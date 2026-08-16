@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "seo:check": "node --experimental-strip-types scripts/seo-check.ts",
+    "check": "npm run typecheck && npm run lint && npm run seo:check"
   },
   "dependencies": {
     "next": "16.3.1",

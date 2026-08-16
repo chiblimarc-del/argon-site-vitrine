@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   ARGON — DESIGN SYSTEM
+   Source de vérité des couleurs, rayons et typographies du site vitrine.
+   Règle : ne JAMAIS écrire une couleur en dur dans un composant.
+   On utilise les classes Tailwind générées depuis le bloc @theme ci-dessous
+   (bg-surface, text-ink-soft, border-line, …).
+
+   Direction (cahier V2 §30) : technologique + premium + opérationnel + fiable.
+   La profondeur vient des surfaces empilées et de la typographie,
+   pas d'un empilement de dégradés ou de glassmorphism.
+   ========================================================================== */
+
+@theme {
+  /* --- Fonds, du plus profond au plus clair --------------------------
+     Teintés vers le marine de l'identité Argon (#0A1240) pour que le logo
+     jaune s'y pose naturellement, sans halo ni fond rapporté. */
+  --color-canvas: #050818; /* fond de page */
+  --color-canvas-2: #090e24; /* bande de section alternée */
+  --color-brand-navy: #0a1240; /* marine officiel de l'identité */
+  --color-surface: #0f1530; /* carte */
+  --color-surface-2: #161d3d; /* sous-carte, champ de formulaire */
+  --color-surface-3: #1d2550; /* survol, état actif */
+
+  /* --- Bordures ------------------------------------------------------ */
+  --color-line: #242a4d;
+  --color-line-soft: #1a1f3c;
+
+  /* --- Texte --------------------------------------------------------- */
+  --color-ink: #f2f4ff; /* titres, texte principal */
+  --color-ink-soft: #a3aac9; /* paragraphes */
+  --color-ink-muted: #6b7295; /* légendes, mentions */
+
+  /* --- Accents ------------------------------------------------------- */
+  --color-accent: #5b5bf5; /* indigo — boutons primaires, liens */
+  --color-accent-hover: #6d6dff;
+  --color-accent-2: #8b5cf6; /* violet — fin de dégradé */
+  --color-cyan: #3ec6f5; /* cyan — données, début de dégradé */
+  --color-argon: #f2c200; /* jaune identité Argon — usage rare */
+
+  /* --- États opérationnels (repris de l'application) ------------------ */
+  --color-ok: #22c55e;
+  --color-warn: #f5a623;
+  --color-info: #3ec6f5;
+  --color-danger: #ef4444;
+
+  /* --- Rayons -------------------------------------------------------- */
+  --radius-card: 14px;
+  --radius-lg: 18px;
+
+  /* --- Typographie --------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* --- Animations ---------------------------------------------------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ==========================================================================
+   BASE
+   ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  /* Le site est en thème sombre uniquement : on le déclare au navigateur
+     pour que les contrôles natifs (inputs, scrollbars) suivent. */
+  color-scheme: dark;
+  /* Compense la hauteur du header fixe lors d'une ancre #section */
+  scroll-padding-top: 6rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Titres : légèrement resserrés, c'est ce qui donne le caractère « premium ». */
+h1,
+h2,
+h3 {
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Accessibilité : anneau de focus visible au clavier sur tout le site. */
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  color: #fff;
+}
+
+/* Respect de la préférence système : on coupe animations et défilement doux. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   UTILITAIRES MAISON
+   Peu nombreux et documentés. Tout le reste passe par Tailwind.
+   ========================================================================== */
+
+/* Dégradé de texte, réservé au mot-clé d'un titre. Un seul par section. */
+.text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-cyan) 0%,
+    #6f8bff 48%,
+    var(--color-accent-2) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Carte de base : surface + bordure + liseré supérieur qui simule la lumière. */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.045);
+}
+
+/* Halo radial décoratif. Toujours en aria-hidden, jamais porteur de sens. */
+.glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Grille technique de fond, très discrète, atténuée sur les bords. */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000 35%, transparent 100%);
+}
+
+/* Filet lumineux de séparation entre deux sections. */
+.hairline {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-line) 15%,
+    var(--color-line) 85%,
+    transparent
+  );
+}
+
+/* Masque le contenu visuellement mais le laisse aux lecteurs d'écran. */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
