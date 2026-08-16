@@ -58,6 +58,15 @@ interface LogoProps {
 
 /**
  * Logo complet cliquable, pointant vers l'accueil.
+ *
+ * ⛔ DÉCISION VERROUILLÉE : le logo du site n'affiche JAMAIS le baseline
+ * « TRANSPORT MANAGEMENT SYSTEM » présent sur le logo d'origine. Le site
+ * positionne Argon sur les opérations terrain à travers cinq métiers
+ * (maintenance, dépannage, installation, transport léger, CVC) ; afficher un
+ * baseline transport contredirait l'architecture SEO et ferait fuir les
+ * visiteurs venus des requêtes maintenance ou dépannage.
+ * Le logo web se limite à la marque : le « A » triangulaire + ARGON.
+ *
  * Le nom est du vrai texte : lisible, sélectionnable, accessible, et aucune
  * image supplémentaire à charger (cahier V2 §29).
  */

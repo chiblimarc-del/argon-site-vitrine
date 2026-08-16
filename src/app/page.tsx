@@ -1,18 +1,13 @@
-import { Section, SectionHeading } from "@/components/ui/Section";
+import { Hero } from "@/components/sections/Hero";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { metadataFor, webPageSchema } from "@/lib/seo";
-import { getRoute } from "@/lib/routes";
 
 /**
- * ACCUEIL — SQUELETTE UNIQUEMENT.
+ * ACCUEIL.
  *
- * ⚠️ Le hero et les sections de la homepage ne sont volontairement PAS
- * construits à ce stade (fin de Phase 1 : fondations seules).
- * Cette page ne sert qu'à valider la chaîne complète :
- * registre de routes → métadonnées → canonical → JSON-LD → layout.
- *
- * La construction des sections 1 à 8 du cahier V2 §7 se fera à l'étape
- * suivante, dans src/components/sections/.
+ * État Phase 2A : Header (layout) + Hero uniquement.
+ * Les sections 2 à 8 du cahier V2 §7 (problème, solution, solutions, métiers,
+ * interface, bénéfices, CTA final) ne sont volontairement pas construites.
  */
 
 const PATH = "/";
@@ -20,14 +15,9 @@ const PATH = "/";
 export const metadata = metadataFor(PATH);
 
 export default function HomePage() {
-  const route = getRoute(PATH);
-
   return (
     <>
-      <Section spacing="large">
-        <SectionHeading as="h1" title={route.h1} />
-      </Section>
-
+      <Hero />
       <JsonLd data={webPageSchema(PATH)} />
     </>
   );
