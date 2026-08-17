@@ -182,7 +182,7 @@ const solutions: RouteDef[] = [
       "planning équipes terrain",
     ],
     priority: "P0",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/solutions",
     sitemapPriority: 0.9,

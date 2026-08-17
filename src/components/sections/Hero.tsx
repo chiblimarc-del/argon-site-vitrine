@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { AppPreview } from "@/components/product-ui/AppPreview";
 import { primaryCta, secondaryCta } from "@/lib/site";
-import { secteurRoutes } from "@/lib/routes";
+import { findRoute, secteurRoutes } from "@/lib/routes";
 
 /**
  * HERO de la page d'accueil.
@@ -19,6 +19,14 @@ import { secteurRoutes } from "@/lib/routes";
  * Server Component, zéro JavaScript côté client, aucune image à charger.
  */
 export function Hero() {
+  /**
+   * Le CTA secondaire ne s'affiche que si sa destination est publiée au
+   * registre. `/solutions` ne l'est pas encore : sans ce garde-fou, le Hero
+   * affichait un bouton menant à une 404 — le contrôle de maillage l'a révélé.
+   * Il réapparaîtra de lui-même le jour où le hub sera construit.
+   */
+  const secondaireDisponible = findRoute(secondaryCta.href)?.published ?? false;
+
   return (
     <section className="relative overflow-hidden border-b border-line-soft">
       {/* Décor de fond — purement visuel, hors du flux et non annoncé. */}
@@ -53,14 +61,11 @@ export function Hero() {
                 {primaryCta.label}
                 <ArrowRight />
               </Button>
-              <Button
-                href={secondaryCta.href}
-                variant="secondary"
-                size="lg"
-                prefetch={false}
-              >
-                {secondaryCta.label}
-              </Button>
+              {secondaireDisponible ? (
+                <Button href={secondaryCta.href} variant="secondary" size="lg">
+                  {secondaryCta.label}
+                </Button>
+              ) : null}
             </div>
 
             {/*
