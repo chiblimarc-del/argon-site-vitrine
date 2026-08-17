@@ -29,9 +29,7 @@ export function Header() {
               l'extérieur, on l'enveloppe.
             */}
             <div className="hidden sm:block">
-              {/* prefetch désactivé : la page de démo n'est construite qu'en
-                  Phase 4. À réactiver (retirer prefetch) une fois publiée. */}
-              <Button href={primaryCta.href} size="md" prefetch={false}>
+              <Button href={primaryCta.href} size="md">
                 {primaryCta.label}
                 <ArrowRight />
               </Button>

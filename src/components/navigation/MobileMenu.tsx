@@ -94,12 +94,7 @@ export function MobileMenu() {
           </nav>
 
           <div className="mt-8">
-            <Button
-              href={primaryCta.href}
-              size="lg"
-              prefetch={false}
-              className="w-full"
-            >
+            <Button href={primaryCta.href} size="lg" className="w-full">
               {primaryCta.label}
               <ArrowRight />
             </Button>

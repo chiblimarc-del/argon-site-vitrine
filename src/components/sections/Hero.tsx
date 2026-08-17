@@ -49,8 +49,7 @@ export function Hero() {
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              {/* prefetch désactivé : page construite en Phase 4. */}
-              <Button href={primaryCta.href} size="lg" prefetch={false}>
+              <Button href={primaryCta.href} size="lg">
                 {primaryCta.label}
                 <ArrowRight />
               </Button>

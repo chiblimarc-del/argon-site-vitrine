@@ -364,7 +364,7 @@ const secteurs: RouteDef[] = [
   },
   {
     path: "/secteurs/transport-courses",
-    label: "Transport léger",
+    label: "Transport & courses",
     title: "Logiciel de gestion des courses et tournées | Argon",
     description:
       "Organisez vos courses, tournées et équipes terrain avec Argon. Planification, suivi des missions et activité transport dans une seule plateforme.",
@@ -433,7 +433,7 @@ const autres: RouteDef[] = [
     keyword: null, // page de conversion, pas d'ambition de trafic organique
     secondaryKeywords: [],
     priority: "P0",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/",
     sitemapPriority: 0.7,

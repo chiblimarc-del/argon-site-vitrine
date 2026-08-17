@@ -52,8 +52,7 @@ export function FinalCtaSection() {
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {/* prefetch désactivé : la page de démo est construite en Phase 4. */}
-          <Button href={primaryCta.href} size="lg" prefetch={false}>
+          <Button href={primaryCta.href} size="lg">
             {primaryCta.label}
             <ArrowRight />
           </Button>
