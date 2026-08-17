@@ -46,10 +46,10 @@ const familles: Record<Famille, { label: string; texte: string; puce: string }> 
     texte: "text-accent-mid",
     puce: "bg-accent-mid",
   },
-  executer: { label: "Exécuter", texte: "text-accent", puce: "bg-accent" },
+  executer: { label: "Exécuter", texte: "text-accent-text", puce: "bg-accent" },
   administrer: {
     label: "Administrer",
-    texte: "text-accent-2",
+    texte: "text-accent2-text",
     puce: "bg-accent-2",
   },
 };

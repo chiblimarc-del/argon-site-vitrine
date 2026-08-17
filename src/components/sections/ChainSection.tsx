@@ -76,7 +76,7 @@ const domaines: Domaine[] = [
     cle: "exploitation",
     titre: "Exploitation",
     intention: "Pendant l'intervention",
-    accent: "text-accent",
+    accent: "text-accent-text",
     puce: "bg-accent",
     etapes: [
       {
@@ -101,7 +101,7 @@ const domaines: Domaine[] = [
     cle: "administration",
     titre: "Administration",
     intention: "Après l'intervention",
-    accent: "text-accent-2",
+    accent: "text-accent2-text",
     puce: "bg-accent-2",
     etapes: [
       {

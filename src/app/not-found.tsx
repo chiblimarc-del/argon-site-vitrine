@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <Section spacing="large">
-      <p className="text-sm font-medium tracking-[0.14em] text-accent">ERREUR 404</p>
+      <p className="text-sm font-medium tracking-[0.14em] text-accent-text">ERREUR 404</p>
       <h1 className="mt-4 text-4xl font-semibold leading-tight text-ink sm:text-5xl">
         Cette page n&apos;existe pas.
       </h1>

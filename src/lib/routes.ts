@@ -16,12 +16,28 @@
  * 4. Les `title` sont plafonnés à 60 caractères et les `description` à 160,
  *    au-delà Google tronque ou réécrit.
  *
- * Décisions appliquées après audit :
- * - `/` porte « logiciel de gestion des interventions terrain ».
+ * Décisions appliquées après audit V1 (architecture V3) :
+ * - `/` porte « logiciel de gestion des interventions terrain ». Ce terme est
+ *   retiré des secondaires de /solutions/gestion-interventions.
  * - `/solutions` et `/secteurs` sont des hubs P3 sans mot-clé propre.
  * - `/secteurs/cvc` cible « logiciel gestion interventions CVC »
  *   (et non « maintenance climatisation », qui cannibaliserait /maintenance).
  * - `/ressources` n'est pas déclarée tant qu'aucun contenu réel n'existe.
+ * - SUPPRIMÉE `/solutions/suivi-terrain` : intention quasi identique à
+ *   gestion-interventions, repliée dedans.
+ * - SUPPRIMÉE `/fonctionnalites` : fourre-tout qui concurrençait chaque page
+ *   solution sur ses propres secondaires, pour une requête inexistante. Le hub
+ *   /solutions assure désormais la vue d'ensemble fonctionnelle.
+ * - CRÉÉE `/solutions/devis-facturation` : une seule page pour le pont
+ *   devis → facture. Deux pages (CRM d'un côté, facturation de l'autre) se
+ *   seraient disputé « logiciel devis facture », la requête à valeur. « CRM »
+ *   n'est PAS une tête : cette requête mène à Sellsy, Axonaut et HubSpot, sur
+ *   une audience qui n'est pas la nôtre. On ne scindera que si Search Console
+ *   révèle deux grappes distinctes.
+ * - RENOMMÉES : application-mobile-terrain → application-mobile-technicien
+ *   (« technicien » est dans la requête observée) ; transport-leger →
+ *   transport-courses (« courses » est le mot-clé cible). Aucune de ces URLs
+ *   n'ayant été publiée, aucune redirection n'est nécessaire.
  */
 
 export type Priority = "P0" | "P1" | "P2" | "P3";
@@ -110,7 +126,7 @@ const solutions: RouteDef[] = [
     label: "Solutions",
     title: "Solutions de pilotage terrain | Argon",
     description:
-      "Interventions, planning, suivi terrain, application mobile et rapports : découvrez les briques de la plateforme Argon.",
+      "Interventions, planning, devis et facturation, application mobile, comptes rendus : découvrez les briques de la plateforme Argon.",
     h1: "Une plateforme pour piloter vos opérations de bout en bout.",
     keyword: null, // hub navigationnel — aucune ambition de positionnement
     secondaryKeywords: [],
@@ -131,12 +147,15 @@ const solutions: RouteDef[] = [
       "Planifiez, affectez et suivez vos interventions depuis une seule plateforme. Argon centralise missions, équipes, comptes rendus et suivi terrain.",
     h1: "Gérez vos interventions de la demande au compte rendu.",
     keyword: "logiciel gestion des interventions",
+    // « logiciel gestion interventions terrain » a été RETIRÉ : c'est le
+    // mot-clé principal de l'accueil. Le laisser ici entretenait la seule
+    // cannibalisation résiduelle du site.
     secondaryKeywords: [
-      "logiciel intervention terrain",
-      "gestion interventions terrain",
+      "gestion intervention",
       "suivi interventions",
       "logiciel suivi interventions",
       "gestion missions terrain",
+      "cycle de vie intervention",
     ],
     priority: "P0",
     published: false,
@@ -172,32 +191,33 @@ const solutions: RouteDef[] = [
     pitch: "Affectez, arbitrez et visualisez la charge de vos équipes.",
   },
   {
-    path: "/solutions/suivi-terrain",
-    label: "Suivi terrain",
-    title: "Suivi des interventions terrain | Argon",
+    path: "/solutions/devis-facturation",
+    label: "Devis & facturation",
+    title: "Logiciel de devis et facturation d'interventions | Argon",
     description:
-      "Suivez l'avancement de vos interventions et de vos équipes depuis une vue centralisée : statuts, progression, retards et événements du terrain.",
-    h1: "Sachez ce qui se passe sur le terrain.",
-    keyword: "suivi interventions terrain",
+      "Établissez vos devis, relancez ceux restés sans réponse et facturez les interventions réalisées, depuis la même fiche client.",
+    h1: "Du devis à la facture, sans ressaisir une ligne.",
+    // Le pont que personne ne couvre : les logiciels d'intervention s'arrêtent
+    // au compte rendu, les outils de devis ne voient pas le terrain.
+    keyword: "logiciel devis facture intervention",
     secondaryKeywords: [
-      "suivi intervention",
-      "suivi équipes terrain",
-      "suivi techniciens",
-      "cartographie interventions",
-      "géolocalisation interventions",
-      "visibilité terrain",
+      "logiciel devis intervention",
+      "logiciel facturation intervention",
+      "devis et facture",
+      "relance devis",
+      "fiche client intervention",
     ],
-    priority: "P1",
+    priority: "P0",
     published: false,
     indexable: true,
     parent: "/solutions",
-    sitemapPriority: 0.8,
+    sitemapPriority: 0.9,
     changeFrequency: "monthly",
     group: "solutions",
-    pitch: "Statuts, progression et carte des interventions.",
+    pitch: "Devis, relances et factures rattachés au client.",
   },
   {
-    path: "/solutions/application-mobile-terrain",
+    path: "/solutions/application-mobile-technicien",
     label: "Application mobile",
     title: "Application mobile pour techniciens terrain | Argon",
     description:
@@ -343,7 +363,7 @@ const secteurs: RouteDef[] = [
     pitch: "Coordonnez les équipes et suivez chaque installation.",
   },
   {
-    path: "/secteurs/transport-leger",
+    path: "/secteurs/transport-courses",
     label: "Transport léger",
     title: "Logiciel de gestion des courses et tournées | Argon",
     description:
@@ -403,27 +423,6 @@ const secteurs: RouteDef[] = [
    ========================================================================== */
 
 const autres: RouteDef[] = [
-  {
-    path: "/fonctionnalites",
-    label: "Fonctionnalités",
-    title: "Fonctionnalités du logiciel Argon",
-    description:
-      "Organiser, exécuter, suivre, piloter : découvrez les fonctionnalités d'Argon pour gérer votre activité terrain au quotidien.",
-    h1: "Tout ce qu'il faut pour piloter votre activité terrain.",
-    keyword: "fonctionnalités logiciel intervention",
-    secondaryKeywords: [
-      "logiciel gestion terrain",
-      "application terrain",
-      "suivi interventions",
-    ],
-    priority: "P1",
-    published: false,
-    indexable: true,
-    parent: "/",
-    sitemapPriority: 0.7,
-    changeFrequency: "monthly",
-    group: "produit",
-  },
   {
     path: "/demander-une-demo",
     label: "Demander une démo",

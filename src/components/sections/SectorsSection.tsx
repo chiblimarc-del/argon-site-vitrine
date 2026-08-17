@@ -70,7 +70,7 @@ const metiers: Metier[] = [
     accent: "text-cyan",
   },
   {
-    path: "/secteurs/transport-leger",
+    path: "/secteurs/transport-courses",
     titre: "Transport & courses",
     rythme: "L'enchaînement",
     accroche:
@@ -78,7 +78,7 @@ const metiers: Metier[] = [
     vocabulaire: ["Courses", "Conducteurs", "Créneaux", "Preuve de livraison"],
     motif: <MotifEnchainement />,
     emprise: "lg:col-span-3",
-    accent: "text-accent-2",
+    accent: "text-accent2-text",
   },
   {
     path: "/secteurs/depannage",
@@ -111,7 +111,7 @@ const metiers: Metier[] = [
     vocabulaire: ["Entretien", "Dépannage", "Saison haute", "Comptes rendus"],
     motif: <MotifSaisons />,
     emprise: "lg:col-span-2",
-    accent: "text-accent",
+    accent: "text-accent-text",
   },
 ];
 
@@ -194,7 +194,7 @@ function CarteMetier({ metier }: { metier: Metier }) {
         {disponible ? (
           <NavLink
             href={metier.path}
-            className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent"
+            className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-accent-text"
           >
             Argon pour ce métier
             <ArrowRight />

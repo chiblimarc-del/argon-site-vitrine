@@ -72,7 +72,7 @@ function DropdownPanel({
           <div className="mt-2 border-t border-line-soft pt-2">
             <NavLink
               href={hubPath}
-              className="block rounded-lg px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-surface-2"
+              className="block rounded-lg px-3 py-2 text-xs font-medium text-accent-text transition-colors hover:bg-surface-2"
             >
               Voir toutes les pages {hubLabel.toLowerCase()}
             </NavLink>
@@ -105,15 +105,6 @@ export function DesktopNav({ className }: { className?: string }) {
             <Chevron />
           </span>
           <DropdownPanel hubPath="/secteurs" hubLabel="Secteurs" items={secteurRoutes} />
-        </li>
-
-        <li>
-          <NavLink
-            href="/fonctionnalites"
-            className="rounded-md px-1 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
-          >
-            Fonctionnalités
-          </NavLink>
         </li>
 
         <li>

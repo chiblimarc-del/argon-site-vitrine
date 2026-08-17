@@ -77,7 +77,7 @@ export function LinkCard({
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{description}</p>
       ) : null}
 
-      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-accent-text">
         {action}
         <ArrowRight className="transition-transform duration-200 group-hover:translate-x-0.5" />
       </span>

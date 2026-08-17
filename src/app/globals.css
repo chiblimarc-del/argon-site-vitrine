@@ -30,11 +30,19 @@
   /* --- Texte --------------------------------------------------------- */
   --color-ink: #f2f4ff; /* titres, texte principal */
   --color-ink-soft: #a3aac9; /* paragraphes */
-  --color-ink-muted: #6b7295; /* légendes, mentions */
+  /* Corrigé après audit : #6b7295 échouait au contraste AA (3,50 sur
+     surface-2). #7f86a9 atteint 4,61 sur le fond le plus clair du site. */
+  --color-ink-muted: #7f86a9; /* légendes, mentions */
 
   /* --- Accents ------------------------------------------------------- */
-  --color-accent: #5b5bf5; /* indigo — boutons primaires, liens */
+  /* ⚠️ `accent` et `accent-2` sont réservés aux FONDS (boutons, pastilles).
+     En TEXTE sur fond sombre ils échouent au contraste AA (3,64 et 4,24) :
+     utiliser `accent-text` et `accent2-text`, qui atteignent 4,59.
+     Blanc sur `accent` en bouton reste conforme (4,93). */
+  --color-accent: #5b5bf5; /* indigo — fond de bouton */
   --color-accent-hover: #6d6dff;
+  --color-accent-text: #7777ff; /* indigo lisible en texte */
+  --color-accent2-text: #996aff; /* violet lisible en texte */
   --color-accent-mid: #6f8bff; /* bleu — point milieu du dégradé de marque */
   --color-accent-2: #8b5cf6; /* violet — fin de dégradé */
   --color-cyan: #3ec6f5; /* cyan — données, début de dégradé */

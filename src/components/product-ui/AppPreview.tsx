@@ -161,9 +161,9 @@ export function AppPreview() {
               {/* Liste des interventions */}
               <div className="min-w-0">
                 <div className="mb-2.5 flex items-baseline justify-between">
-                  <h3 className="text-[12px] font-medium text-ink">
+                  <p className="text-[12px] font-medium text-ink">
                     Interventions du jour
-                  </h3>
+                  </p>
                   <span className="text-[11px] text-ink-muted">4 affichées</span>
                 </div>
 
@@ -208,16 +208,16 @@ export function AppPreview() {
               {/* Colonne droite : carte + planning */}
               <div className="min-w-0 space-y-4">
                 <div>
-                  <h3 className="mb-2.5 text-[12px] font-medium text-ink">
+                  <p className="mb-2.5 text-[12px] font-medium text-ink">
                     Carte des interventions
-                  </h3>
+                  </p>
                   <MapPanel />
                 </div>
 
                 <div>
-                  <h3 className="mb-2.5 text-[12px] font-medium text-ink">
+                  <p className="mb-2.5 text-[12px] font-medium text-ink">
                     Planning des équipes
-                  </h3>
+                  </p>
                   <PlanningPanel />
                 </div>
               </div>

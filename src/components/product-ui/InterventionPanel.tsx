@@ -59,9 +59,9 @@ export function InterventionPanel() {
           {/* ---------- En-tête de la fiche ---------- */}
           <div>
             <p className="font-mono text-[11px] text-ink-muted">IN-4821</p>
-            <h3 className="mt-1 text-[15px] font-semibold text-ink">
+            <p className="mt-1 text-[15px] font-semibold text-ink">
               Maintenance climatisation
-            </h3>
+            </p>
           </div>
 
           <dl className="grid gap-x-4 gap-y-2 rounded-lg border border-line-soft bg-surface p-3 sm:grid-cols-3">

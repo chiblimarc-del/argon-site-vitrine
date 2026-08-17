@@ -26,7 +26,7 @@ const columns = [
   { title: "Secteurs", hub: "/secteurs", items: secteurRoutes },
 ];
 
-const produit = ["/fonctionnalites", "/demander-une-demo"];
+const produit = ["/demander-une-demo"];
 const entreprise = ["/a-propos", "/contact"];
 
 export function Footer() {
