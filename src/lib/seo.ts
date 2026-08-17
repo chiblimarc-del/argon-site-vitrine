@@ -19,9 +19,16 @@ export function metadataFor(path: string): Metadata {
     title: route.title,
     description: route.description,
     alternates: { canonical: url },
-    robots: route.indexable
-      ? { index: true, follow: true }
-      : { index: false, follow: true },
+    /**
+     * Une page peut exister sur le disque sans être publiée au registre : Next
+     * sert la route quoi qu'il arrive. Sans ce garde-fou, une page construite
+     * mais non validée resterait indexable si Google la découvrait autrement
+     * que par le sitemap. `published: false` implique donc `noindex`.
+     */
+    robots:
+      route.indexable && route.published
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
     openGraph: {
       type: "website",
       locale: site.locale,

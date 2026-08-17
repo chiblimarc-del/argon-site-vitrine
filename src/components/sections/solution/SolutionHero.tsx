@@ -4,7 +4,11 @@ import { getRoute } from "@/lib/routes";
 import { primaryCta } from "@/lib/site";
 
 /**
- * En-tête commun à toutes les pages « solution ».
+ * En-tête commun aux pages « solution » ET aux pages « secteur ».
+ *
+ * Les deux axes partagent la même ossature de page (hero → corps propre →
+ * FAQ → maillage → CTA) ; seul le corps diffère. Le composant est resté dans
+ * le dossier `solution/` par continuité, mais il n'a rien de spécifique.
  *
  * Le H1 vient du registre de routes : impossible qu'il diverge du H1 déclaré
  * dans la matrice SEO, et `seo:check` garantit qu'il est unique sur le site.

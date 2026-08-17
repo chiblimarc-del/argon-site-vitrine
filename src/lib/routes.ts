@@ -282,7 +282,7 @@ const secteurs: RouteDef[] = [
     keyword: null, // hub navigationnel
     secondaryKeywords: [],
     priority: "P3",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/",
     sitemapPriority: 0.4,
@@ -306,7 +306,7 @@ const secteurs: RouteDef[] = [
       "planning maintenance",
     ],
     priority: "P0",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/secteurs",
     sitemapPriority: 0.9,
@@ -330,7 +330,7 @@ const secteurs: RouteDef[] = [
       "techniciens dépannage",
     ],
     priority: "P1",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/secteurs",
     sitemapPriority: 0.8,
@@ -354,7 +354,7 @@ const secteurs: RouteDef[] = [
       "techniciens installation",
     ],
     priority: "P1",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/secteurs",
     sitemapPriority: 0.8,
@@ -381,13 +381,15 @@ const secteurs: RouteDef[] = [
       "gestion livraisons",
     ],
     priority: "P0",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/secteurs",
     sitemapPriority: 0.9,
     changeFrequency: "monthly",
     group: "secteurs",
-    pitch: "Courses, tournées, conducteurs et suivi des livraisons.",
+    // « tournées » retiré : la page transport précise qu'Argon ne construit ni
+    // n'optimise les tournées. On s'en tient à ce qui est géré.
+    pitch: "Courses, conducteurs, créneaux et preuve de livraison.",
   },
   {
     path: "/secteurs/cvc",
@@ -408,13 +410,16 @@ const secteurs: RouteDef[] = [
     ],
     priority: "P1",
     // À CONFIRMER COMMERCIALEMENT avant publication (cahier V2 §19).
-    published: false,
+    published: true,
     indexable: true,
     parent: "/secteurs",
     sitemapPriority: 0.8,
     changeFrequency: "monthly",
     group: "secteurs",
-    pitch: "Interventions, contrats et techniciens du CVC.",
+    // « contrats » a été retiré : la gestion contractuelle n'est pas une brique
+    // du produit, et la page CVC le dit explicitement. Un pitch de navigation
+    // est lu comme une promesse au même titre qu'un paragraphe.
+    pitch: "Entretien, dépannage et techniciens du CVC.",
   },
 ];
 
