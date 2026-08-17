@@ -10,11 +10,23 @@ import { findRoute, solutionRoutes, secteurRoutes } from "@/lib/routes";
  * initial, donc crawlables sans exécution de script.
  */
 
+/**
+ * Panneau déroulant.
+ *
+ * ⚠️ NE JAMAIS revenir à `invisible` (visibility: hidden) : un élément ainsi
+ * masqué n'est PAS focusable, donc `focus-within` ne peut jamais se déclencher
+ * et la navigation principale devient inatteignable au clavier (échec
+ * WCAG 2.1.1). C'est le défaut relevé à l'audit global.
+ *
+ * `opacity-0` + `pointer-events-none` masque visuellement tout en gardant les
+ * liens dans l'ordre de tabulation : le panneau s'ouvre dès qu'un lien reçoit
+ * le focus, exactement comme au survol. Toujours zéro JavaScript.
+ */
 const panelClasses =
-  "invisible absolute left-1/2 top-full z-50 w-[30rem] -translate-x-1/2 pt-3 opacity-0 " +
-  "transition-[opacity,visibility] duration-150 " +
-  "group-hover:visible group-hover:opacity-100 " +
-  "group-focus-within:visible group-focus-within:opacity-100";
+  "pointer-events-none absolute left-1/2 top-full z-50 w-[30rem] -translate-x-1/2 pt-3 opacity-0 " +
+  "transition-opacity duration-150 " +
+  "group-hover:pointer-events-auto group-hover:opacity-100 " +
+  "group-focus-within:pointer-events-auto group-focus-within:opacity-100";
 
 const triggerClasses =
   "inline-flex items-center gap-1 rounded-md px-1 py-2 text-sm text-ink-soft " +
@@ -87,11 +99,17 @@ export function DesktopNav({ className }: { className?: string }) {
   return (
     <nav aria-label="Navigation principale" className={cn("items-center", className)}>
       <ul className="flex items-center gap-7">
+        {/*
+          Le déclencheur est un NavLink et non un <span> : quand le hub est
+          publié, il devient un vrai lien, donc focusable — le menu s'ouvre au
+          clavier dès qu'on l'atteint, sans attendre d'être entré dans le
+          panneau. Tant que le hub n'existe pas, NavLink le rend inerte.
+        */}
         <li className="group relative">
-          <span className={triggerClasses}>
+          <NavLink href="/solutions" className={triggerClasses}>
             Solutions
             <Chevron />
-          </span>
+          </NavLink>
           <DropdownPanel
             hubPath="/solutions"
             hubLabel="Solutions"
@@ -100,10 +118,10 @@ export function DesktopNav({ className }: { className?: string }) {
         </li>
 
         <li className="group relative">
-          <span className={triggerClasses}>
+          <NavLink href="/secteurs" className={triggerClasses}>
             Secteurs
             <Chevron />
-          </span>
+          </NavLink>
           <DropdownPanel hubPath="/secteurs" hubLabel="Secteurs" items={secteurRoutes} />
         </li>
 

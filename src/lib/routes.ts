@@ -131,7 +131,7 @@ const solutions: RouteDef[] = [
     keyword: null, // hub navigationnel — aucune ambition de positionnement
     secondaryKeywords: [],
     priority: "P3",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/",
     sitemapPriority: 0.4,

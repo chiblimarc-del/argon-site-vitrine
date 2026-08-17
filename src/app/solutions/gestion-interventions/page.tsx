@@ -232,6 +232,7 @@ export default function GestionInterventionsPage() {
         chapo="La gestion des interventions s'appuie sur ces briques, et alimente les suivantes."
         paths={[
           "/solutions/planning-interventions",
+          "/solutions/devis-facturation",
           "/solutions/application-mobile-technicien",
           "/solutions/rapports-intervention",
           "/secteurs/maintenance",

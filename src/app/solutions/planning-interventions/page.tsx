@@ -226,6 +226,7 @@ export default function PlanningInterventionsPage() {
         chapo="Ce que le planning reçoit en amont, et ce qu'il déclenche ensuite."
         paths={[
           "/solutions/gestion-interventions",
+          "/solutions/devis-facturation",
           "/solutions/application-mobile-technicien",
           "/solutions/rapports-intervention",
           "/secteurs/depannage",

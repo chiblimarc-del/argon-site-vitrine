@@ -1,5 +1,6 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { InterventionPanel } from "@/components/product-ui/InterventionPanel";
+import { NavLink } from "@/components/navigation/NavLink";
 
 /**
  * SECTION 4 — LES BRIQUES FONCTIONNELLES.
@@ -59,11 +60,19 @@ type Module = {
   titre: string;
   texte: string;
   icone: React.ReactNode;
+  /**
+   * Page solution correspondante, quand elle existe au registre. Rend la carte
+   * cliquable : l'accueil transmet ainsi un lien CONTEXTUEL aux pages P0, et
+   * pas seulement les liens sitewide de l'en-tête et du pied de page — que
+   * Google pondère nettement moins. Défaut relevé à l'audit global.
+   */
+  path?: string;
 };
 
 const modules: Module[] = [
   {
     famille: "vendre",
+    path: "/solutions/devis-facturation",
     titre: "CRM & devis",
     texte:
       "Clients, contacts et sites d'intervention réunis sur une fiche. Le devis est établi depuis cette fiche, envoyé, puis retrouvé au même endroit.",
@@ -78,6 +87,7 @@ const modules: Module[] = [
   },
   {
     famille: "organiser",
+    path: "/solutions/planning-interventions",
     titre: "Planning & affectation",
     texte:
       "Affectez chaque intervention à un intervenant et à un créneau. Le planning des équipes se lit d'un seul coup d'œil.",
@@ -133,13 +143,15 @@ export function ModulesSection() {
       />
 
       {/* ---------- Brique dominante : l'intervention terrain ---------- */}
-      <article className="card mt-14 overflow-hidden">
+      <article className="card relative mt-14 overflow-hidden">
         <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-12">
           <div>
             <EtiquetteFamille famille="executer" />
 
             <h3 className="mt-4 text-2xl font-semibold leading-tight text-ink sm:text-3xl">
-              Interventions terrain
+              <LienBrique path="/solutions/gestion-interventions">
+                Interventions terrain
+              </LienBrique>
             </h3>
 
             <p className="mt-4 text-[15px] leading-relaxed text-ink-soft sm:text-base">
@@ -170,7 +182,14 @@ export function ModulesSection() {
       {/* ---------- Modules secondaires ---------- */}
       <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {modules.map((module) => (
-          <li key={module.titre} className="card flex flex-col p-6">
+          <li
+            key={module.titre}
+            className={`card relative flex flex-col p-6${
+              module.path
+                ? " transition-colors duration-200 hover:border-accent/40 hover:bg-surface-2"
+                : ""
+            }`}
+          >
             <span className="mb-5 flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-soft">
               {module.icone}
             </span>
@@ -178,7 +197,11 @@ export function ModulesSection() {
             <EtiquetteFamille famille={module.famille} />
 
             <h3 className="mt-2.5 text-base font-semibold text-ink">
-              {module.titre}
+              {module.path ? (
+                <LienBrique path={module.path}>{module.titre}</LienBrique>
+              ) : (
+                module.titre
+              )}
             </h3>
 
             <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-soft">
@@ -188,6 +211,27 @@ export function ModulesSection() {
         ))}
       </ul>
     </Section>
+  );
+}
+
+/**
+ * Titre de brique cliquable. Le pseudo-élément étend la zone de clic à toute
+ * la carte tout en n'émettant qu'UN seul lien : une seule cible dans l'ordre
+ * de tabulation, un seul lien à crawler.
+ * Si la route n'est pas publiée, NavLink rend un texte inerte — la carte
+ * redevient simplement descriptive.
+ */
+function LienBrique({
+  path,
+  children,
+}: {
+  path: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <NavLink href={path} className="after:absolute after:inset-0 after:content-['']">
+      {children}
+    </NavLink>
   );
 }
 
