@@ -3,15 +3,16 @@ import { ProblemSection } from "@/components/sections/ProblemSection";
 import { ChainSection } from "@/components/sections/ChainSection";
 import { ModulesSection } from "@/components/sections/ModulesSection";
 import { SectorsSection } from "@/components/sections/SectorsSection";
+import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * ACCUEIL.
  *
- * État Phase 2E : Header (layout) + Hero + « problème » + « chaîne de gestion »
- * + « briques fonctionnelles » + « métiers ».
- * La section finale (CTA) n'est volontairement pas construite.
+ * État Phase 2F : la homepage est complète.
+ * Hero → problème → chaîne de gestion → briques fonctionnelles → métiers →
+ * CTA final. Header et footer sont portés par le layout racine.
  */
 
 const PATH = "/";
@@ -26,6 +27,7 @@ export default function HomePage() {
       <ChainSection />
       <ModulesSection />
       <SectorsSection />
+      <FinalCtaSection />
       <JsonLd data={webPageSchema(PATH)} />
     </>
   );
