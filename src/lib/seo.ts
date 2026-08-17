@@ -71,7 +71,11 @@ export function organizationSchema() {
     url: siteUrl,
     ...(site.legalName ? { legalName: site.legalName } : {}),
     ...(site.email ? { email: site.email } : {}),
-    ...(site.phone ? { telephone: site.phone } : {}),
+    ...(site.phoneInternational
+      ? { telephone: site.phoneInternational }
+      : site.phone
+        ? { telephone: site.phone }
+        : {}),
     ...(site.address
       ? { address: { "@type": "PostalAddress", ...site.address } }
       : {}),

@@ -29,12 +29,28 @@ export const site = {
   description:
     "Argon centralise vos interventions, plannings, équipes et opérations terrain dans une seule plateforme.",
   /**
-   * Coordonnées : volontairement vides tant qu'elles ne sont pas réelles.
-   * Règle de vérité produit (cahier V2 §31) : on n'invente rien.
-   * Les composants testent la présence avant d'afficher.
+   * Coordonnées.
+   *
+   * Règle de vérité produit (cahier V2 §31) : on n'invente rien. Une valeur
+   * absente reste une chaîne vide et les composants testent la présence avant
+   * d'afficher — jamais de coordonnée de remplissage.
+   *
+   * ⚠️ Le type est explicitement `string` (et non le littéral déduit par
+   * `as const`) : sans cela, une chaîne vide est narrowée au type `""`, la
+   * branche « valeur présente » devient `never` et tout code qui manipule la
+   * valeur (`.replace`, `.trim`…) casse le typecheck. Le type doit refléter
+   * « peut être renseignée ou non », pas la valeur du jour.
    */
-  email: "",
-  phone: "",
+  email: "contact@argon-mobility.com" as string,
+  /** Forme lisible, affichée telle quelle sur le site. */
+  phone: "01 85 73 59 41" as string,
+  /**
+   * Même numéro au format international. Deux usages distincts :
+   *   — `tel:` doit être composable depuis l'étranger, donc jamais le 0 initial ;
+   *   — Schema.org attend un format international pour `telephone`.
+   * Ce n'est pas une seconde donnée, c'est le même numéro autrement écrit.
+   */
+  phoneInternational: "+33185735941" as string,
   address: null as null | {
     streetAddress: string;
     postalCode: string;
