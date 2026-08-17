@@ -8,18 +8,27 @@ import { Section, SectionHeading } from "@/components/ui/Section";
  *
  * Parti pris : ne PAS écrire « informations dispersées » puis passer au point
  * suivant. On montre les artefacts réels dans lesquels l'information se
- * disperse — un SMS, un tableur en version 4, un appel manqué, une relance
- * par e-mail, une note de carnet, un compte rendu papier. Chaque carte porte
- * ensuite, en clair, le problème qu'elle illustre.
+ * disperse — un SMS, un tableur en version 4, un devis sans réponse, un appel
+ * manqué, une relance par e-mail, une note de carnet, un compte rendu papier,
+ * des interventions non facturées. Chaque carte porte ensuite, en clair, le
+ * problème qu'elle illustre.
+ *
+ * Les huit artefacts couvrent les trois domaines de la chaîne de gestion
+ * présentée en section 3 : commercial, exploitation, administration. La
+ * dispersion n'est pas seulement opérationnelle, elle traverse toute
+ * l'entreprise — c'est ce qui rend la section 3 nécessaire.
  *
  * Dialogue visuel avec le Hero : le panneau Argon y est parfaitement aligné,
  * une seule surface, une seule grille. Ici, mêmes composants et mêmes jetons
- * de couleur, mais six surfaces autonomes, légèrement désalignées, reliées par
+ * de couleur, mais huit surfaces autonomes, légèrement désalignées, reliées par
  * des traits qui ne se rejoignent pas. La composition dit la dispersion avant
  * que le texte ne la nomme.
  *
  * Règle de vérité (V2 §31) : aucune statistique, aucun pourcentage, aucun coût
- * chiffré. Les contenus des cartes sont des situations, pas des mesures.
+ * chiffré. Les contenus des cartes — horodatages, numéro de devis, nombre
+ * d'interventions — sont des données d'illustration décrivant une situation
+ * quelconque, jamais une mesure réalisée par Argon ni une moyenne constatée
+ * chez ses utilisateurs.
  *
  * Server Component, aucune image, aucun JavaScript.
  */
@@ -56,11 +65,19 @@ const artefacts: Artefact[] = [
     ton: "neutre",
   },
   {
+    source: "Devis",
+    repere: "sans réponse",
+    contenu: "Devis n° 2214 — envoyé il y a 11 jours",
+    probleme: "Des devis qui s'oublient faute de relance",
+    inclinaison: "lg:rotate-[0.5deg]",
+    ton: "neutre",
+  },
+  {
     source: "Appels",
     repere: "matinée",
     contenu: "Agence Sud · 3 appels manqués",
     probleme: "Le suivi qui repose sur le téléphone",
-    inclinaison: "lg:rotate-[0.5deg]",
+    inclinaison: "lg:-rotate-[0.5deg]",
     ton: "alerte",
   },
   {
@@ -87,6 +104,17 @@ const artefacts: Artefact[] = [
     inclinaison: "lg:-rotate-[0.4deg]",
     ton: "neutre",
   },
+  {
+    source: "Facturation",
+    repere: "en attente",
+    // « 6 » est une donnée d'illustration, au même titre que les horodatages
+    // des autres cartes. Ce n'est en aucun cas une statistique mesurée par
+    // Argon ni une moyenne constatée chez ses utilisateurs.
+    contenu: "6 interventions réalisées · non facturées",
+    probleme: "Du travail réalisé qui n'arrive jamais sur une facture",
+    inclinaison: "lg:rotate-[0.6deg]",
+    ton: "alerte",
+  },
 ];
 
 export function ProblemSection() {
@@ -103,11 +131,11 @@ export function ProblemSection() {
             <span className="text-gradient">coordination</span> devient complexe.
           </>
         }
-        description="L'information existe déjà : elle est dans un SMS, dans un tableur, dans un appel, sur un carnet. Le problème n'est pas de la produire, c'est qu'elle n'est jamais au même endroit au même moment."
+        description="L'information existe déjà : elle est dans un SMS, dans un tableur, dans un devis sans réponse, sur un carnet, dans une facture jamais établie. Le problème n'est pas de la produire, c'est qu'elle n'est jamais au même endroit au même moment."
         className="max-w-3xl"
       />
 
-      <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+      <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
         {artefacts.map((artefact) => (
           <li
             key={artefact.source}

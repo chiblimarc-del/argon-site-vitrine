@@ -87,14 +87,24 @@ const missions: {
   },
 ];
 
-/** Éléments de la barre latérale. L'actif correspond à l'écran affiché. */
+/**
+ * Barre latérale de l'application. L'entrée active correspond à l'écran affiché.
+ *
+ * Elle suit l'ordre de la chaîne de gestion racontée en section 3 :
+ * commercial (Clients, CRM / Devis) → exploitation (Interventions, Planning,
+ * Équipes) → administration (Facturation) → pilotage (Rapports).
+ *
+ * ⚠️ Ne contient QUE des briques validées côté produit. Toute entrée
+ * supplémentaire doit être confirmée avant d'être ajoutée : la barre latérale
+ * est lue comme une liste de fonctionnalités disponibles.
+ */
 const rubriques = [
-  { label: "Tableau de bord", actif: false },
+  { label: "Clients", actif: false },
+  { label: "CRM / Devis", actif: false },
   { label: "Interventions", actif: true },
   { label: "Planning", actif: false },
   { label: "Équipes", actif: false },
-  { label: "Clients", actif: false },
-  { label: "Véhicules", actif: false },
+  { label: "Facturation", actif: false },
   { label: "Rapports", actif: false },
 ];
 
