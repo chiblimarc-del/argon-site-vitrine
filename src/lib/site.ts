@@ -15,6 +15,36 @@ export const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.argon-mobility.com"
 ).replace(/\/$/, "");
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OUVERTURE DU SITE AUX MOTEURS DE RECHERCHE
+ *
+ * Deux questions distinctes, qu'il ne faut surtout pas confondre :
+ *   — QUEL DOMAINE ? → NEXT_PUBLIC_SITE_URL (canonical, sitemap, Open Graph)
+ *   — OUVERT OU FERMÉ ? → NEXT_PUBLIC_SITE_OPEN (ci-dessous)
+ *
+ * Le site est déployé sur son domaine définitif AVANT d'être ouvert au
+ * référencement : les pages légales ne sont pas prêtes, et un site
+ * professionnel indexé sans mentions légales est en infraction (article 6 de
+ * la LCEN). Il faut donc des canonical de production ET une fermeture totale.
+ *
+ * ⚠️ FERMÉ PAR DÉFAUT. L'ouverture est un acte délibéré, jamais un effet de
+ * bord d'un oubli de variable. Un site fermé par erreur se rattrape en un
+ * build ; un site ouvert par erreur laisse des traces dans l'index de Google
+ * pendant des semaines.
+ *
+ * ⚠️ « Fermé » ne veut PAS dire `Disallow: /` dans robots.txt. Interdire
+ * l'exploration n'empêche pas l'indexation : Google peut faire figurer dans
+ * ses résultats une URL qu'il n'a jamais lue, si elle lui parvient autrement
+ * (un lien, un partage, un referrer). Et comme il n'a pas le droit de lire la
+ * page, il n'y verra jamais l'ordre de ne pas l'indexer. On fait donc
+ * l'inverse : on AUTORISE l'exploration, et chaque réponse porte un `noindex`
+ * que le robot est obligé de lire. C'est la méthode recommandée par Google
+ * pour tenir une page hors de l'index.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+export const siteOuvertAuxMoteurs = process.env.NEXT_PUBLIC_SITE_OPEN === "true";
+
 export const site = {
   name: "Argon",
   /** Nom légal / raison sociale. À compléter quand la société sera immatriculée. */

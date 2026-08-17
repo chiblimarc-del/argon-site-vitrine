@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { site, siteUrl, absoluteUrl } from "@/lib/site";
+import { site, siteUrl, absoluteUrl, siteOuvertAuxMoteurs } from "@/lib/site";
 import { getRoute, breadcrumbsFor } from "@/lib/routes";
 
 /**
@@ -20,13 +20,22 @@ export function metadataFor(path: string): Metadata {
     description: route.description,
     alternates: { canonical: url },
     /**
-     * Une page peut exister sur le disque sans être publiée au registre : Next
-     * sert la route quoi qu'il arrive. Sans ce garde-fou, une page construite
-     * mais non validée resterait indexable si Google la découvrait autrement
-     * que par le sitemap. `published: false` implique donc `noindex`.
+     * Trois conditions cumulatives pour qu'une page soit indexable.
+     *
+     * 1. `siteOuvertAuxMoteurs` — tant que le site est en pré-lancement,
+     *    AUCUNE page ne l'est, quelle que soit sa déclaration au registre.
+     *    C'est la seconde barrière, indépendante de l'en-tête HTTP posée par
+     *    le .htaccess : deux mécanismes distincts doivent tomber en même temps
+     *    pour qu'une page fuie dans l'index.
+     * 2. `indexable` — la page vise-t-elle une requête ? (la confirmation
+     *    d'envoi, par exemple, n'a aucune valeur de recherche)
+     * 3. `published` — une page peut exister sur le disque sans être publiée
+     *    au registre : Next sert la route quoi qu'il arrive. Sans ce garde-fou,
+     *    une page construite mais non validée resterait indexable si Google la
+     *    découvrait autrement que par le sitemap.
      */
     robots:
-      route.indexable && route.published
+      siteOuvertAuxMoteurs && route.indexable && route.published
         ? { index: true, follow: true }
         : { index: false, follow: true },
     openGraph: {
