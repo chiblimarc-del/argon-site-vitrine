@@ -158,7 +158,7 @@ const solutions: RouteDef[] = [
       "cycle de vie intervention",
     ],
     priority: "P0",
-    published: false,
+    published: true,
     indexable: true,
     parent: "/solutions",
     sitemapPriority: 0.9,

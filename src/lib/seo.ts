@@ -105,10 +105,19 @@ export function webPageSchema(path: string) {
   };
 }
 
-/** BreadcrumbList — dérivé du registre, jamais écrit à la main. */
+/**
+ * BreadcrumbList — dérivé du registre, jamais écrit à la main.
+ *
+ * Le schéma n'est émis que si TOUTE la chaîne est publiée. Un fil d'Ariane
+ * structuré qui pointe vers une URL en 404 est signalé comme erreur dans la
+ * Search Console, et Google exige une chaîne contiguë : on ne peut pas se
+ * contenter de retirer le maillon manquant. Le fil visible, lui, reste affiché
+ * pour l'utilisateur — voir components/seo/Breadcrumbs.
+ */
 export function breadcrumbSchema(path: string) {
   const trail = breadcrumbsFor(path);
   if (trail.length < 2) return null; // pas de fil d'Ariane sur l'accueil
+  if (trail.some((route) => !route.published)) return null;
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
