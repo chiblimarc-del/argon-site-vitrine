@@ -35,6 +35,7 @@
   /* --- Accents ------------------------------------------------------- */
   --color-accent: #5b5bf5; /* indigo — boutons primaires, liens */
   --color-accent-hover: #6d6dff;
+  --color-accent-mid: #6f8bff; /* bleu — point milieu du dégradé de marque */
   --color-accent-2: #8b5cf6; /* violet — fin de dégradé */
   --color-cyan: #3ec6f5; /* cyan — données, début de dégradé */
   --color-argon: #f2c200; /* jaune identité Argon — usage rare */
