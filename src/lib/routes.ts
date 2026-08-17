@@ -447,6 +447,38 @@ const autres: RouteDef[] = [
     group: "conversion",
   },
   {
+    /**
+     * Page de confirmation après envoi du formulaire.
+     *
+     * ⚠️ CE N'EST PAS UNE 17ᵉ PAGE DU SITE. Elle n'existe que parce que le
+     * site est statique : sans processus serveur, le seul moyen d'afficher
+     * une confirmation qui fonctionne AUSSI sans JavaScript est de rediriger
+     * vers un fichier HTML déjà construit.
+     *
+     * `indexable: false` la retire du sitemap et lui applique `noindex` : elle
+     * n'a aucune valeur de recherche, et une confirmation indexée enverrait
+     * des visiteurs sur un remerciement pour une demande qu'ils n'ont jamais
+     * faite. Elle reste `published: true` car le fichier, lui, existe bien.
+     * Aucune page ne pointe vers elle : on n'y arrive qu'en postant le
+     * formulaire.
+     */
+    path: "/demande-envoyee",
+    label: "Demande envoyée",
+    title: "Demande envoyée | Argon",
+    description:
+      "Votre demande de démonstration a bien été transmise à l'équipe Argon.",
+    h1: "Votre demande est bien partie.",
+    keyword: null,
+    secondaryKeywords: [],
+    priority: "P3",
+    published: true,
+    indexable: false,
+    parent: "/",
+    sitemapPriority: 0.1,
+    changeFrequency: "yearly",
+    group: "systeme",
+  },
+  {
     path: "/a-propos",
     label: "À propos",
     title: "À propos d'Argon",

@@ -1,18 +1,19 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { useFormStatus } from "react-dom";
-import { demanderUneDemo } from "@/app/demander-une-demo/actions";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  etatInitial,
   optionsSecteur,
+  ENDPOINT_DEMANDE,
   CHAMP_PIEGE,
   CHAMP_INSTANT,
+  MOTIF_EMAIL,
+  MOTIF_TELEPHONE,
   type ChampDemo,
-  type EtatFormulaire,
 } from "@/lib/demo-request";
 import { NavLink } from "@/components/navigation/NavLink";
 import { ArrowRight } from "@/components/ui/Button";
+import { site } from "@/lib/site";
 
 /**
  * Formulaire de demande de démonstration.
@@ -20,9 +21,28 @@ import { ArrowRight } from "@/components/ui/Button";
  * Cinq champs seulement : la qualification se fait au téléphone, pas dans un
  * formulaire. Chaque champ supplémentaire coûte des demandes.
  *
- * Fonctionne sans JavaScript : `<form action={action}>` poste vers l'action
- * serveur, qui renvoie la page rendue avec son état. Le JavaScript n'ajoute que
- * l'état « envoi en cours » et l'horodatage anti-robot.
+ * ─────────────────────────────────────────────────────────────────────────
+ * POURQUOI UN POST CLASSIQUE ET NON UNE ACTION SERVEUR
+ *
+ * Le site est déployé en export statique sur un hébergement Apache : il n'y a
+ * aucun processus Node en production, donc aucune action serveur possible.
+ * Le formulaire poste vers `api/demande.php`, qui refait exactement les mêmes
+ * contrôles (validation, piège, délai) avant d'appeler Mailjet, puis :
+ *   — succès  → redirige vers /demande-envoyee, un fichier HTML déjà construit ;
+ *   — échec   → revient ici avec `?etat=erreur`.
+ *
+ * ⚠️ LE FORMULAIRE LUI-MÊME NE DOIT JAMAIS DÉPENDRE DE `useSearchParams`.
+ * Une lecture de l'URL au niveau du <form> oblige Next à mettre toute la
+ * branche derrière <Suspense> : le HTML exporté ne contient alors que le
+ * repli, et le formulaire n'existe plus ni pour un visiteur sans JavaScript,
+ * ni pour un robot d'indexation. Seule la bannière d'erreur — un détail
+ * accessoire — lit l'URL, et elle est isolée dans sa propre frontière.
+ *
+ * ⚠️ Le serveur reste la seule autorité : les contraintes HTML ci-dessous
+ * (`required`, `pattern`) sont un confort de saisie, pas une sécurité. Elles
+ * reprennent volontairement les mêmes règles que PHP pour qu'un visiteur
+ * légitime ne se fasse jamais refuser après un aller-retour réseau.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 
 const champs: {
@@ -31,8 +51,15 @@ const champs: {
   type: string;
   autoComplete: string;
   placeholder?: string;
+  motif?: string;
+  titre?: string;
 }[] = [
-  { nom: "nom", libelle: "Nom", type: "text", autoComplete: "name" },
+  {
+    nom: "nom",
+    libelle: "Nom",
+    type: "text",
+    autoComplete: "name",
+  },
   {
     nom: "entreprise",
     libelle: "Entreprise",
@@ -45,6 +72,8 @@ const champs: {
     type: "email",
     autoComplete: "email",
     placeholder: "vous@votre-entreprise.fr",
+    motif: MOTIF_EMAIL,
+    titre: "Indiquez une adresse e-mail valide.",
   },
   {
     nom: "telephone",
@@ -52,48 +81,45 @@ const champs: {
     type: "tel",
     autoComplete: "tel",
     placeholder: "06 12 34 56 78",
+    motif: MOTIF_TELEPHONE,
+    titre: "Indiquez un numéro où vous joindre.",
   },
 ];
 
 export function DemoForm() {
-  const [etat, action] = useActionState<EtatFormulaire, FormData>(
-    demanderUneDemo,
-    etatInitial,
-  );
-
-  if (etat.statut === "succes") return <Confirmation />;
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   return (
-    <form action={action} noValidate className="card p-6 sm:p-8">
+    <form
+      method="post"
+      action={ENDPOINT_DEMANDE}
+      onSubmit={() => setEnvoiEnCours(true)}
+      className="card p-6 sm:p-8"
+    >
       <HorodatageAntiRobot />
       <ChampPiege />
 
-      {etat.message ? (
-        <p
-          role="alert"
-          className="mb-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-ink"
-        >
-          {etat.message}
-        </p>
-      ) : null}
+      {/* Frontière volontairement réduite à la bannière : voir l'en-tête. */}
+      <Suspense fallback={null}>
+        <MessageErreur />
+      </Suspense>
 
       <div className="space-y-5">
         {champs.map((champ) => (
-          <Champ
-            key={champ.nom}
-            {...champ}
-            erreur={etat.erreurs?.[champ.nom]}
-            defaut={etat.valeurs?.[champ.nom]}
-          />
+          <Champ key={champ.nom} {...champ} />
         ))}
 
-        <SelecteurSecteur
-          erreur={etat.erreurs?.secteur}
-          defaut={etat.valeurs?.secteur}
-        />
+        <SelecteurSecteur />
       </div>
 
-      <BoutonEnvoi />
+      <button
+        type="submit"
+        disabled={envoiEnCours}
+        className="mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-7 text-[15px] font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-60"
+      >
+        {envoiEnCours ? "Envoi en cours…" : "Demander ma démo"}
+        {envoiEnCours ? null : <ArrowRight />}
+      </button>
 
       {/*
         Mention RGPD. La base légale est l'exécution de mesures précontractuelles
@@ -115,11 +141,49 @@ export function DemoForm() {
 }
 
 /* ==========================================================================
+   MESSAGE D'ERREUR
+   ========================================================================== */
+
+/**
+ * Un envoi refusé ne doit jamais être un cul-de-sac : le visiteur a pris la
+ * peine de remplir cinq champs. On lui donne immédiatement une porte de sortie
+ * réelle — l'adresse de contact —, sans jamais révéler la cause technique.
+ *
+ * Sans JavaScript, la bannière ne s'affiche pas : le visiteur retrouve
+ * simplement le formulaire, ce qui reste la bonne invitation après un échec.
+ * La confirmation de succès, elle, ne dépend d'aucun script — c'est une page
+ * à part entière (/demande-envoyee).
+ */
+function MessageErreur() {
+  if (useSearchParams().get("etat") !== "erreur") return null;
+
+  return (
+    <div
+      role="alert"
+      className="mb-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3"
+    >
+      <p className="text-sm text-ink">
+        L&apos;envoi n&apos;a pas abouti. Réessayez dans un instant
+        {site.email ? (
+          <>
+            , ou écrivez-nous directement à{" "}
+            <a href={`mailto:${site.email}`} className="underline">
+              {site.email}
+            </a>
+          </>
+        ) : null}
+        .
+      </p>
+    </div>
+  );
+}
+
+/* ==========================================================================
    CHAMPS
    ========================================================================== */
 
 const classesChamp =
-  "w-full rounded-lg border bg-surface-2 px-3.5 py-2.5 text-[15px] text-ink " +
+  "w-full rounded-lg border border-line bg-surface-2 px-3.5 py-2.5 text-[15px] text-ink " +
   "placeholder:text-ink-muted transition-colors " +
   "focus:border-accent-text focus:outline-none";
 
@@ -129,18 +193,17 @@ function Champ({
   type,
   autoComplete,
   placeholder,
-  erreur,
-  defaut,
+  motif,
+  titre,
 }: {
   nom: ChampDemo;
   libelle: string;
   type: string;
   autoComplete: string;
   placeholder?: string;
-  erreur?: string;
-  defaut?: string;
+  motif?: string;
+  titre?: string;
 }) {
-  const idErreur = `${nom}-erreur`;
   return (
     <div>
       <label htmlFor={nom} className="mb-2 block text-[13px] font-medium text-ink">
@@ -152,28 +215,16 @@ function Champ({
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        defaultValue={defaut}
+        pattern={motif}
+        title={titre}
         required
-        aria-invalid={erreur ? true : undefined}
-        aria-describedby={erreur ? idErreur : undefined}
-        className={`${classesChamp} ${erreur ? "border-danger" : "border-line"}`}
+        className={classesChamp}
       />
-      {erreur ? (
-        <p id={idErreur} className="mt-1.5 text-[12.5px] text-danger">
-          {erreur}
-        </p>
-      ) : null}
     </div>
   );
 }
 
-function SelecteurSecteur({
-  erreur,
-  defaut,
-}: {
-  erreur?: string;
-  defaut?: string;
-}) {
+function SelecteurSecteur() {
   return (
     <div>
       <label
@@ -183,18 +234,11 @@ function SelecteurSecteur({
         Votre activité
       </label>
       <select
-        // `defaultValue` ne s'applique qu'au montage : sans cette clé, le
-        // sélecteur repartait vide après un renvoi en erreur, alors que les
-        // champs texte conservaient leur saisie. La clé force le remontage
-        // quand le serveur renvoie une valeur.
-        key={defaut ?? "vide"}
         id="secteur"
         name="secteur"
-        defaultValue={defaut ?? ""}
+        defaultValue=""
         required
-        aria-invalid={erreur ? true : undefined}
-        aria-describedby={erreur ? "secteur-erreur" : undefined}
-        className={`${classesChamp} ${erreur ? "border-danger" : "border-line"}`}
+        className={classesChamp}
       >
         <option value="" disabled>
           Choisissez…
@@ -205,11 +249,6 @@ function SelecteurSecteur({
           </option>
         ))}
       </select>
-      {erreur ? (
-        <p id="secteur-erreur" className="mt-1.5 text-[12.5px] text-danger">
-          {erreur}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -241,68 +280,25 @@ function ChampPiege() {
 }
 
 /**
- * Horodatage d'ouverture, posé après le montage. Il n'est donc jamais rendu
- * côté serveur : la page reste entièrement statique et cacheable.
- * Absent sans JavaScript — dans ce cas le champ piège fait seul le travail.
+ * Horodatage d'ouverture.
+ *
+ * ⚠️ Il est posé par le navigateur, jamais au rendu : la page est un fichier
+ * HTML figé au moment du build. Une valeur calculée au rendu serait gravée
+ * dans le fichier livré, et le délai serait toujours considéré comme écoulé —
+ * la barrière anti-robot ne servirait plus à rien.
+ *
+ * Absent si le visiteur navigue sans JavaScript : dans ce cas le champ piège
+ * fait seul le travail, et PHP ne bloque pas sur un horodatage vide.
  */
 function HorodatageAntiRobot() {
-  const ref = useRef<HTMLInputElement>(null);
-
-  // On écrit directement dans le DOM plutôt que de passer par un état : le
-  // champ n'a pas besoin d'être contrôlé, et cela évite un rendu inutile.
-  // Surtout, `Date.now()` ne doit PAS être évalué au rendu — il serait figé
-  // dans le HTML statique au moment du build, et le délai serait toujours
-  // considéré comme écoulé.
-  useEffect(() => {
-    if (ref.current) ref.current.value = String(Date.now());
-  }, []);
-
-  return <input ref={ref} type="hidden" name={CHAMP_INSTANT} defaultValue="" />;
-}
-
-/* ==========================================================================
-   ENVOI ET CONFIRMATION
-   ========================================================================== */
-
-function BoutonEnvoi() {
-  const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-7 text-[15px] font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-60"
-    >
-      {pending ? "Envoi en cours…" : "Demander ma démo"}
-      {pending ? null : <ArrowRight />}
-    </button>
-  );
-}
-
-/** Confirmation sur place : le formulaire est remplacé, sans changer de page. */
-function Confirmation() {
-  return (
-    <div role="status" className="card p-8 text-center sm:p-10">
-      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ok/12">
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 text-ok">
-          <path
-            d="m5 12.5 4.5 4.5L19 7.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-
-      <h2 className="mt-6 text-xl font-semibold text-ink">
-        Votre demande est bien partie.
-      </h2>
-
-      <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-soft">
-        Nous revenons vers vous par téléphone ou par e-mail pour convenir d&apos;un
-        créneau et préparer la démonstration sur vos propres cas.
-      </p>
-    </div>
+    <input
+      type="hidden"
+      name={CHAMP_INSTANT}
+      defaultValue=""
+      ref={(champ) => {
+        if (champ) champ.value = String(Date.now());
+      }}
+    />
   );
 }

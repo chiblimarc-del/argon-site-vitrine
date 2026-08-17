@@ -2,14 +2,20 @@
   "name": "argon-site",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.6"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npx --yes serve dist -l 3000",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "seo:check": "node --experimental-strip-types scripts/seo-check.ts",
-    "check": "npm run typecheck && npm run lint && npm run seo:check"
+    "check": "npm run typecheck && npm run lint && npm run seo:check",
+    "deploy:pack": "node --experimental-strip-types scripts/prepare-deploy.ts",
+    "deploy:build": "node --experimental-strip-types scripts/deploy.ts",
+    "deploy:ouvrir": "node --experimental-strip-types scripts/deploy.ts --ouvrir"
   },
   "dependencies": {
     "next": "16.3.1",

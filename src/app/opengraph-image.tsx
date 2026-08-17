@@ -1,6 +1,14 @@
 import { ImageResponse } from "next/og";
 
 /**
+ * ⚠️ `dynamic = "force-static"` est OBLIGATOIRE avec `output: "export"` :
+ * sans lui, le build échoue sur cette route. Il déclare explicitement que le
+ * fichier est calculé une fois au build, jamais à la requête.
+ */
+export const dynamic = "force-static";
+
+
+/**
  * Image Open Graph par défaut du site (partages LinkedIn, X, Slack…).
  * Générée par code plutôt que stockée en PNG : pas de binaire à maintenir,
  * et elle reste alignée sur la charte si les couleurs évoluent.

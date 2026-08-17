@@ -3,6 +3,14 @@ import { publishedRoutes } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/site";
 
 /**
+ * ⚠️ `dynamic = "force-static"` est OBLIGATOIRE avec `output: "export"` :
+ * sans lui, le build échoue sur cette route. Il déclare explicitement que le
+ * fichier est calculé une fois au build, jamais à la requête.
+ */
+export const dynamic = "force-static";
+
+
+/**
  * Sitemap généré depuis le registre de routes.
  *
  * Seules les routes `published: true` ET `indexable: true` y figurent :

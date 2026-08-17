@@ -21,7 +21,11 @@ const eslintConfig = defineConfig([
   },
   globalIgnores([
     ".next/**",
+    // Sorties de build : `out/` est l'export statique brut, `dist/` le paquet
+    // assemblé pour OVH. Les linter sur du JS minifié produit par Turbopack
+    // n'a aucun sens et noie les vraies erreurs sous des milliers d'alertes.
     "out/**",
+    "dist/**",
     "build/**",
     "next-env.d.ts",
   ]),

@@ -1,6 +1,33 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /**
+   * ═══════════════════════════════════════════════════════════════════════
+   * EXPORT STATIQUE — décision de déploiement, août 2026
+   *
+   * `next build` produit un dossier `out/` de HTML, CSS et JS purs, déposé
+   * tel quel sur l'hébergement mutualisé OVH. Aucun processus Node ne tourne
+   * en production.
+   *
+   * Pourquoi : l'hébergement mutualisé OVH classique n'exécute que PHP, et la
+   * version de Node.js de l'offre Cloud Web n'est pas documentée (les guides
+   * officiels citent encore Node 8, quand Next 16 exige Node ≥ 20.9). Or les
+   * 16 pages étaient déjà toutes pré-générées : le seul élément qui réclamait
+   * un serveur était le formulaire, désormais traité par `api/demande.php`.
+   *
+   * ⚠️ CE QUE CELA INTERDIT DÉFINITIVEMENT dans ce projet :
+   *   — les actions serveur (`"use server"`) ;
+   *   — les Route Handlers autres que GET statique ;
+   *   — `redirects()` et `headers()` ci-dessous, qui ne sont pas appliqués en
+   *     export : ils ont été transposés dans `deploy/.htaccess`, qui est
+   *     désormais leur unique source. Toute règle ajoutée ici serait
+   *     silencieusement ignorée en production.
+   *   — `next/image` avec optimisation à la demande (le site n'utilise
+   *     aucune image bitmap, le point est théorique).
+   * ═══════════════════════════════════════════════════════════════════════
+   */
+  output: "export",
+
   // Empêche un build de partir en production avec des erreurs de types
   // silencieusement ignorées. (L'option `eslint` a été retirée de la config
   // Next 16 : le lint passe désormais par `npm run lint` / `npm run check`.)
@@ -8,47 +35,12 @@ const nextConfig: NextConfig = {
 
   poweredByHeader: false,
 
-  // URLs avec slash final => 301 vers la version sans slash.
-  // Évite le contenu dupliqué (/solutions/ et /solutions).
+  /**
+   * URLs sans slash final, identiques aux balises canonical déjà en place.
+   * L'export produit alors `contact.html` plutôt que `contact/index.html` ;
+   * c'est `.htaccess` qui sert le fichier sur l'URL sans extension.
+   */
   trailingSlash: false,
-
-  async redirects() {
-    return [
-      /**
-       * Cahier V2 §25 — table de redirections.
-       *
-       * Seule cette entrée est active : « intervention terrain » a été retiré
-       * des secteurs (ce n'est pas un métier) et son intention est portée par
-       * /solutions/gestion-interventions.
-       *
-       * Les autres lignes de la table V2 (geolocalisation, gestion-techniciens,
-       * transport) ne sont PAS déclarées : ces URLs n'ont jamais été publiées
-       * ni indexées, créer une redirection pour elles serait du bruit inutile.
-       * À réactiver uniquement si Search Console remonte ces URLs.
-       */
-      {
-        // `statusCode: 301` et non `permanent: true` : ce dernier émet un 308.
-        // Google traite les deux à l'identique, mais plusieurs outils d'audit
-        // et de vieux crawlers ne gèrent que le 301.
-        source: "/secteurs/intervention-terrain",
-        destination: "/solutions/gestion-interventions",
-        statusCode: 301,
-      },
-    ];
-  },
-
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;

@@ -54,7 +54,10 @@ for (const route of routes) {
     errors.push(
       `${at} description de ${route.description.length} caractères (max ${DESCRIPTION_MAX}).`,
     );
-  } else if (route.description.length < 70) {
+  } else if (route.description.length < 70 && route.indexable) {
+    // Seulement pour les pages indexables : sur une page en noindex, la
+    // description n'est jamais affichée dans un résultat de recherche, il n'y
+    // a donc aucune « occasion manquée » à signaler.
     warnings.push(
       `${at} description courte (${route.description.length} caractères) — occasion manquée.`,
     );
@@ -91,9 +94,23 @@ for (const route of routes) {
 
 const published = routes.filter((r) => r.published);
 
+/**
+ * Une route peut être construite sans viser le référencement : la page de
+ * confirmation d'envoi existe bien, mais elle est en `noindex` et absente du
+ * sitemap. Les compter ensemble ferait dériver le décompte du site — c'est le
+ * nombre de pages INDEXABLES qui doit rester stable et vérifiable.
+ */
+const indexed = published.filter((r) => r.indexable);
+const technical = published.filter((r) => !r.indexable);
+
 console.log("— Vérification de la matrice SEO Argon —\n");
 console.log(`Routes déclarées   : ${routes.length}`);
-console.log(`Routes publiées    : ${published.length} (${published.map((r) => r.path).join(", ")})`);
+console.log(`Pages indexables   : ${indexed.length} (${indexed.map((r) => r.path).join(", ")})`);
+if (technical.length > 0) {
+  console.log(
+    `Pages techniques   : ${technical.length} (${technical.map((r) => r.path).join(", ")}) — noindex, hors sitemap`,
+  );
+}
 console.log(`Intentions uniques : ${seenKeywords.size}\n`);
 
 for (const warning of warnings) console.log(`AVERTISSEMENT  ${warning}`);

@@ -1,0 +1,84 @@
+# =============================================================================
+# Argon — site vitrine statique sur hébergement OVH (Apache)
+# À déposer à la racine du dossier www/, à côté de index.html.
+# =============================================================================
+
+# --- 1. HTTPS + www ----------------------------------------------------------
+# Une seule URL canonique : https://www.argon-mobility.com
+# Toute autre forme (http, sans www) redirige en 301. Sans cela, Google voit
+# jusqu'à quatre versions du même site.
+RewriteEngine On
+
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://www.argon-mobility.com/$1 [R=301,L]
+
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteRule ^(.*)$ https://www.argon-mobility.com/$1 [R=301,L]
+
+# --- 2. URLs sans extension --------------------------------------------------
+# Next.js exporte « contact.html » ET un dossier « contact/ » qui ne contient
+# que les charges utiles de navigation. Sans DirectorySlash Off, Apache
+# redirigerait /contact vers /contact/ — un dossier sans index, donc une erreur.
+# On sert donc explicitement le .html quand il existe, avant tout traitement
+# de répertoire. Les URLs restent sans slash final, exactement comme les
+# balises canonical du site.
+DirectorySlash Off
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# Une URL qui se termine par un slash redirige vers la version sans slash.
+RewriteCond %{REQUEST_URI} ^(.+)/$
+RewriteRule ^(.+)/$ /$1 [R=301,L]
+
+# --- 3. Redirection éditoriale (table du cahier V2 §25) ----------------------
+# « intervention terrain » n'est pas un métier : l'intention est portée par
+# /solutions/gestion-interventions.
+Redirect 301 /secteurs/intervention-terrain /solutions/gestion-interventions
+
+# --- 4. Page 404 -------------------------------------------------------------
+ErrorDocument 404 /404.html
+
+# --- 5. Ouverture aux moteurs de recherche -----------------------------------
+# ⚠️ NE PAS MODIFIER CE BLOC À LA MAIN.
+# Il est réécrit automatiquement par `npm run deploy:pack` à partir de la
+# variable NEXT_PUBLIC_SITE_OPEN, pour qu'il soit IMPOSSIBLE que l'en-tête HTTP
+# et les balises meta des pages se contredisent. Le contenu ci-dessous n'est
+# qu'un état par défaut, volontairement fermé.
+# @OUVERTURE@
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+# @FIN-OUVERTURE@
+
+# --- 6. En-têtes de sécurité -------------------------------------------------
+# Reprend exactement ceux que servait next.config.ts.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # Les fichiers versionnés par Next (hash dans le nom) sont immuables.
+  <FilesMatch "\.(js|css|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Le HTML, lui, doit être revalidé à chaque visite.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# --- 7. Compression ----------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml application/xml
+</IfModule>
+
+# --- 8. Ne pas exposer les charges utiles internes ---------------------------
+# Les fichiers __next.*.txt servent la navigation côté client ; ils ne doivent
+# ni être indexés, ni apparaître dans les résultats de recherche.
+<FilesMatch "^__next\..*\.txt$">
+  Header set X-Robots-Tag "noindex"
+</FilesMatch>

@@ -1,0 +1,13 @@
+# Le dossier api/ n'expose qu'un seul point d'entrée : demande.php.
+# Tout le reste — et en particulier config.php, qui contient les clés Mailjet —
+# est inaccessible depuis le web.
+
+<FilesMatch "^(?!demande\.php$).*$">
+  Require all denied
+</FilesMatch>
+
+# Ceinture et bretelles : interdiction explicite des fichiers de configuration,
+# au cas où le module de réécriture ci-dessus serait indisponible.
+<FilesMatch "^config.*\.php$">
+  Require all denied
+</FilesMatch>
