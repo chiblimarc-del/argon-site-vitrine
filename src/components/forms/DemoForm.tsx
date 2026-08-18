@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   optionsSecteur,
@@ -89,14 +90,40 @@ const champs: {
 export function DemoForm() {
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  /**
+   * Barrière anti-robot : la DURÉE de remplissage, mesurée ici, dans le
+   * navigateur, et transmise au serveur en millisecondes.
+   *
+   * ⚠️ Ne jamais transmettre un horodatage que le serveur comparerait à sa
+   * propre horloge. Les deux horloges ne sont pas synchronisées : en recette,
+   * un poste en avance de six secondes produisait une durée négative, donc
+   * « inférieure au seuil », et le visiteur était traité comme un robot — sa
+   * demande abandonnée en silence, la page de confirmation affichée quand
+   * même. Une seule horloge doit servir, du début à la fin de la mesure.
+   *
+   * `performance.now()` est monotone : ni le fuseau, ni une mise à l'heure
+   * réseau, ni un changement d'heure ne peuvent la faire reculer.
+   */
+  const ouverture = useRef<number | null>(null);
+  const champDuree = useRef<HTMLInputElement | null>(null);
+
   return (
     <form
       method="post"
       action={ENDPOINT_DEMANDE}
-      onSubmit={() => setEnvoiEnCours(true)}
+      onSubmit={() => {
+        // Écrit juste avant l'envoi : le navigateur construit la charge utile
+        // après l'exécution des gestionnaires de soumission.
+        if (champDuree.current && ouverture.current !== null) {
+          champDuree.current.value = String(
+            Math.round(performance.now() - ouverture.current),
+          );
+        }
+        setEnvoiEnCours(true);
+      }}
       className="card p-6 sm:p-8"
     >
-      <HorodatageAntiRobot />
+      <DureeAntiRobot champ={champDuree} ouverture={ouverture} />
       <ChampPiege />
 
       {/* Frontière volontairement réduite à la bannière : voir l'en-tête. */}
@@ -280,24 +307,35 @@ function ChampPiege() {
 }
 
 /**
- * Horodatage d'ouverture.
+ * Champ portant la durée de remplissage, en millisecondes.
  *
- * ⚠️ Il est posé par le navigateur, jamais au rendu : la page est un fichier
- * HTML figé au moment du build. Une valeur calculée au rendu serait gravée
- * dans le fichier livré, et le délai serait toujours considéré comme écoulé —
- * la barrière anti-robot ne servirait plus à rien.
+ * ⚠️ L'instant d'ouverture est relevé par le navigateur, jamais au rendu : la
+ * page est un fichier HTML figé au moment du build. Une valeur calculée au
+ * rendu serait gravée dans le fichier livré, et le délai serait toujours
+ * considéré comme écoulé — la barrière ne servirait plus à rien.
  *
- * Absent si le visiteur navigue sans JavaScript : dans ce cas le champ piège
- * fait seul le travail, et PHP ne bloque pas sur un horodatage vide.
+ * Le champ part vide si le visiteur navigue sans JavaScript : PHP ne bloque
+ * alors pas, et le champ piège fait seul le travail.
  */
-function HorodatageAntiRobot() {
+function DureeAntiRobot({
+  champ,
+  ouverture,
+}: {
+  champ: RefObject<HTMLInputElement | null>;
+  ouverture: RefObject<number | null>;
+}) {
   return (
     <input
       type="hidden"
       name={CHAMP_INSTANT}
       defaultValue=""
-      ref={(champ) => {
-        if (champ) champ.value = String(Date.now());
+      ref={(element) => {
+        champ.current = element;
+        // Premier montage seulement : un remontage ne doit pas remettre le
+        // chronomètre à zéro, sinon le visiteur repasserait sous le seuil.
+        if (element && ouverture.current === null) {
+          ouverture.current = performance.now();
+        }
       }}
     />
   );

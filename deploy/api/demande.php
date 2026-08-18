@@ -109,7 +109,7 @@ if ($manquants !== []) {
    -------------------------------------------------------------------------- */
 
 const CHAMP_PIEGE   = 'site_web_entreprise';
-const CHAMP_INSTANT = 'ouverture';
+const CHAMP_INSTANT = 'ouverture'; // contient une DUREE en ms, pas un instant
 const DELAI_MINIMUM_MS = 3000; // Un humain met plus de 3 s à remplir 5 champs.
 
 function valeur(string $nom): string
@@ -122,10 +122,32 @@ if (valeur(CHAMP_PIEGE) !== '') {
     redirige('succes');
 }
 
-// 2. Délai de saisie. Absent si le visiteur navigue sans JavaScript : dans ce
-//    cas on ne bloque pas, le champ piège suffit.
-$ouverture = (float) valeur(CHAMP_INSTANT);
-if ($ouverture > 0 && (microtime(true) * 1000 - $ouverture) < DELAI_MINIMUM_MS) {
+// 2. Durée de remplissage, MESURÉE PAR LE NAVIGATEUR et transmise en
+//    millisecondes. Absente si le visiteur navigue sans JavaScript : on ne
+//    bloque alors pas, le champ piège suffit.
+//
+//    ⚠️ Ne JAMAIS revenir à un horodatage comparé à l'heure du serveur. Les
+//    deux horloges ne sont pas synchronisées : en recette, un écart de six
+//    secondes a produit une durée négative, donc « inférieure au seuil », et
+//    un visiteur légitime a été traité comme un robot — demande abandonnée en
+//    silence, page de confirmation affichée. Le serveur ne doit lire qu'une
+//    DURÉE, sans jamais consulter sa propre horloge.
+//
+//    Une valeur aberrante (négative, ou si grande qu'elle trahit un ancien
+//    horodatage envoyé par une page en cache) n'est pas jugeable : on laisse
+//    passer plutôt que de risquer de perdre une vraie demande.
+$delai = (float) valeur(CHAMP_INSTANT);
+
+if ($delai < 0 || $delai > 86400000) {
+    error_log(
+        '[demande-demo] Duree de remplissage aberrante (' . $delai . ' ms) : '
+        . 'controle du delai ignore, le champ piege reste actif.',
+    );
+} elseif ($delai > 0 && $delai < DELAI_MINIMUM_MS) {
+    error_log(
+        '[demande-demo] Anti-robot : formulaire valide en ' . (int) $delai . ' ms '
+        . '(minimum ' . DELAI_MINIMUM_MS . ' ms). Aucun envoi.',
+    );
     redirige('succes');
 }
 
