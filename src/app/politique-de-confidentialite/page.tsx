@@ -98,7 +98,7 @@ const duree = [
 ];
 
 const destinataires = [
-  "Vos données sont traitées par Vertus Consulting. Deux prestataires interviennent techniquement dans la chaîne, chacun pour la seule opération qui le concerne :",
+  "Vos données sont traitées par Vertus Consulting. Trois prestataires interviennent techniquement dans la chaîne, chacun pour la seule opération qui le concerne :",
 ];
 
 const sousTraitants = [
