@@ -1,0 +1,195 @@
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  LegalHero,
+  LegalCorps,
+  LegalBloc,
+  LegalIdentite,
+} from "@/components/sections/legal/LegalLayout";
+import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+
+/**
+ * POLITIQUE DE CONFIDENTIALITÉ.
+ *
+ * ⚠️ RÈGLE DE RÉDACTION : cette page décrit ce que le site fait RÉELLEMENT,
+ * jamais ce qu'un site de ce type fait d'habitude. Chaque affirmation ci-dessous
+ * a été vérifiée sur la production le 18/08/2026 :
+ *   — aucun cookie, aucun localStorage, aucun sessionStorage, aucune base
+ *     IndexedDB, aucun service worker ;
+ *   — aucune requête vers un domaine tiers, donc aucune mesure d'audience ;
+ *   — un seul formulaire, cinq champs, transmis par Mailjet.
+ *
+ * Une politique qui promet moins que la réalité est un mensonge ; une politique
+ * qui promet plus est une faute. Si un traceur, une mesure d'audience ou un
+ * champ supplémentaire apparaît un jour, CETTE PAGE se met à jour dans le même
+ * commit — pas plus tard.
+ *
+ * ⚠️ POINT OUVERT — BASE LÉGALE, À FAIRE CONFIRMER PAR UN JURISTE
+ *
+ * L'article 13.1.c du RGPD impose d'indiquer la base juridique du traitement.
+ * Deux qualifications sont plausibles pour ce formulaire, et le choix entre
+ * elles n'appartient pas à celui qui écrit le code :
+ *
+ *   — art. 6.1.b, mesures précontractuelles prises à la demande de la
+ *     personne : c'est le visiteur qui sollicite une démonstration ;
+ *   — art. 6.1.f, intérêt légitime : qualification retenue par beaucoup
+ *     d'éditeurs pour la prospection entre professionnels.
+ *
+ * En attendant cette validation, la page décrit le fondement du traitement
+ * SANS citer d'article — elle dit ce qui déclenche la collecte, ce qui est
+ * exact et vérifiable. La référence devra être ajoutée une fois tranchée :
+ * une politique muette sur ce point reste incomplète au regard de l'article 13.
+ */
+
+const PATH = "/politique-de-confidentialite";
+
+export const metadata = metadataFor(PATH);
+
+const MISE_A_JOUR = "Dernière mise à jour : 18 août 2026.";
+
+const responsable = [
+  { terme: "Responsable du traitement", valeur: "Vertus Consulting" },
+  { terme: "Siège social", valeur: "76 rue Arago, 33300 Bordeaux, France" },
+  { terme: "Immatriculation", valeur: "RCS Bordeaux 913 663 571" },
+  { terme: "Contact pour vos droits", valeur: "info@argon-mobility.com" },
+];
+
+const collecte = [
+  "Un seul formulaire du site collecte des données : la demande de démonstration. Il comporte cinq champs, tous nécessaires pour vous rappeler et préparer l'échange — votre nom, le nom de votre entreprise, votre adresse électronique, votre numéro de téléphone et votre secteur d'activité.",
+  "Aucun autre champ n'est demandé, aucun champ n'est facultatif, et rien n'est collecté à votre insu. Le site ne propose ni compte, ni newsletter, ni espace client.",
+];
+
+const technique = [
+  "Comme tout serveur web, celui qui sert ce site enregistre les requêtes qu'il reçoit : adresse IP, date et heure, page demandée, navigateur utilisé. Ces journaux servent au diagnostic technique et à la sécurité, jamais à la prospection, et ne sont jamais recoupés avec les demandes reçues par le formulaire.",
+  "Ils ne sont pas conservés pour une durée fixe mais bornés en volume : au plus trois fichiers de dix mégaoctets, les entrées les plus anciennes étant écrasées à mesure que de nouvelles arrivent. Leur profondeur d'historique dépend donc du trafic, et reste de l'ordre de quelques semaines.",
+  "Le formulaire mesure par ailleurs la durée de sa saisie et comporte un champ invisible destiné aux robots. Ces deux mesures servent uniquement à écarter les soumissions automatisées ; elles ne sont pas conservées.",
+];
+
+const finalite = [
+  "Vos données servent à répondre à votre demande de démonstration : vous recontacter, préparer la présentation et assurer le suivi de l'échange. Elles ne servent à rien d'autre.",
+  "Le traitement repose entièrement sur la démarche que vous engagez : sans votre demande, aucune de ces données ne serait collectée. Nous ne constituons aucun fichier de prospection à partir d'autres sources.",
+  "Vos données ne sont ni vendues, ni louées, ni cédées, ni utilisées à des fins publicitaires.",
+];
+
+const duree = [
+  "Les demandes de démonstration sont conservées trois ans à compter de notre dernier contact. Passé ce délai, elles sont supprimées.",
+  "Vous pouvez demander leur suppression à tout moment avant ce terme, sans avoir à vous justifier.",
+];
+
+const destinataires = [
+  "Vos données sont traitées par Vertus Consulting. Deux prestataires interviennent techniquement dans la chaîne, chacun pour la seule opération qui le concerne :",
+];
+
+const sousTraitants = [
+  {
+    terme: "OVH SAS",
+    valeur: "Hébergement du site, sur une infrastructure située en France.",
+  },
+  {
+    terme: "Mailjet (groupe Sinch)",
+    valeur:
+      "Acheminement du message issu du formulaire jusqu'à notre boîte de réception.",
+  },
+];
+
+const cookies = [
+  "Ce site ne dépose aucun cookie. Il n'utilise ni mesure d'audience, ni pixel publicitaire, ni bouton de réseau social, ni police de caractères chargée depuis un serveur tiers.",
+  "C'est pour cette raison qu'aucune bannière de consentement ne vous est présentée : il n'y a rien à consentir. Aucune requête n'est émise vers un autre domaine que celui de ce site.",
+];
+
+const droits = [
+  "Vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données, ainsi que d'un droit à la limitation et à l'opposition au traitement.",
+  "Pour les exercer, écrivez à info@argon-mobility.com. Nous répondons dans un délai d'un mois. Aucune pièce d'identité ne vous sera demandée si votre demande provient de l'adresse électronique que vous nous aviez communiquée.",
+  "Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL — 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07 — ou sur cnil.fr.",
+];
+
+const securite = [
+  "Le site est servi exclusivement en HTTPS. Les identifiants nécessaires à l'envoi des messages sont stockés hors de la racine web du serveur, dans un fichier qu'aucune URL ne peut atteindre, et ne figurent dans aucun dépôt de code.",
+  "Aucun système n'est infaillible : si une violation de données vous concernant devait survenir et présenter un risque pour vos droits, vous en seriez informé conformément à l'article 34 du RGPD.",
+];
+
+const modifications = [
+  "Cette politique peut évoluer si les traitements changent. La date de dernière mise à jour figure en haut de cette page ; toute modification de fond y sera reflétée au moment où elle prend effet, et non après.",
+];
+
+export default function PolitiqueConfidentialitePage() {
+  return (
+    <>
+      <Breadcrumbs path={PATH} />
+
+      <LegalHero
+        path={PATH}
+        chapo="Ce site collecte très peu de données, et cette page dit exactement lesquelles, pourquoi, pendant combien de temps, et comment les faire supprimer."
+        miseAJour={MISE_A_JOUR}
+      />
+
+      <LegalCorps>
+        <LegalBloc numero="01" titre="Qui traite vos données">
+          <LegalIdentite entrees={responsable} />
+        </LegalBloc>
+
+        <LegalBloc numero="02" titre="Ce que nous collectons">
+          {collecte.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="03" titre="Données techniques">
+          {technique.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="04" titre="Pourquoi, et sur quelle base">
+          {finalite.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="05" titre="Combien de temps">
+          {duree.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="06" titre="Qui y a accès">
+          {destinataires.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+          <LegalIdentite entrees={sousTraitants} />
+          <p>
+            Aucun transfert de vos données en dehors de l&apos;Union européenne
+            n&apos;est effectué à notre initiative.
+          </p>
+        </LegalBloc>
+
+        <LegalBloc numero="07" titre="Cookies et traceurs : aucun">
+          {cookies.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="08" titre="Vos droits">
+          {droits.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="09" titre="Sécurité">
+          {securite.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+
+        <LegalBloc numero="10" titre="Modifications">
+          {modifications.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
+        </LegalBloc>
+      </LegalCorps>
+
+      <JsonLd data={webPageSchema(PATH)} />
+      <JsonLd data={breadcrumbSchema(PATH)} />
+    </>
+  );
+}

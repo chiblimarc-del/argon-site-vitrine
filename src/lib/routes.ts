@@ -516,11 +516,17 @@ const autres: RouteDef[] = [
 
 /* ==========================================================================
    PAGES LÉGALES
-   Obligatoires en France : mentions légales pour tout site professionnel,
-   politique de confidentialité dès lors que le formulaire de démo collecte
-   des données personnelles (RGPD).
-   Le contenu n'est PAS rédigé ici : il dépend de la forme juridique, du SIREN,
-   de l'hébergeur et des traitements réellement mis en œuvre.
+   Obligatoires en France : mentions légales pour tout site professionnel
+   (art. 6-III LCEN), politique de confidentialité dès lors que le formulaire
+   de démo collecte des données personnelles (RGPD).
+
+   Rédigées et publiées le 18/08/2026, à partir de l'extrait Kbis de la société
+   et des mentions légales de l'hébergeur. Aucune valeur n'y est déduite.
+
+   `indexable: false` : ces pages doivent être ACCESSIBLES, la loi ne demande
+   rien de plus. Les laisser hors de l'index évite qu'elles se présentent en
+   résultat de recherche à la place d'une page de contenu, et les retire du
+   sitemap. Elles restent en `follow` : le maillage interne les traverse.
    ========================================================================== */
 
 const legal: RouteDef[] = [
@@ -534,8 +540,8 @@ const legal: RouteDef[] = [
     keyword: null,
     secondaryKeywords: [],
     priority: "P3",
-    published: false,
-    indexable: true,
+    published: true,
+    indexable: false,
     parent: "/",
     sitemapPriority: 0.1,
     changeFrequency: "yearly",
@@ -551,8 +557,8 @@ const legal: RouteDef[] = [
     keyword: null,
     secondaryKeywords: [],
     priority: "P3",
-    published: false,
-    indexable: true,
+    published: true,
+    indexable: false,
     parent: "/",
     sitemapPriority: 0.1,
     changeFrequency: "yearly",

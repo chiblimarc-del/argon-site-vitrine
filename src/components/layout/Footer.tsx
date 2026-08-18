@@ -79,9 +79,9 @@ export function Footer() {
           {/*
             Pages légales : obligatoires en France (mentions légales pour tout
             site professionnel, politique de confidentialité dès la collecte de
-            données via le formulaire de démo). Elles restent non cliquables
-            tant que leur contenu n'a pas été rédigé — il dépend de la forme
-            juridique, du SIREN et de l'hébergeur, qui ne sont pas connus.
+            données via le formulaire de démo). Publiées le 18/08/2026, donc
+            cliquables — `NavLink` les grisait automatiquement tant que le
+            registre les déclarait `published: false`.
           */}
           <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {legalRoutes.map((route) => (
