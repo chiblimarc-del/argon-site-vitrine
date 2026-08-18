@@ -259,18 +259,41 @@ export default function DevisFacturationPage() {
       <Section className="border-b border-line-soft">
         <div className="max-w-3xl">
           <h2 className="text-2xl font-semibold leading-tight text-ink sm:text-3xl">
-            Relancer un client est une décision, pas un automatisme.
+            Relancer un devis est une décision, pas un automatisme.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-ink-soft">
             Un devis resté sans réponse depuis onze jours apparaît comme tel sur
             la fiche du client. Argon vous le montre —{" "}
             <span className="font-medium text-ink">
-              il ne relance personne à votre place
+              il ne relance aucun devis à votre place
             </span>
             . C&apos;est volontaire : dans une activité où vous connaissez vos
-            clients, le moment et le ton d&apos;une relance valent souvent plus
-            que sa régularité. Ce qui manque rarement, c&apos;est l&apos;envie de
-            relancer ; ce qui manque, c&apos;est de savoir lequel.
+            clients, le moment et le ton d&apos;une relance commerciale valent
+            souvent plus que sa régularité. Ce qui manque rarement, c&apos;est
+            l&apos;envie de relancer ; ce qui manque, c&apos;est de savoir
+            lequel.
+          </p>
+          {/*
+            Le raccord vers l'encaissement, un écran plus haut. Sans lui, la
+            page affirmait « il ne relance personne » à un écran d'une section
+            qui décrit une procédure de relance : deux phrases justes — l'une
+            parle du devis, l'autre de l'impayé — que rien ne distinguait pour
+            le lecteur.
+
+            La phrase ne se contente pas de séparer les deux périmètres : elle
+            nomme ce qu'ils ont en commun. Les séparer aurait suffi à lever
+            l'ambiguïté, mais aurait laissé croire à deux philosophies selon la
+            page. Le principe est le même des deux côtés — l'envoi est une
+            décision —, seul l'outillage diffère.
+          */}
+          <p className="mt-5 text-base leading-relaxed text-ink-soft">
+            Une facture impayée est un autre sujet : elle suit la procédure
+            décrite plus haut, dont les étapes se déverrouillent aux délais que
+            vous avez fixés. Le principe, lui, ne change pas —{" "}
+            <span className="font-medium text-ink">
+              l&apos;envoi reste votre décision
+            </span>
+            .
           </p>
         </div>
       </Section>
