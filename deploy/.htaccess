@@ -85,8 +85,27 @@ ErrorDocument 404 /404.html
 </IfModule>
 
 # --- 8. Ne pas exposer les charges utiles internes ---------------------------
-# Les fichiers __next.*.txt servent la navigation côté client ; ils ne doivent
-# ni être indexés, ni apparaître dans les résultats de recherche.
-<FilesMatch "^__next\..*\.txt$">
-  Header set X-Robots-Tag "noindex"
+# Next produit deux familles de fichiers .txt à côté des pages HTML :
+#   — `__next.*.txt`, charges utiles de navigation côté client ;
+#   — `index.txt`, `contact.txt`, `solutions/gestion-interventions.txt`… qui
+#     contiennent le TEXTE INTÉGRAL de la page correspondante.
+#
+# La règle précédente ne couvrait que la première famille : son motif exigeait
+# un nom commençant par `__next.`. La seconde n'était donc protégée que par
+# l'en-tête global de pré-lancement — celui que `npm run deploy:ouvrir` retire.
+# Le jour de l'ouverture, seize duplicatas en texte brut seraient devenus
+# indexables, en concurrence directe avec les pages elles-mêmes.
+#
+# Constaté en production le 18/08/2026 : `/__next._full.txt` renvoyait deux
+# `noindex` (règle globale + cette règle), `/index.txt` un seul — le global.
+#
+# Le motif couvre désormais tout `.txt`, sauf `robots.txt` : celui-là doit
+# rester lisible sans réserve, c'est le premier fichier que le robot consulte.
+#
+# ⚠️ On pose un `noindex`, on ne BLOQUE PAS l'accès. Ces fichiers servent la
+# navigation côté client : un 403 casserait le passage d'une page à l'autre
+# sans message d'erreur, ne laissant qu'un site qui « rame parfois ». Le but
+# est de les sortir de l'index, pas de les rendre injoignables.
+<FilesMatch "^(?!robots\.txt$).+\.txt$">
+  Header always set X-Robots-Tag "noindex, nofollow"
 </FilesMatch>

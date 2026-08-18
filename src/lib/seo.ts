@@ -45,11 +45,41 @@ export function metadataFor(path: string): Metadata {
       siteName: site.name,
       title: route.title,
       description: route.description,
+      /**
+       * ⚠️ L'image doit être déclarée ICI, explicitement.
+       *
+       * `src/app/opengraph-image.tsx` ne l'a posée que sur l'accueil : dès
+       * qu'une page déclare son propre bloc `openGraph`, celui-ci REMPLACE
+       * celui du layout au lieu de le compléter, et l'image du fichier n'y est
+       * pas réinjectée. Seize pages sur dix-sept annonçaient donc une carte
+       * `summary_large_image` sans image (constaté en production le
+       * 18/08/2026).
+       *
+       * La dégradation n'est pas discrète : une carte « grande image » sans
+       * image s'affiche en bloc de texte nu sur LinkedIn, WhatsApp et Slack —
+       * c'est-à-dire là où les pages solutions et secteurs sont partagées en
+       * prospection.
+       *
+       * L'URL est relative : c'est `metadataBase`, déclaré dans le layout
+       * racine, qui la rend absolue. Une URL relative dans un partage social
+       * ne fonctionne pas.
+       */
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: site.name + " — " + site.description,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: route.title,
       description: route.description,
+      // Même image qu'Open Graph : X ne retombe pas systématiquement sur
+      // `og:image` lorsque `twitter:card` est déclaré.
+      images: ["/opengraph-image"],
     },
   };
 }
