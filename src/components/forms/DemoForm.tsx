@@ -104,8 +104,8 @@ export function DemoForm() {
    * `performance.now()` est monotone : ni le fuseau, ni une mise à l'heure
    * réseau, ni un changement d'heure ne peuvent la faire reculer.
    */
-  const ouverture = useRef<number | null>(null);
-  const champDuree = useRef<HTMLInputElement | null>(null);
+  const ouvertureRef = useRef<number | null>(null);
+  const champDureeRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <form
@@ -114,16 +114,16 @@ export function DemoForm() {
       onSubmit={() => {
         // Écrit juste avant l'envoi : le navigateur construit la charge utile
         // après l'exécution des gestionnaires de soumission.
-        if (champDuree.current && ouverture.current !== null) {
-          champDuree.current.value = String(
-            Math.round(performance.now() - ouverture.current),
+        if (champDureeRef.current && ouvertureRef.current !== null) {
+          champDureeRef.current.value = String(
+            Math.round(performance.now() - ouvertureRef.current),
           );
         }
         setEnvoiEnCours(true);
       }}
       className="card p-6 sm:p-8"
     >
-      <DureeAntiRobot champ={champDuree} ouverture={ouverture} />
+      <DureeAntiRobot champRef={champDureeRef} ouvertureRef={ouvertureRef} />
       <ChampPiege />
 
       {/* Frontière volontairement réduite à la bannière : voir l'en-tête. */}
@@ -318,11 +318,11 @@ function ChampPiege() {
  * alors pas, et le champ piège fait seul le travail.
  */
 function DureeAntiRobot({
-  champ,
-  ouverture,
+  champRef,
+  ouvertureRef,
 }: {
-  champ: RefObject<HTMLInputElement | null>;
-  ouverture: RefObject<number | null>;
+  champRef: RefObject<HTMLInputElement | null>;
+  ouvertureRef: RefObject<number | null>;
 }) {
   return (
     <input
@@ -330,11 +330,11 @@ function DureeAntiRobot({
       name={CHAMP_INSTANT}
       defaultValue=""
       ref={(element) => {
-        champ.current = element;
+        champRef.current = element;
         // Premier montage seulement : un remontage ne doit pas remettre le
         // chronomètre à zéro, sinon le visiteur repasserait sous le seuil.
-        if (element && ouverture.current === null) {
-          ouverture.current = performance.now();
+        if (element && ouvertureRef.current === null) {
+          ouvertureRef.current = performance.now();
         }
       }}
     />
