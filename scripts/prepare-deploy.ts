@@ -24,6 +24,24 @@ const DIST = path.join(RACINE, "dist");
 
 const HOTE_PRODUCTION = "www.argon-mobility.com";
 
+/**
+ * Ce qui, de `deploy/`, part réellement sur le serveur. Trois fichiers, nommés
+ * un par un.
+ *
+ * ⚠️ Une LISTE D'INCLUSIONS, jamais une liste d'exclusions. Le script copiait
+ * auparavant `deploy/` en entier puis retirait nommément les fichiers
+ * indésirables. Le jour où `deploy/vps/` a été ajouté au dépôt, il s'est
+ * retrouvé publié : `docker-compose.yml` et la procédure de déploiement sont
+ * devenus téléchargeables. Aucun secret dedans, mais rien qui doive être
+ * public.
+ *
+ * La différence est structurelle : oublier d'ajouter un fichier à une liste
+ * d'inclusions casse le site de façon visible et immédiate ; oublier de
+ * l'ajouter à une liste d'exclusions le publie en silence. Ajouter un fichier
+ * ici doit rester un acte délibéré.
+ */
+const FICHIERS_PUBLIES = [".htaccess", "api/.htaccess", "api/demande.php"] as const;
+
 const erreurs: string[] = [];
 const avertissements: string[] = [];
 
@@ -107,7 +125,24 @@ if (erreurs.length > 0) {
 await rm(DIST, { recursive: true, force: true });
 await mkdir(DIST, { recursive: true });
 await cp(OUT, DIST, { recursive: true });
-await cp(DEPLOY, DIST, { recursive: true });
+
+for (const relatif of FICHIERS_PUBLIES) {
+  const source = path.join(DEPLOY, relatif);
+  if (!existsSync(source)) {
+    erreurs.push(`deploy/${relatif} est absent : le paquet serait incomplet.`);
+    continue;
+  }
+  const destination = path.join(DIST, relatif);
+  await mkdir(path.dirname(destination), { recursive: true });
+  await cp(source, destination);
+}
+
+if (erreurs.length > 0) {
+  console.error("\n✗ Paquet NON produit :\n");
+  for (const erreur of erreurs) console.error(`   • ${erreur}`);
+  console.error("");
+  process.exit(1);
+}
 
 /* ==========================================================================
    SYNCHRONISATION DE L'OUVERTURE
@@ -179,16 +214,6 @@ if (erreurs.length > 0) {
   console.error("");
   process.exit(1);
 }
-
-/**
- * Deux fichiers de `deploy/` sont de la documentation, pas du site :
- *   — config.example.php signalerait publiquement l'emplacement des secrets ;
- *   — README.md exposerait la procédure de déploiement à qui la demande.
- * Ni l'un ni l'autre n'a sa place sur un serveur public.
- */
-await rm(path.join(DIST, "api", "config.example.php"), { force: true });
-await rm(path.join(DIST, "README.md"), { force: true });
-await rm(path.join(DIST, "MAILJET.md"), { force: true });
 
 /**
  * Contrôle final, sur le paquet lui-même : aucun fichier servi au navigateur
