@@ -30,6 +30,16 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  *
  * Formulation imposée : « génération et envoi des factures ».
  *
+ * OÙ LES CHOSES SE VOIENT — corrigé le 18/08/2026 après contrôle produit.
+ * La fiche client sert à ÉTABLIR un devis, pas à surveiller son sort. Trois
+ * passages de cette page affirmaient qu'un devis en attente « apparaît sur la
+ * fiche du client » : c'est faux, et l'erreur était antérieure au lot 1.
+ *   · un DEVIS resté sans réponse se repère à son ÉTAT, dans la liste des devis
+ *   · une FACTURE impayée remonte chaque jour dans « Relances à faire », avec
+ *     son retard et son montant dû, et un bouton pour relancer
+ * Ne jamais réécrire « sur la fiche du client » à propos d'un suivi : le
+ * dirigeant ouvre une liste de travail, il ne fait pas le tour des dossiers.
+ *
  * VALIDÉ, donc présentable : fiche client · devis · relance d'un devis resté
  * sans réponse · intervention · contrôle avant facturation · génération et
  * envoi de la facture.
@@ -85,7 +95,7 @@ const boucle = [
     etape: "02",
     titre: "Le devis sans réponse reste visible",
     texte:
-      "Un devis en attente ne se perd pas dans une pile. Il apparaît comme tel sur la fiche du client, et vous décidez quand le relancer.",
+      "Un devis en attente ne se perd pas dans une pile. Chaque devis porte son état : ceux restés sans réponse se repèrent d'un coup d'œil, et vous décidez quand relancer.",
   },
   {
     etape: "03",
@@ -155,7 +165,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Argon relance-t-il automatiquement les devis et les factures ?",
     answer:
-      "Non. Un devis resté sans réponse est signalé comme tel sur la fiche du client, ce qui vous permet de le voir et de décider de le relancer. Il n'y a ni relance automatique, ni recouvrement automatisé : la décision de relancer un client vous appartient.",
+      "Non, aucun message ne part sans vous. Vos devis portent un état : ceux restés sans réponse se repèrent d'un coup d'œil. Et chaque jour, Argon vous liste les factures impayées dont une étape de relance s'ouvre, avec le retard et le montant dû. Pour les impayés, la procédure progresse d'elle-même jusqu'à la mise en demeure, aux délais que vous avez fixés — mais c'est vous qui décidez d'envoyer, à chaque étape.",
   },
 ];
 
@@ -279,8 +289,8 @@ export default function DevisFacturationPage() {
             Relancer un devis est une décision, pas un automatisme.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-ink-soft">
-            Un devis resté sans réponse depuis onze jours apparaît comme tel sur
-            la fiche du client. Argon vous le montre —{" "}
+            Un devis resté sans réponse depuis onze jours se repère à son état,
+            sans ouvrir les dossiers un par un. Argon vous le montre —{" "}
             <span className="font-medium text-ink">
               il ne relance aucun devis à votre place
             </span>
