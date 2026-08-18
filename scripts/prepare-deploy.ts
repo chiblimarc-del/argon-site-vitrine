@@ -222,7 +222,44 @@ if (erreurs.length > 0) {
  * vérification qui vaille pour un secret.
  */
 const EXTENSIONS_PUBLIQUES = [".html", ".js", ".css", ".txt", ".xml", ".svg"];
-const MOTIF_SECRET = /mailjet|api[_-]?key|secret[_-]?key|Basic\s+[A-Za-z0-9+/=]{20,}/i;
+/**
+ * Motifs nommés plutôt qu'une seule alternance : quand le contrôle se
+ * déclenche, il doit dire LEQUEL a mordu. Un message qui annonce « trace
+ * d'identifiant » sans préciser laquelle oblige à relire un fichier de 100 ko
+ * à la main pour découvrir qu'il s'agissait d'un mot parfaitement légitime.
+ */
+const MOTIFS_SECRETS = [
+  { nom: "mailjet", motif: /mailjet/i },
+  { nom: "api_key", motif: /api[_-]?key/i },
+  { nom: "secret_key", motif: /secret[_-]?key/i },
+  { nom: "basic_auth", motif: /Basic\s+[A-Za-z0-9+/=]{20,}/ },
+] as const;
+
+/**
+ * Exceptions, une par une, et jamais par fichier entier.
+ *
+ * Le motif `mailjet` est un PROXY : il n'attrape pas une clé, il attrape la
+ * présence d'un fichier qui en contiendrait une — typiquement un `config.php`
+ * empaqueté par erreur, où figurerait `MAILJET_API_KEY`. Le proxy est grossier
+ * par construction, et c'est ce qui fait sa valeur : il mord avant qu'un
+ * secret ne soit reconnaissable.
+ *
+ * Mais la politique de confidentialité NOMME Mailjet, parce que le RGPD
+ * demande d'identifier les sous-traitants. C'est le cas légitime, et il est
+ * durable : il ne disparaîtra pas au prochain build.
+ *
+ * L'exception est donc bornée à un couple (chemin, motif). Tout AUTRE motif
+ * continue de bloquer dans ce fichier — un `api_key` y resterait fatal. Une
+ * exception qui exempterait le fichier en entier rouvrirait exactement le trou
+ * que ce contrôle est là pour fermer.
+ */
+const EXCEPTIONS = [
+  {
+    chemin: /^politique-de-confidentialite/,
+    nom: "mailjet",
+    raison: "sous-traitant nommé au titre du RGPD, pas un identifiant",
+  },
+] as const;
 
 async function fichiersPublics(dossier: string): Promise<string[]> {
   const trouves: string[] = [];
@@ -237,10 +274,31 @@ async function fichiersPublics(dossier: string): Promise<string[]> {
 }
 
 const suspects: string[] = [];
+const tolerees: string[] = [];
+
 for (const fichier of await fichiersPublics(DIST)) {
-  if (MOTIF_SECRET.test(await readFile(fichier, "utf8"))) {
-    suspects.push(path.relative(DIST, fichier));
+  const relatif = path.relative(DIST, fichier);
+  const contenu = await readFile(fichier, "utf8");
+
+  for (const { nom, motif } of MOTIFS_SECRETS) {
+    if (!motif.test(contenu)) continue;
+
+    const exception = EXCEPTIONS.find(
+      (e) => e.nom === nom && e.chemin.test(relatif.split(path.sep).join("/")),
+    );
+
+    if (exception) tolerees.push(`${relatif} — « ${nom} » : ${exception.raison}`);
+    else suspects.push(`${relatif} — motif « ${nom} »`);
   }
+}
+
+/**
+ * Les occurrences tolérées sont AFFICHÉES, jamais tues. Un contrôle qui écarte
+ * silencieusement ce qu'il a trouvé finit par écarter ce qu'il fallait voir.
+ */
+if (tolerees.length > 0) {
+  console.log("\n   Occurrences connues et acceptées :");
+  for (const toleree of tolerees) console.log(`     · ${toleree}`);
 }
 
 if (suspects.length > 0) {
