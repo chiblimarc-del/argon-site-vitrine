@@ -4,30 +4,27 @@ import { cn } from "@/lib/cn";
 /**
  * Marque Argon — le « A » triangulaire de l'identité.
  *
- * ⚠️ RECONSTRUCTION GÉOMÉTRIQUE — à remplacer par le SVG officiel.
- * Le tracé approxime le logo fourni : triangle évidé, avec une entaille
- * parallèle au flanc droit qui détache la jambe inférieure gauche.
- * Dès que le fichier vectoriel source sera disponible, il suffira de
- * remplacer le contenu de <svg> : l'API du composant ne bougera pas.
+ * Tracé OFFICIEL, repris tel quel du paquet vectoriel de la charte
+ * (`package_print/base/icon`), converti du PDF sans retouche : les
+ * proportions et les angles sont ceux du fichier source, pas une
+ * approximation. Le tracé qui vivait ici auparavant était une reconstruction
+ * géométrique dont l'entaille détachait entièrement la jambe inférieure
+ * gauche — le triangle se lisait cassé.
  *
- * Technique : un masque plutôt qu'un `fill-rule="evenodd"`. Avec evenodd,
- * l'entaille qui traverse à la fois la branche et l'évidement se ré-inverse
- * et fait réapparaître un coin plein parasite.
+ * Un seul sous-tracé, refermé sur lui-même : l'évidement central est creusé
+ * par la règle de remplissage `nonzero`, sans masque ni `evenodd` — c'est
+ * exactement ce que fait le fichier de la charte. Accessoirement, un masque
+ * SVG n'est pas rendu partout : cairosvg, par exemple, l'ignore et produit un
+ * triangle plein. Le tracé simple n'a pas ce risque.
  *
- * `id` doit être unique dans la page : le header et le pied de page en
- * passent chacun un différent.
+ * La couleur vient de `currentColor` : la marque prend celle du texte
+ * environnant, ce qui la rend utilisable sur fond clair comme sur fond sombre
+ * sans dupliquer le tracé.
  */
-export function LogoMark({
-  id = "argon-mark",
-  className,
-}: {
-  id?: string;
-  className?: string;
-}) {
-  const maskId = `${id}-mask`;
+export function LogoMark({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 84.359 87.418"
       aria-hidden="true"
       focusable="false"
       // Ni hauteur ni largeur par défaut : elles sont imposées par l'appelant.
@@ -35,22 +32,12 @@ export function LogoMark({
       // éléments remplacés (300 px), ce qui faisait déborder le header.
       className={cn(className)}
     >
-      <mask id={maskId}>
-        {/* Triangle plein */}
-        <path fill="#fff" d="M50 3 L98 96 L2 96 Z" />
-        {/* Évidement central */}
-        <path fill="#000" d="M50 38 L76 90 L24 90 Z" />
-        {/* Entaille qui détache la jambe inférieure gauche */}
-        <path fill="#000" d="M28 46 L53 96 L42 96 L22 55 Z" />
-      </mask>
-      <rect width="100" height="100" fill="currentColor" mask={`url(#${maskId})`} />
+      <path fill="currentColor" fillRule="nonzero" d="M36.453 49.215L42.137 37.414L58.48 71.16L33.043 71.16L25.262 87.418L84.359 87.418L42.137 0L0 87.418L18.008 87.418Z" />
     </svg>
   );
 }
 
 interface LogoProps {
-  /** Identifiant unique dans la page (le masque SVG en dépend). */
-  id?: string;
   /** Masque le nom écrit et ne garde que la marque. */
   markOnly?: boolean;
   className?: string;
@@ -70,7 +57,7 @@ interface LogoProps {
  * Le nom est du vrai texte : lisible, sélectionnable, accessible, et aucune
  * image supplémentaire à charger (cahier V2 §29).
  */
-export function Logo({ id = "argon-logo", markOnly = false, className }: LogoProps) {
+export function Logo({ markOnly = false, className }: LogoProps) {
   return (
     <Link
       href="/"
@@ -81,7 +68,7 @@ export function Logo({ id = "argon-logo", markOnly = false, className }: LogoPro
       )}
       aria-label="Argon — retour à l'accueil"
     >
-      <LogoMark id={id} className="h-7 w-7 shrink-0 text-argon" />
+      <LogoMark className="h-7 w-7 shrink-0 text-argon" />
       {markOnly ? null : (
         <span className="text-[19px] font-semibold tracking-[0.14em] text-ink">
           ARGON

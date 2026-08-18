@@ -38,7 +38,7 @@ export function Footer() {
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-5 lg:gap-8 lg:py-16">
           {/* Identité */}
           <div className="lg:col-span-1">
-            <Logo id="logo-footer" />
+            <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-muted">
               Le logiciel de pilotage des opérations terrain.
             </p>

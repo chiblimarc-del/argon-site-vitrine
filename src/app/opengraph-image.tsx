@@ -36,13 +36,13 @@ export default function OpengraphImage() {
       >
         {/* Marque */}
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <svg width="52" height="52" viewBox="0 0 100 100">
-            <mask id="og-mark">
-              <path fill="#fff" d="M50 3 L98 96 L2 96 Z" />
-              <path fill="#000" d="M50 38 L76 90 L24 90 Z" />
-              <path fill="#000" d="M28 46 L53 96 L42 96 L22 55 Z" />
-            </mask>
-            <rect width="100" height="100" fill="#F2C200" mask="url(#og-mark)" />
+          {/* Tracé officiel de la charte. L'ancien était une reconstruction
+              géométrique dont l'entaille détachait la jambe gauche : c'est
+              cette marque-là qui partait dans les aperçus LinkedIn et
+              WhatsApp. Vérifié en rendant le composant avec Satori, le moteur
+              qui compose réellement cette image. */}
+          <svg width="52" height="54" viewBox="0 0 84.359 87.418">
+            <path fill="#F1C400" fillRule="nonzero" d="M36.453 49.215L42.137 37.414L58.48 71.16L33.043 71.16L25.262 87.418L84.359 87.418L42.137 0L0 87.418L18.008 87.418Z" />
           </svg>
           <div
             style={{

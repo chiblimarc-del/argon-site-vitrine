@@ -15,7 +15,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-line-soft bg-canvas/85 backdrop-blur-xl">
       <Container>
         <div className="flex h-16 items-center justify-between gap-6">
-          <Logo id="logo-header" />
+          <Logo />
 
           <DesktopNav className="hidden lg:flex" />
 
