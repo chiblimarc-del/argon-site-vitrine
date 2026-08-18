@@ -74,8 +74,8 @@ foreach ($emplacements as $emplacement) {
 
 if (!is_array($config)) {
     error_log(
-        '[demande-demo] Aucun fichier de configuration trouvé. Emplacements '
-        . 'testés : ' . implode(', ', $emplacements),
+        '[demande-demo] Aucun fichier de configuration trouve. Emplacements '
+        . 'testes : ' . implode(', ', $emplacements),
     );
     redirige('erreur');
 }
@@ -96,7 +96,7 @@ if ($manquants !== []) {
     error_log(
         '[demande-demo] config.php incomplet — clés vides : '
         . implode(', ', $manquants)
-        . '. La demande n\'a PAS été envoyée.',
+        . '. La demande n\'a PAS ete envoyee.',
     );
     redirige('erreur');
 }
@@ -119,6 +119,10 @@ function valeur(string $nom): string
 
 // 1. Champ piège : seul un robot qui remplit tout le formulaire le renseigne.
 if (valeur(CHAMP_PIEGE) !== '') {
+    // Tracé côté serveur uniquement : le robot ne voit rien, mais sans cette
+    // ligne il est impossible de distinguer « le formulaire fonctionne » de
+    // « le formulaire avale les demandes en silence ».
+    error_log('[demande-demo] Anti-robot : champ piege rempli. Aucun envoi.');
     redirige('succes');
 }
 
@@ -164,15 +168,39 @@ $email      = valeur('email');
 $telephone  = valeur('telephone');
 $secteur    = valeur('secteur');
 
-$valide =
-    mb_strlen($nom) >= 2 && mb_strlen($nom) <= 80
-    && mb_strlen($entreprise) >= 2 && mb_strlen($entreprise) <= 120
-    && mb_strlen($email) <= 160
-    && preg_match('/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i', $email) === 1
-    && preg_match('/^[+0-9][0-9\s.()\-]{7,19}$/', $telephone) === 1
-    && $secteur !== '' && mb_strlen($secteur) <= 60;
+/**
+ * Chaque règle est évaluée séparément afin que le journal nomme le champ
+ * fautif. Une validation globale qui répond « invalide » sans dire quoi est
+ * indiagnosticable en exploitation : c'est la panne où l'on sait que des
+ * demandes se perdent, sans pouvoir dire pourquoi.
+ *
+ * `mb_strlen` n'est pas garanti présent — l'extension mbstring n'est pas
+ * activée dans toutes les images PHP. `strlen` compte des octets et non des
+ * caractères, ce qui est ici sans conséquence : les bornes sont larges, et un
+ * nom accentué compte simplement quelques octets de plus.
+ */
+$longueur = static fn(string $v): int =>
+    function_exists('mb_strlen') ? mb_strlen($v) : strlen($v);
 
-if (!$valide) {
+$refus = [];
+if ($longueur($nom) < 2 || $longueur($nom) > 80) {
+    $refus[] = 'nom (' . $longueur($nom) . ' caractères)';
+}
+if ($longueur($entreprise) < 2 || $longueur($entreprise) > 120) {
+    $refus[] = 'entreprise (' . $longueur($entreprise) . ' caractères)';
+}
+if ($longueur($email) > 160 || preg_match('/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i', $email) !== 1) {
+    $refus[] = 'email';
+}
+if (preg_match('/^[+0-9][0-9\s.()\-]{7,19}$/', $telephone) !== 1) {
+    $refus[] = 'telephone (« ' . $telephone . ' »)';
+}
+if ($secteur === '' || $longueur($secteur) > 60) {
+    $refus[] = 'secteur (« ' . $secteur . ' »)';
+}
+
+if ($refus !== []) {
+    error_log('[demande-demo] Demande refusee - champs invalides : ' . implode(', ', $refus));
     redirige('erreur');
 }
 
@@ -248,7 +276,7 @@ curl_close($ch);
  * Le journal est consultable depuis l'espace client OVH.
  */
 if ($erreurReseau !== '') {
-    error_log('[demande-demo] Requête sortante impossible : ' . $erreurReseau);
+    error_log('[demande-demo] Requete sortante impossible : ' . $erreurReseau);
     redirige('erreur');
 }
 
@@ -256,5 +284,10 @@ if ($code < 200 || $code >= 300) {
     error_log('[demande-demo] Mailjet a répondu ' . $code . ' : ' . (string) $reponse);
     redirige('erreur');
 }
+
+error_log(
+    '[demande-demo] Demande transmise a Mailjet (HTTP ' . $code . ') - '
+    . $entreprise . ' / ' . $email . ' - activite : ' . $activite,
+);
 
 redirige('succes');
