@@ -1,0 +1,91 @@
+# =============================================================================
+# Site vitrine Argon — pile Docker autonome.
+#
+# ⚠️ PROJET SÉPARÉ, VOLONTAIREMENT. Ce fichier ne fait pas partie de la pile du
+# SaaS et ne doit jamais y être fusionné :
+#   — un `docker compose up` de la vitrine ne peut pas redémarrer le backend,
+#     la base ou Redis, donc ne peut pas interrompre la production ;
+#   — le compose du SaaS sert à la fois staging et production ; y ajouter la
+#     vitrine la déploierait aussi sur staging, où son domaine n'existe pas, et
+#     Caddy tenterait indéfiniment d'obtenir un certificat pour rien.
+#
+# Le seul point de contact est le réseau Docker, rejoint en `external` : Caddy
+# doit pouvoir joindre ce conteneur, rien de plus.
+#
+# Démarrage :
+#   cd /home/argon/vitrine
+#   docker compose up -d
+# =============================================================================
+
+name: argon-vitrine
+
+services:
+  vitrine:
+    # Apache + PHP dans une seule image. Ce choix n'est pas anodin : il permet
+    # de servir le site avec EXACTEMENT le .htaccess déjà écrit et testé
+    # (URLs sans extension, page 404, en-têtes, noindex de pré-lancement) et de
+    # faire tourner le formulaire sans réécrire quoi que ce soit en langage
+    # Caddy. Ce qui est déployé est ce qui a été vérifié.
+    image: php:8.3-apache
+    restart: unless-stopped
+
+    # Les trois modules sont présents dans l'image mais désactivés par défaut.
+    # `exec` remplace le shell par Apache : le conteneur reçoit alors
+    # directement les signaux d'arrêt, et `docker compose down` ne traîne pas
+    # dix secondes avant un arrêt forcé.
+    command: >
+      bash -c "a2enmod rewrite headers deflate >/dev/null 2>&1 && exec apache2-foreground"
+
+    volumes:
+      # Le site, en lecture seule : rien de ce qui est servi ne doit pouvoir
+      # être modifié depuis le conteneur.
+      - ./site:/var/www/html:ro
+
+      # AllowOverride, sans lequel le .htaccess serait ignoré en silence.
+      - ./apache-vitrine.conf:/etc/apache2/conf-enabled/zz-vitrine.conf:ro
+
+      # ⚠️ Les clés Mailjet, montées HORS de la racine web (/var/www/html).
+      # Aucune URL ne peut y mener : c'est la protection par la structure, pas
+      # par une règle de configuration qu'on pourrait perdre. `demande.php`
+      # cherche ce chemin en premier, sans modification.
+      - ./argon-config.php:/var/www/argon-config.php:ro
+
+    # Repris de la pile du SaaS. Sans cette section, Docker écrit sans aucune
+    # limite de taille et finit par saturer le disque — la panne apparaît alors
+    # côté PostgreSQL, très loin de sa cause.
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+    # Vérifie qu'Apache répond ET que le .htaccess est bien pris en compte :
+    # /solutions n'existe que par la réécriture vers solutions.html. Une sonde
+    # sur / passerait même avec un .htaccess ignoré, c'est-à-dire avec un site
+    # dont toutes les pages sont en 404.
+    healthcheck:
+      test: ['CMD', 'php', '-r', 'exit(@file_get_contents("http://127.0.0.1/solutions") === false ? 1 : 0);']
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+    networks:
+      argon:
+        # Caddy joint le conteneur par ce nom. L'alias est explicite plutôt
+        # qu'implicite : le nom du projet Compose ne le préfixe donc pas, et le
+        # bloc Caddy reste identique en staging et en production.
+        aliases:
+          - vitrine
+
+networks:
+  argon:
+    # Réseau de la pile du SaaS, déjà créé par elle. `external: true` signifie
+    # « rejoindre », jamais « créer » : si le nom est faux, le démarrage échoue
+    # immédiatement au lieu de créer un réseau parallèle où Caddy ne verrait
+    # rien — panne silencieuse classique.
+    #
+    #   production : argon-production_default
+    #   staging    : argon-staging_default
+    name: ${RESEAU_ARGON:-argon-production_default}
+    external: true

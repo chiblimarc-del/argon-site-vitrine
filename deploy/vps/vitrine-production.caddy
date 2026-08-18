@@ -1,0 +1,31 @@
+# =============================================================================
+# Site vitrine Argon — bloc Caddy, environnement de PRODUCTION.
+#
+# À déposer dans le dossier conf.d de Caddy sur le serveur de production,
+# UNIQUEMENT après validation de la chaîne complète sur staging.
+# =============================================================================
+
+# Le site est servi sur www. C'est la forme retenue par toutes les balises
+# canonical et par le sitemap : elle ne se rediscute pas ici, sous peine de
+# créer du contenu dupliqué entre deux versions du même site.
+www.argon-mobility.com {
+	log
+	encode zstd gzip
+
+	reverse_proxy vitrine:80 {
+		# Caddy termine le TLS ; le conteneur ne voit que du HTTP.
+		# La canonisation http→https est assurée par Caddy — jamais par le
+		# .htaccess, qui boucherait en redirection infinie derrière un proxy.
+		header_up X-Forwarded-Proto https
+	}
+}
+
+# Le domaine nu redirige vers www, en 301. Sans ce bloc, argon-mobility.com
+# répondrait « site inconnu » alors que le DNS y mène : c'est l'adresse que les
+# gens tapent spontanément, et celle qui figure sur les cartes de visite.
+#
+# `{uri}` conserve le chemin : argon-mobility.com/contact mène bien à
+# www.argon-mobility.com/contact, et non à l'accueil.
+argon-mobility.com {
+	redir https://www.argon-mobility.com{uri} permanent
+}

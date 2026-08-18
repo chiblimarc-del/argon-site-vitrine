@@ -1,0 +1,27 @@
+# =============================================================================
+# Site vitrine Argon — bloc Caddy, environnement de STAGING.
+#
+# À déposer dans le dossier conf.d de Caddy sur le serveur de staging.
+# Ce fichier n'existe QUE sur staging : la production a le sien.
+# =============================================================================
+
+vitrine-staging.argon-mobility.com {
+	# Journal d'accès sur stdout, lisible par `docker compose logs caddy`.
+	# Même raison que pour les autres blocs : sans lui, un 404 signalé par un
+	# utilisateur reste introuvable dans les journaux du proxy le mieux placé
+	# pour en témoigner.
+	log
+
+	encode zstd gzip
+
+	reverse_proxy vitrine:80 {
+		# Caddy termine le TLS ; le conteneur ne voit que du HTTP. Cet en-tête
+		# lui dit que la connexion d'origine était chiffrée.
+		#
+		# ⚠️ La canonisation http→https est faite par Caddy, jamais par le
+		# .htaccess : une règle `RewriteCond %{HTTPS} !=on` dans le conteneur
+		# se déclencherait à chaque requête et boucherait en redirection
+		# infinie. Voir le commentaire en tête de deploy/.htaccess.
+		header_up X-Forwarded-Proto https
+	}
+}

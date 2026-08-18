@@ -3,17 +3,18 @@
 # À déposer à la racine du dossier www/, à côté de index.html.
 # =============================================================================
 
-# --- 1. HTTPS + www ----------------------------------------------------------
-# Une seule URL canonique : https://www.argon-mobility.com
-# Toute autre forme (http, sans www) redirige en 301. Sans cela, Google voit
-# jusqu'à quatre versions du même site.
-RewriteEngine On
-
-RewriteCond %{HTTPS} !=on
-RewriteRule ^(.*)$ https://www.argon-mobility.com/$1 [R=301,L]
-
-RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteRule ^(.*)$ https://www.argon-mobility.com/$1 [R=301,L]
+# --- 1. Canonisation HTTPS + www : PAS ICI ---------------------------------
+# ⚠️ Volontairement absente de ce fichier.
+#
+# Le site est servi derrière Caddy, qui termine le TLS. Le conteneur ne reçoit
+# donc que du HTTP en clair : une règle `RewriteCond %{HTTPS} !=on` se
+# déclencherait à CHAQUE requête et produirait une boucle de redirection
+# infinie. De même, une règle « rediriger tout ce qui ne commence pas par www »
+# renverrait le staging vers le domaine de production.
+#
+# La canonisation (http→https, apex→www) est donc assurée par Caddy, qui est le
+# seul à connaître le protocole réel et le domaine servi. Voir deploy/vps/.
+# Ne pas réintroduire ces règles ici.
 
 # --- 2. URLs sans extension --------------------------------------------------
 # Next.js exporte « contact.html » ET un dossier « contact/ » qui ne contient
@@ -22,6 +23,13 @@ RewriteRule ^(.*)$ https://www.argon-mobility.com/$1 [R=301,L]
 # On sert donc explicitement le .html quand il existe, avant tout traitement
 # de répertoire. Les URLs restent sans slash final, exactement comme les
 # balises canonical du site.
+# ⚠️ `RewriteEngine On` doit rester ICI. Il vivait dans le bloc de canonisation
+# HTTPS supprimé ci-dessus ; sans lui, Apache lit les RewriteRule suivantes et
+# n'en applique AUCUNE, sans le moindre avertissement. Le symptôme n'est pas une
+# erreur de configuration mais un site dont toutes les pages répondent 404 —
+# sauf l'accueil, qui est le seul fichier servi sans réécriture.
+RewriteEngine On
+
 DirectorySlash Off
 
 RewriteCond %{REQUEST_FILENAME} !-f
