@@ -78,15 +78,22 @@ export function TableauDeBordSection() {
           }
         >
           <div>
-            <div className="flex items-center gap-2">
+            {/*
+              Un h3, comme les deux preuves secondaires — corrigé au contrôle
+              UX du 18/08/2026. C'était un <span> : la preuve DOMINANTE du bloc
+              était la seule des trois absente du plan du document. Un lecteur
+              d'écran parcourant les titres de la page trouvait « ce qui
+              attend » et « ce qui est rentré », jamais « ce qui bloque » —
+              c'est-à-dire l'argument que ce bloc existe pour porter.
+              Rendu visuel inchangé.
+            */}
+            <h3 className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.12em] text-accent-text">
               <span
                 aria-hidden="true"
                 className="h-1.5 w-1.5 rounded-full bg-accent"
               />
-              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-accent-text">
-                {dominante.titre}
-              </span>
-            </div>
+              {dominante.titre}
+            </h3>
 
             {/*
               Pas de guillemets extérieurs : la citation contient déjà
