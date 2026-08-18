@@ -26,8 +26,16 @@ import { Section, SectionHeading } from "@/components/ui/Section";
  *
  * INTERDIT également :
  *   présenter Argon comme un ERP ou comme un logiciel comptable ; promettre
- *   une intégration comptable tant que les connecteurs ne sont pas validés.
- *   Le vocabulaire imposé est « génération et envoi des factures ».
+ *   une INTÉGRATION comptable — un connecteur vers un logiciel nommé — tant
+ *   qu'aucune n'est validée. Le vocabulaire imposé reste « génération et
+ *   envoi des factures ».
+ *
+ *   La TRANSMISSION vers la comptabilité, elle, existe et est autorisée
+ *   depuis le contrôle produit du 18/08/2026 : export par période et accès
+ *   cabinet. Elle n'a pas sa place dans cette section, qui décrit la chaîne
+ *   d'exploitation ; elle est portée par /solutions/devis-facturation.
+ *   Interdiction distincte, donc, et à ne pas confondre : « intégration »
+ *   promet un branchement, « transmission » décrit une sortie de données.
  *
  * Toute évolution de ce périmètre doit passer par une validation produit
  * avant d'être écrite ici.

@@ -70,7 +70,7 @@ const choix = [
     numero: "04",
     titre: "Dire ce que le produit ne fait pas",
     texte:
-      "Chaque page de ce site indique ses limites : pas de comptabilité, pas d'optimisation automatique, pas de mode hors ligne, pas de suivi GPS. Une limite découverte en démonstration coûte une démonstration. Découverte après la signature, elle coûte un client.",
+      "Chaque page de ce site indique ses limites : pas de tenue de comptabilité, pas d'optimisation automatique, pas de mode hors ligne, pas de suivi GPS. Une limite découverte en démonstration coûte une démonstration. Découverte après la signature, elle coûte un client.",
   },
 ];
 

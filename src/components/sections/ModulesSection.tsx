@@ -29,8 +29,8 @@ import { NavLink } from "@/components/navigation/NavLink";
  * d'anomalie · génération et envoi des factures.
  *
  * INTERDIT : IA, géolocalisation avancée, optimisation automatique de
- * tournées, gestion de stocks, RH, BI avancée, comptabilité. Argon n'est
- * présenté ni comme un ERP ni comme un logiciel comptable. Le vocabulaire
+ * tournées, gestion de stocks, RH, BI avancée, TENUE de comptabilité. Argon
+ * n'est présenté ni comme un ERP ni comme un logiciel comptable. Le vocabulaire
  * imposé pour la facturation est « génération et envoi des factures ».
  *
  * Toute brique ajoutée ici doit être validée produit au préalable : cette

@@ -35,12 +35,28 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  * envoi de la facture.
  *
  * INTERDIT ABSOLU — aucune de ces briques n'existe dans le produit :
- *   · comptabilité, écritures, export comptable, rapprochement bancaire
- *   · TVA, paiements, encaissement, échéances, statut « payée »
- *   · recouvrement ou relance de facture automatisés
+ *   · comptabilité, écritures comptables, partie double
+ *   · rapprochement bancaire
+ *   · déclaration de TVA
+ *   · ENVOI AUTOMATIQUE d'une relance ou d'une mise en demeure
  *   · « pilotage financier », « comptabilité automatisée »,
  *     « facturation intelligente » et toute formule qui laisse entendre
  *     davantage que ce que le produit fait réellement
+ *
+ * AUTORISÉ depuis le contrôle produit du 18/08/2026 — vérifié dans le code du
+ * SaaS, pas déduit :
+ *   · le suivi des règlements (modèle `Reglement` : montant, date, moyen de
+ *     paiement, référence) et le statut « partielle » qu'un acompte laisse
+ *   · les échéances portées par la facture
+ *   · la procédure de relance à étapes paramétrables, jusqu'à la mise en
+ *     demeure, avec intérêts de retard et indemnité forfaitaire PARAMÉTRÉE
+ *   · l'export comptable (six extractions par période) et l'accès cabinet
+ *
+ * Cette liste disait le contraire jusqu'au 18/08/2026, et le site annonçait
+ * donc comme absentes des briques qu'il livre. Le défaut n'était pas une
+ * promesse excessive mais l'inverse : la page se sous-vendait. La distinction
+ * qui tient l'ensemble : le CALENDRIER de la procédure progresse seul,
+ * l'ENVOI ne part jamais seul.
  *
  * Argon n'est ni un ERP, ni un logiciel comptable, et la page le dit
  * explicitement plutôt que de laisser le doute s'installer.
@@ -103,12 +119,13 @@ const perimetre = {
     "Le passage du devis accepté à l'intervention",
     "Le contrôle de l'intervention avant facturation",
     "La génération et l'envoi des factures",
+    "Le suivi des règlements et de ce qui reste dû",
+    "La procédure de relance, jusqu'à la mise en demeure",
   ],
   nonCouvert: [
     "La comptabilité et les écritures comptables",
-    "Le suivi des règlements et des échéances",
     "Le rapprochement bancaire",
-    "Le recouvrement automatisé des impayés",
+    "L'envoi automatique des relances et des mises en demeure",
     "La déclaration de TVA",
   ],
 };
@@ -133,7 +150,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Argon est-il un logiciel de comptabilité ?",
     answer:
-      "Non, et ce n'est pas son objet. Argon génère et envoie les factures issues de vos interventions. Il ne tient pas votre comptabilité : ni écritures, ni déclaration de TVA, ni rapprochement bancaire, ni suivi des règlements. Ces travaux restent du ressort de votre outil comptable et de votre cabinet.",
+      "Non, et ce n'est pas son objet. Argon génère et envoie les factures issues de vos interventions, suit ce qui a été réglé et ce qui reste dû, et cadre la relance des impayés. Il ne tient pas votre comptabilité : ni écritures, ni déclaration de TVA, ni rapprochement bancaire. Ces travaux restent du ressort de votre outil comptable et de votre cabinet.",
   },
   {
     question: "Argon relance-t-il automatiquement les devis et les factures ?",
