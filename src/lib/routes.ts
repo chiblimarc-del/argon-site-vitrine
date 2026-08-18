@@ -242,7 +242,7 @@ const solutions: RouteDef[] = [
     label: "Devis & facturation",
     title: "Logiciel de devis et facturation d'interventions | Argon",
     description:
-      "Établissez vos devis, relancez ceux restés sans réponse et facturez les interventions réalisées, depuis la même fiche client.",
+      "Établissez vos devis, suivez ceux restés sans réponse et facturez les interventions réalisées. Règlements, relances et documents comptables au même endroit.",
     h1: "Du devis à la facture, sans ressaisir une ligne.",
     // Le pont que personne ne couvre : les logiciels d'intervention s'arrêtent
     // au compte rendu, les outils de devis ne voient pas le terrain.
