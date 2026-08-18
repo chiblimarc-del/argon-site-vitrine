@@ -155,6 +155,17 @@ export default function InstallationPage() {
             <InterventionPanel />
           </div>
         </div>
+
+        {/*
+          Lot 1 — profondeur, intégrée au fil de la section existante.
+          Deux sujets, choisis parce qu'ils découlent de l'angle de cette
+          page. Pas de nouveau titre, pas de composant : une page métier
+          répond à « comment Argon m'aide dans MON métier », pas à
+          « voici encore toutes les fonctions d'Argon ».
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          Un chantier se pilote par phases, et chaque phase engage de l&apos;argent avant d&apos;en rapporter. Argon garde l&apos;engagement rattaché au chantier : à la réception, vous savez ce qui a été commandé, à quel tarif, pour quelle phase. La preuve de réalisation suit le même dossier — ce qui a été posé se montre sans aller chercher ailleurs.
+        </p>
       </Section>
 
       <SolutionFaq items={faq} />

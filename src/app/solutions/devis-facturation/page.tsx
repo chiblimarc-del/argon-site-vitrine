@@ -6,6 +6,8 @@ import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
+import { EncaissementSection } from "@/components/sections/depth/EncaissementSection";
+import { DocumentsSection } from "@/components/sections/depth/DocumentsSection";
 import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
 
 /**
@@ -248,6 +250,10 @@ export default function DevisFacturationPage() {
           </div>
         </div>
       </Section>
+
+      <EncaissementSection />
+
+      <DocumentsSection />
 
       {/* ---------- La décision reste la vôtre ---------- */}
       <Section className="border-b border-line-soft">

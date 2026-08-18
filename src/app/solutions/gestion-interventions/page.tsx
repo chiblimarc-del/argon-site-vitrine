@@ -6,6 +6,8 @@ import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
+import { EngagementsSection } from "@/components/sections/depth/EngagementsSection";
+import { TableauDeBordSection } from "@/components/sections/depth/TableauDeBordSection";
 import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
 
 /**
@@ -202,6 +204,10 @@ export default function GestionInterventionsPage() {
           ))}
         </dl>
       </Section>
+
+      <EngagementsSection />
+
+      <TableauDeBordSection />
 
       {/* ---------- Le contrôle avant facturation ---------- */}
       <Section className="border-b border-line-soft">

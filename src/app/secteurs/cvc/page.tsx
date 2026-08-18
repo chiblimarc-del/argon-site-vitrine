@@ -158,6 +158,17 @@ export default function CvcPage() {
             </div>
           ))}
         </dl>
+
+        {/*
+          Lot 1 — profondeur, intégrée au fil de la section existante.
+          Deux sujets, choisis parce qu'ils découlent de l'angle de cette
+          page. Pas de nouveau titre, pas de composant : une page métier
+          répond à « comment Argon m'aide dans MON métier », pas à
+          « voici encore toutes les fonctions d'Argon ».
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          Deux saisons, deux régimes : l&apos;entretien quand c&apos;est calme, le dépannage quand tout tombe en panne en même temps. Vos équipes ne travaillent pas de la même façon selon la période, et Argon suit les heures et les absences dans la même planification que les interventions. Vous voyez arriver la charge avant qu&apos;elle arrive — c&apos;est-à-dire au moment où il est encore possible de décider.
+        </p>
       </Section>
 
       <SolutionFaq items={faq} />

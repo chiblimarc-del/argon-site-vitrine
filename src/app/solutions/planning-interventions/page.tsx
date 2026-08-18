@@ -6,6 +6,7 @@ import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
+import { EquipesSection } from "@/components/sections/depth/EquipesSection";
 import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
 
 /**
@@ -196,6 +197,8 @@ export default function PlanningInterventionsPage() {
           ))}
         </dl>
       </Section>
+
+      <EquipesSection />
 
       {/* ---------- Ce qu'Argon ne fait pas ---------- */}
       <Section className="border-b border-line-soft">

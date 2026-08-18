@@ -158,6 +158,17 @@ export default function DepannagePage() {
             </div>
           ))}
         </dl>
+
+        {/*
+          Lot 1 — profondeur, intégrée au fil de la section existante.
+          Deux sujets, choisis parce qu'ils découlent de l'angle de cette
+          page. Pas de nouveau titre, pas de composant : une page métier
+          répond à « comment Argon m'aide dans MON métier », pas à
+          « voici encore toutes les fonctions d'Argon ».
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          En dépannage, la question n&apos;est jamais « qu&apos;est-ce qui s&apos;est passé ce mois-ci », mais « qu&apos;est-ce qui coince maintenant ». Argon affiche ce qui attend et à quelle étape, en direct. Et parce qu&apos;une intervention urgente déborde presque toujours du créneau prévu, le temps réellement passé est celui qui remonte du terrain — pas celui qui avait été annoncé.
+        </p>
       </Section>
 
       <SolutionFaq items={faq} />

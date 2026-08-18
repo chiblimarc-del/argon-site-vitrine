@@ -155,6 +155,17 @@ export default function MaintenancePage() {
             <InterventionPanel />
           </div>
         </div>
+
+        {/*
+          Lot 1 — profondeur, intégrée au fil de la section existante.
+          Deux sujets, choisis parce qu'ils découlent de l'angle de cette
+          page. Pas de nouveau titre, pas de composant : une page métier
+          répond à « comment Argon m'aide dans MON métier », pas à
+          « voici encore toutes les fonctions d'Argon ».
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          Un contrat d&apos;entretien se juge sur l&apos;année, pas sur une visite. Argon garde le temps réellement passé sur chaque site, visite après visite : au renouvellement, vous discutez sur des heures constatées et non sur une impression. Ce qui a été engagé sur le contrat suit le même chemin — vous savez ce que ce site vous a coûté avant de le retarifer.
+        </p>
       </Section>
 
       <SolutionFaq items={faq} />

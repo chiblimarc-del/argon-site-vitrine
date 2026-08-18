@@ -157,6 +157,16 @@ export default function TransportCoursesPage() {
             </div>
           ))}
         </dl>
+        {/*
+          Lot 1 — profondeur, intégrée au fil de la section existante.
+          Deux sujets, choisis parce qu'ils découlent de l'angle de cette
+          page. Pas de nouveau titre, pas de composant : une page métier
+          répond à « comment Argon m'aide dans MON métier », pas à
+          « voici encore toutes les fonctions d'Argon ».
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          Chez un donneur d&apos;ordre, une facture sans numéro de bon de commande revient — et repart pour trente jours. Argon porte ce numéro sur les courses concernées, sur toute une période s&apos;il le faut, et pas course par course. Et quand la facture est partie, elle ne disparaît pas de votre vue : ce qui reste dû se relance selon une procédure, jusqu&apos;à la mise en demeure si nécessaire.
+        </p>
       </Section>
 
       <Section className="border-b border-line-soft">
@@ -177,6 +187,7 @@ export default function TransportCoursesPage() {
             — autant le savoir maintenant.
           </p>
         </div>
+
       </Section>
 
       <SolutionFaq items={faq} />
