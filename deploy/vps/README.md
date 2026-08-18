@@ -83,6 +83,34 @@ scp deploy/vps/vitrine-staging.caddy root@37.187.183.209:/home/argon/argon-deplo
 `/home/argon/vitrine/`, **jamais** dans `site/` : le conteneur le monte hors de
 la racine web, donc aucune URL ne peut y mener.
 
+#### Droits du fichier de clés : `chown 33:33`, pas `argon:argon`
+
+Sur le serveur, immédiatement après le `scp` :
+
+```bash
+chown 33:33 /home/argon/vitrine/argon-config.php
+chmod 600   /home/argon/vitrine/argon-config.php
+```
+
+⚠️ **Le propriétaire n'est pas `argon`.** Le fichier n'est pas lu par un compte
+du serveur mais par Apache **à l'intérieur du conteneur**, où il tourne sous
+`www-data` — uid 33. Un `chown argon:argon` accompagné d'un mode 600 rend donc
+le fichier illisible pour le seul processus qui en a besoin.
+
+Le symptôme ne dit pas « permission refusée » : PHP ne trouve simplement aucune
+configuration exploitable, le formulaire répond « erreur », et les clés
+semblent en cause alors qu'elles sont correctes.
+
+Le mode 600 reste le bon choix — il fallait seulement l'accorder au bon
+utilisateur. L'uid est écrit en chiffres parce que le nom `www-data` n'existe
+pas forcément côté hôte : c'est l'uid, pas le nom, que le noyau compare.
+
+Vérification :
+
+```bash
+docker exec argon-vitrine-vitrine-1 php -r "var_dump(is_readable('/config/argon-config.php'));"
+```
+
 ### Étape 3 — Démarrer le conteneur
 
 Sur le serveur :
