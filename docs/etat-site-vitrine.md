@@ -1,4 +1,4 @@
-# Site vitrine Argon — EN LIGNE, fermé aux moteurs (18/08/2026, 13h00)
+# Site vitrine Argon — EN LIGNE, fermé aux moteurs (18/08/2026, 15h00)
 
 **https://www.argon-mobility.com** — déployé, fonctionnel, **volontairement invisible de Google** tant que les mentions légales ne sont pas publiées.
 
@@ -22,7 +22,7 @@
 | Mentions légales et politique de confidentialité | 🟢 rédigées, publiées, vérifiées en ligne |
 | Base légale du formulaire | 🟢 arbitrée : article 6.1.b, mesures précontractuelles |
 | Contrôles anti-robot et anti-spam du formulaire | 🟢 quatre contrôles actifs, vérifiés en production |
-| **Clés Mailjet à régénérer** | 🔴 elles ont transité par une conversation |
+| Clés Mailjet | 🟢 régénérées le 18/08, testées en production |
 
 ---
 
@@ -161,7 +161,14 @@ formulaire.
    ⚠️ L'activité déclarée au Kbis ne mentionne pas l'édition de logiciel — à vérifier avec un comptable avant publication.
    Routes déjà déclarées `published: false` : `/mentions-legales` et `/politique-de-confidentialite`.
 
-3. **Régénérer les clés Mailjet**, puis remplacer `argon-config.php` sur le VPS (`chown 33:33`, `chmod 600`).
+3. *(Fait le 18/08)* **Clés Mailjet régénérées** et posées sur le VPS.
+
+   ⚠️ Elles vivent à QUATRE endroits, et la duplication est voulue : secrets
+   GitHub du dépôt SaaS (source de vérité, et seul emplacement lisible par la
+   veille externe quand les deux VPS sont morts), `.env` de production, `.env`
+   de staging — les trois synchronisés par `synchroniser-secrets-mail.sh` — et
+   `argon-config.php` de la vitrine, que rien ne synchronise. Une rotation les
+   touche tous si la clé est partagée.
 
 4. **Ouvrir** : `npm run deploy:ouvrir` → redéployer **tout** (le `.htaccess` change) → soumettre le sitemap en Search Console.
    ⚠️ Vérifier alors que `/index.txt` porte toujours `noindex` et que `/robots.txt` n'en porte plus :
@@ -218,6 +225,32 @@ d'emplacement inscriptible ailleurs — `/var/www` appartient à root et Apache 
 tourne sous l'uid 33. Une recréation du conteneur remet le compteur à zéro,
 sans conséquence sur une fenêtre de 24 h. Le code prendra automatiquement un
 dossier monté en écriture si l'on en ajoute un au `docker-compose`.
+
+---
+
+## 5 ter. Scripts d'exploitation
+
+Dans `Downloads/`, écrits pour ne demander aucun caractère AltGr — le clavier
+AZERTY et le collage de Git Bash mangent les `@` et les `~`, ce qui a produit
+plusieurs commandes muettes le 18/08.
+
+| Script | Ce qu'il fait |
+|---|---|
+| `deploy-argon.sh` | applique les correctifs en attente, vérifie, construit, pousse, met en ligne |
+| `ssh-argon.sh` | session serveur · `journal` : lignes du formulaire · `menage` : efface les sauvegardes |
+| `rotation-mailjet.sh` | envoie et lance la rotation des clés sur le serveur |
+| `poser-cles-mailjet.sh` | remplace les deux clés dans `argon-config.php` (tourne SUR le serveur) |
+| `poser-cle-turnstile.sh` | pose la clé secrète Turnstile (tourne SUR le serveur) |
+| `commit-etat.sh` | verse ce document dans le dépôt |
+
+Tous suivent la même règle : sauvegarde, écriture **dans** le fichier existant
+par redirection — jamais `sed -i`, qui créerait un inode neuf que le conteneur
+ne verrait pas —, relecture par le conteneur, restauration si le contrôle
+échoue.
+
+`deploy-argon.sh` teste chaque patch **à deux sens** : applicable à l'endroit →
+il manque ; applicable à l'envers → déjà là ; ni l'un ni l'autre → appliqué
+puis modifié depuis, on passe. Un seul des deux tests suffirait à se tromper.
 
 ---
 
