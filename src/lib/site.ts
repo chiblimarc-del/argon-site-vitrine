@@ -45,6 +45,30 @@ export const siteUrl = (
  */
 export const siteOuvertAuxMoteurs = process.env.NEXT_PUBLIC_SITE_OPEN === "true";
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CLÉ PUBLIQUE TURNSTILE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Turnstile est le contrôle anti-robot de Cloudflare, posé sur le formulaire
+ * de demande de démonstration.
+ *
+ * Cette clé est PUBLIQUE par conception : Cloudflare la nomme « clé publique
+ * servant à invoquer le widget », elle figure dans le code source de chaque
+ * page qui l'affiche, et elle ne fonctionne que sur les domaines déclarés dans
+ * le tableau de bord. La divulguer ne donne rien à personne.
+ *
+ * ⚠️ Elle est écrite ICI et non dans une variable d'environnement, à dessein.
+ * `.env.local` est ignoré par Git : un poste qui l'oublie produirait un build
+ * dépourvu de widget, expédié sans que rien ne le signale. Le contrôle
+ * anti-robot ne doit pas dépendre d'un fichier que le dépôt ne transporte pas.
+ *
+ * La clé SECRÈTE, elle, ne vit que dans `argon-config.php` sur le serveur, aux
+ * côtés des identifiants Mailjet. Elle n'est ni ici, ni nulle part dans ce
+ * dépôt.
+ */
+export const turnstileSiteKey = "0x4AAAAAAET2H51IgcxjGM8Q";
+
 export const site = {
   name: "Argon",
   /** Nom légal / raison sociale. À compléter quand la société sera immatriculée. */

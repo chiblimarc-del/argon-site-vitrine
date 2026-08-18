@@ -51,4 +51,19 @@ return [
 
     // Destinataire des demandes.
     'to'        => 'contact@argon-mobility.com',
+
+    /*
+     * Clé SECRÈTE Turnstile — dash.cloudflare.com > Turnstile > votre widget.
+     *
+     * À ne pas confondre avec la clé publique, qui vit dans le dépôt
+     * (`src/lib/site.ts`) parce qu'elle s'affiche de toute façon dans la page.
+     * Celle-ci prouve à Cloudflare que c'est bien VOTRE serveur qui pose la
+     * question : elle ne doit exister qu'ici.
+     *
+     * Laissée vide, le contrôle Turnstile est simplement INACTIF — le
+     * formulaire continue de fonctionner, et chaque envoi le journalise en
+     * toutes lettres. C'est volontaire : déployer le site avant d'avoir posé
+     * la clé ne doit casser aucune demande.
+     */
+    'turnstileSecret' => '',
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useRef, useState } from "react";
+import Script from "next/script";
 import type { RefObject } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -15,7 +16,7 @@ import {
 } from "@/lib/demo-request";
 import { NavLink } from "@/components/navigation/NavLink";
 import { ArrowRight } from "@/components/ui/Button";
-import { site } from "@/lib/site";
+import { site, turnstileSiteKey } from "@/lib/site";
 
 /**
  * Formulaire de demande de démonstration.
@@ -164,6 +165,29 @@ export function DemoForm() {
 
         <SelecteurSecteur />
       </div>
+
+      {/*
+        Turnstile — contrôle anti-robot de Cloudflare.
+
+        Rendu implicite : le script cherche les éléments portant la classe
+        `cf-turnstile` et injecte lui-même, DANS le formulaire, un champ caché
+        `cf-turnstile-response`. Le widget doit donc rester à l'intérieur du
+        `<form>`, sans quoi le jeton ne partirait pas avec la demande.
+
+        Thème sombre imposé : `globals.css` déclare `color-scheme: dark`, le
+        site n'a pas de variante claire. Un widget en « auto » s'afficherait en
+        blanc sur fond sombre chez un visiteur dont le système est en clair.
+      */}
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+      />
+      <div
+        className="cf-turnstile mt-6"
+        data-sitekey={turnstileSiteKey}
+        data-language="fr"
+        data-theme="dark"
+      />
 
       <button
         type="submit"

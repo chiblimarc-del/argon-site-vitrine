@@ -344,6 +344,95 @@ if ($secteur === '' || $longueur($secteur) > 60) {
 }
 
 /* --------------------------------------------------------------------------
+   TURNSTILE — CONTRÔLE ANTI-ROBOT DE CLOUDFLARE
+
+   Placé APRÈS le champ piège et le contrôle de délai, qui ne coûtent rien, et
+   AVANT la validation des champs : inutile de payer un aller-retour réseau
+   pour un robot que les deux barrières précédentes ont déjà écarté.
+
+   TROIS COMPORTEMENTS, ET LEURS RAISONS
+
+   1. Secret absent de la configuration → on laisse passer, et on le crie dans
+      le journal. Le paquet peut être déployé avant que la clé ne soit posée
+      sur le serveur ; refuser dans cet intervalle casserait le formulaire
+      pour tout le monde. Mais un contrôle inactif doit s'entendre.
+
+   2. Jeton absent → la demande PASSE. L'absence de jeton n'est pas un signal
+      de robot : c'est le plus souvent un bloqueur de contenu, un réseau
+      d'entreprise filtrant, ou Cloudflare momentanément injoignable. Refuser
+      là-dessus perdrait des prospects réels en silence. Les autres barrières
+      restent actives. Décision prise explicitement le 18/08/2026.
+
+   3. Jeton présent mais refusé → `erreur`, PAS `succes`.
+      C'est une différence de traitement assumée avec le champ piège. Remplir
+      un champ invisible est un comportement sans ambiguïté : on répond
+      « succès » pour ne rien apprendre au robot. Un jeton refusé, lui, est
+      ambigu — il peut avoir expiré chez un visiteur lent, ou avoir déjà servi.
+      Renvoyer vers le formulaire lui redonne un jeton neuf et il aboutit ;
+      afficher une fausse confirmation lui ferait croire à un envoi qui
+      n'aurait jamais eu lieu.
+
+   Le jeton est à usage unique et vaut cinq minutes. Le widget le renouvelle
+   tout seul avant expiration.
+   -------------------------------------------------------------------------- */
+
+const TURNSTILE_VERIFICATION = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+
+$secretTurnstile = trim((string) ($config['turnstileSecret'] ?? ''));
+$jetonTurnstile  = valeur('cf-turnstile-response');
+
+if ($secretTurnstile === '') {
+    error_log(
+        '[demande-demo] ATTENTION : turnstileSecret absent de la configuration. '
+        . 'Le controle Turnstile est INACTIF.',
+    );
+} elseif ($jetonTurnstile === '') {
+    error_log(
+        '[demande-demo] Turnstile : aucun jeton recu (widget non charge ou bloque). '
+        . 'La demande PASSE, les autres barrieres restent actives.',
+    );
+} else {
+    $requete = curl_init(TURNSTILE_VERIFICATION);
+    curl_setopt_array($requete, [
+        CURLOPT_POST           => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'secret'   => $secretTurnstile,
+            'response' => $jetonTurnstile,
+            // Aide Cloudflare à juger. C'est l'adresse RÉELLE du visiteur,
+            // pas celle du proxy — voir adresseVisiteur() plus haut.
+            'remoteip' => adresseVisiteur(),
+        ]),
+    ]);
+    $reponseTurnstile = curl_exec($requete);
+    $erreurTurnstile  = curl_error($requete);
+    curl_close($requete);
+
+    if ($reponseTurnstile === false) {
+        // Cloudflare injoignable : même raisonnement que le jeton absent. Une
+        // panne chez un tiers ne doit pas fermer votre formulaire.
+        error_log(
+            '[demande-demo] Turnstile injoignable (' . $erreurTurnstile
+            . '). La demande PASSE.',
+        );
+    } else {
+        $verdict = json_decode((string) $reponseTurnstile, true);
+        $accepte = is_array($verdict) && ($verdict['success'] ?? false) === true;
+
+        if (!$accepte) {
+            $codes = is_array($verdict) ? (array) ($verdict['error-codes'] ?? []) : ['reponse-illisible'];
+            error_log(
+                '[demande-demo] Turnstile a refuse le jeton : '
+                . (implode(', ', array_map('strval', $codes)) ?: 'aucun code')
+                . '. Aucun envoi.',
+            );
+            redirige('erreur');
+        }
+    }
+}
+
+/* --------------------------------------------------------------------------
    CONTENU MANIFESTEMENT AUTOMATISÉ
    Le formulaire n'a aucun champ libre : « nom » et « entreprise » n'ont donc
    aucune raison de contenir une URL. Quand ils en contiennent une, ce n'est

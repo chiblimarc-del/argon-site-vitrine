@@ -16,8 +16,19 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  * a été vérifiée sur la production le 18/08/2026 :
  *   — aucun cookie, aucun localStorage, aucun sessionStorage, aucune base
  *     IndexedDB, aucun service worker ;
- *   — aucune requête vers un domaine tiers, donc aucune mesure d'audience ;
  *   — un seul formulaire, cinq champs, transmis par Mailjet.
+ *
+ * ⚠️ MISE À JOUR DU 18/08/2026, PLUS TARD DANS LA JOURNÉE
+ * La ligne « aucune requête vers un domaine tiers » n'est plus vraie : le
+ * formulaire porte désormais Turnstile, et le navigateur contacte donc
+ * challenges.cloudflare.com. Le reste de la vérification tient, y compris
+ * l'absence de cookie — Turnstile n'en pose aucun tant que le mode
+ * « pre-clearance » reste désactivé, ce qui est son état par défaut.
+ *
+ * POINT À CONFIRMER : le mécanisme exact encadrant le transfert vers
+ * Cloudflare (clauses contractuelles types, Data Privacy Framework) n'a pas
+ * pu être vérifié à la source. La page décrit le fait sans nommer le
+ * mécanisme. À compléter quand la réponse sera connue.
  *
  * Une politique qui promet moins que la réalité est un mensonge ; une politique
  * qui promet plus est une faute. Si un traceur, une mesure d'audience ou un
@@ -64,6 +75,7 @@ const technique = [
   "Le formulaire mesure par ailleurs la durée de sa saisie et comporte un champ invisible destiné aux robots. Ces deux mesures servent uniquement à écarter les soumissions automatisées ; elles ne sont pas conservées.",
   "Pour empêcher qu'un automate ne sature le formulaire, le nombre d'envois est borné. Le serveur conserve à cette seule fin une empreinte chiffrée de votre adresse IP, effacée au bout de vingt-quatre heures : l'adresse elle-même n'est pas enregistrée, et l'empreinte ne permet pas de la reconstituer.",
   "Le domaine de l'adresse électronique que vous indiquez fait l'objet d'une vérification technique — nous demandons au réseau si ce domaine reçoit du courrier. Aucun message ne vous est envoyé à cette occasion, et un domaine non vérifiable n'empêche jamais votre demande d'aboutir.",
+  "La page de demande de démonstration porte enfin un contrôle anti-robot fourni par Cloudflare. Il examine votre adresse IP et quelques caractéristiques techniques de votre navigateur pour établir que vous êtes bien une personne. Il ne dépose aucun cookie et ne conserve rien chez nous.",
 ];
 
 const finalite = [
@@ -91,11 +103,22 @@ const sousTraitants = [
     valeur:
       "Acheminement du message issu du formulaire jusqu'à notre boîte de réception.",
   },
+  {
+    terme: "Cloudflare",
+    valeur:
+      "Contrôle anti-robot du formulaire. Reçoit votre adresse IP et quelques caractéristiques techniques de votre navigateur, à seule fin de distinguer un visiteur d'un automate.",
+  },
+];
+
+const transferts = [
+  "L'hébergement et l'acheminement des messages se font sur des infrastructures situées dans l'Union européenne.",
+  "Le contrôle anti-robot fait exception : Cloudflare est une société américaine, et le traitement de votre adresse IP à cette occasion peut impliquer un transfert hors de l'Union européenne, encadré par les garanties contractuelles que Cloudflare met en œuvre auprès de ses clients. Ce traitement se limite à la page de demande de démonstration, et les données correspondantes ne nous sont jamais transmises.",
 ];
 
 const cookies = [
-  "Ce site ne dépose aucun cookie. Il n'utilise ni mesure d'audience, ni pixel publicitaire, ni bouton de réseau social, ni police de caractères chargée depuis un serveur tiers.",
-  "C'est pour cette raison qu'aucune bannière de consentement ne vous est présentée : il n'y a rien à consentir. Aucune requête n'est émise vers un autre domaine que celui de ce site.",
+  "Ce site ne dépose aucun cookie, et n'écrit rien dans la mémoire de votre navigateur. Il n'utilise ni mesure d'audience, ni pixel publicitaire, ni bouton de réseau social, ni police de caractères chargée depuis un serveur tiers.",
+  "C'est pour cette raison qu'aucune bannière de consentement ne vous est présentée : il n'y a rien à consentir, puisque rien n'est déposé.",
+  "Une seule exception à l'absence de tiers, et elle est limitée à la page de demande de démonstration : le contrôle anti-robot y fait appel à Cloudflare. Votre navigateur contacte alors challenges.cloudflare.com, qui reçoit votre adresse IP et quelques caractéristiques techniques. Ce contrôle ne dépose aucun cookie et ne sert qu'à distinguer un visiteur d'un automate — il ne permet ni de vous identifier, ni de vous suivre d'un site à l'autre. Aucune autre page du site n'émet la moindre requête vers un autre domaine.",
 ];
 
 const droits = [
@@ -158,10 +181,9 @@ export default function PolitiqueConfidentialitePage() {
             <p key={texte}>{texte}</p>
           ))}
           <LegalIdentite entrees={sousTraitants} />
-          <p>
-            Aucun transfert de vos données en dehors de l&apos;Union européenne
-            n&apos;est effectué à notre initiative.
-          </p>
+          {transferts.map((texte) => (
+            <p key={texte}>{texte}</p>
+          ))}
         </LegalBloc>
 
         <LegalBloc numero="07" titre="Cookies et traceurs : aucun">

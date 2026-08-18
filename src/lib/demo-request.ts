@@ -138,9 +138,14 @@ export function suggererAdresse(email: string): string | null {
 
 /* ==========================================================================
    ANTI-SPAM
-   Deux barrières sans cookie, sans service tiers, sans capteur biométrique :
-   rien à déclarer au titre du RGPD, aucun impact sur les Core Web Vitals.
-   Les deux sont vérifiées par demande.php ; ici on ne déclare que les noms.
+   Deux barrières posées ici, sans cookie et sans service tiers : un champ
+   piège et une mesure de durée, toutes deux vérifiées par demande.php. On ne
+   déclare ici que leurs noms.
+
+   ⚠️ Depuis le 18/08/2026, elles ne sont plus les seules : Turnstile s'y
+   ajoute, et LUI fait appel à un tiers. La phrase « aucun service tiers » ne
+   vaut donc que pour ces deux barrières-ci, plus pour le formulaire dans son
+   ensemble — voir la politique de confidentialité, qui en fait état.
    ========================================================================== */
 
 /** Nom du champ piège. Plausible pour un robot, invisible pour un humain. */
