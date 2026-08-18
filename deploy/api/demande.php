@@ -186,11 +186,56 @@ function adresseVisiteur(): string
 const ENVOIS_MAX_PAR_HEURE = 5;
 const ENVOIS_MAX_PAR_JOUR  = 15;
 
-$fichierLimites = $dossierConfig . '/argon-limites.php';
+/**
+ * Où écrire le compteur.
+ *
+ * ⚠️ Ce n'est PAS une question de goût. Dans le conteneur de production, le
+ * dossier de la configuration est `/var/www` : il appartient à root, et Apache
+ * y tourne sous l'uid 33. Il ne peut donc rien y écrire. Le fichier de
+ * configuration lui-même y est monté en LECTURE SEULE depuis l'hôte, et créer
+ * un fichier voisin côté hôte ne servirait à rien — seul ce fichier-là est
+ * monté, pas le dossier qui le contient.
+ *
+ * On essaie donc les emplacements dans l'ordre, et on prend le premier
+ * réellement accessible en écriture :
+ *
+ *   1. le dossier de la configuration — utilisé tel quel si quelqu'un monte un
+ *      jour un dossier inscriptible à cet endroit ; le compteur s'y installera
+ *      sans modification de code ;
+ *   2. le dossier temporaire du système, qui existe et est inscriptible dans
+ *      toute image PHP.
+ *
+ * Le repli sur le dossier temporaire a une conséquence à connaître : une
+ * recréation du conteneur remet le compteur à zéro. Pour une fenêtre glissante
+ * de vingt-quatre heures, c'est acceptable — et la recréation du conteneur
+ * vitrine est un événement rare, le déploiement du site se faisant par rsync
+ * sans redémarrage.
+ */
+function dossierCompteur(string $dossierConfig): string
+{
+    foreach ([$dossierConfig, sys_get_temp_dir()] as $candidat) {
+        if ($candidat !== '' && is_dir($candidat) && is_writable($candidat)) {
+            return $candidat;
+        }
+    }
+    return '';
+}
+
+$dossierLimites = dossierCompteur($dossierConfig);
+$fichierLimites = $dossierLimites === '' ? '' : $dossierLimites . '/argon-limites.php';
+
+if ($fichierLimites === '') {
+    error_log(
+        '[demande-demo] ATTENTION : aucun emplacement inscriptible pour le compteur '
+        . '(essayes : ' . $dossierConfig . ', ' . sys_get_temp_dir() . '). '
+        . 'La limitation d envois est INACTIVE.',
+    );
+}
+
 $empreinte = hash('sha256', adresseVisiteur() . '|' . (string) $config['secretKey']);
 
 $historique = [];
-if (is_readable($fichierLimites)) {
+if ($fichierLimites !== '' && is_readable($fichierLimites)) {
     $lu = @include $fichierLimites;
     if (is_array($lu)) {
         $historique = $lu;
@@ -216,7 +261,9 @@ $miens = $historique[$empreinte] ?? [];
 $surUneHeure = count(array_filter($miens, static fn(int $t): bool => $t > $maintenant - 3600));
 $surUnJour   = count($miens);
 
-if ($surUneHeure >= ENVOIS_MAX_PAR_HEURE || $surUnJour >= ENVOIS_MAX_PAR_JOUR) {
+if ($fichierLimites !== ''
+    && ($surUneHeure >= ENVOIS_MAX_PAR_HEURE || $surUnJour >= ENVOIS_MAX_PAR_JOUR)
+) {
     error_log(sprintf(
         '[demande-demo] Limite atteinte : %d envoi(s) sur une heure, %d sur 24 h. Aucun envoi.',
         $surUneHeure,
@@ -230,7 +277,7 @@ if ($surUneHeure >= ENVOIS_MAX_PAR_HEURE || $surUnJour >= ENVOIS_MAX_PAR_JOUR) {
 
 $historique[$empreinte] = [...$miens, $maintenant];
 
-if (@file_put_contents(
+if ($fichierLimites !== '' && @file_put_contents(
     $fichierLimites,
     "<?php\n\n// Compteur d'envois. Empreintes salees, purge a 24 h. Genere automatiquement.\n\nreturn "
         . var_export($historique, true) . ";\n",
@@ -241,7 +288,7 @@ if (@file_put_contents(
     // inactive depuis des mois sans que rien ne l'ait signalé.
     error_log(
         '[demande-demo] ATTENTION : compteur non ecrit (' . $fichierLimites
-        . '). La limitation d envois est INACTIVE. Verifier chown 33:33 et chmod 600.',
+        . '). La limitation d envois est INACTIVE.',
     );
 }
 

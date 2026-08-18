@@ -18,23 +18,22 @@
 
 /*
  * ---------------------------------------------------------------------------
- * FICHIER VOISIN : argon-limites.php
+ * COMPTEUR D'ENVOIS — RIEN À FAIRE
  *
  * `demande.php` borne le nombre d'envois par visiteur et tient son compteur
- * dans `argon-limites.php`, DANS CE MÊME DOSSIER. Il le crée tout seul — à
- * condition de pouvoir y écrire.
+ * dans un fichier `argon-limites.php` qu'il crée tout seul, à l'emplacement
+ * inscriptible qu'il trouve.
  *
- * ⚠️ Apache tourne sous l'uid 33 dans le conteneur. Si le dossier ne lui est
- * pas accessible en écriture, le compteur n'est jamais écrit et la limitation
- * est INACTIVE. Le cas est journalisé à chaque envoi, en toutes lettres — mais
- * autant le prévenir :
+ * En production, ce sera le dossier temporaire du conteneur : le dossier de ce
+ * fichier-ci, `/var/www`, appartient à root et Apache y tourne sous l'uid 33.
+ * Créer le fichier côté hôte ne servirait à rien — seul `argon-config.php` est
+ * monté, pas le dossier qui le contient.
  *
- *     touch  /home/argon/vitrine/argon-limites.php
- *     chown  33:33 /home/argon/vitrine/argon-limites.php
- *     chmod  600   /home/argon/vitrine/argon-limites.php
+ * Conséquence à connaître : une recréation du conteneur remet le compteur à
+ * zéro. Pour une fenêtre glissante de 24 h, c'est sans importance.
  *
  * Le fichier ne contient que des empreintes salées et des horodatages : ni
- * adresse IP, ni donnée personnelle en clair. Purge automatique à 24 h.
+ * adresse IP, ni donnée personnelle en clair.
  * ---------------------------------------------------------------------------
  */
 
