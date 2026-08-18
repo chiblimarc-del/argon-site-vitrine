@@ -36,7 +36,7 @@ export function ReportDocument() {
           <div className="flex items-start justify-between gap-4 border-b border-[#dfe3ef] pb-4">
             <div className="flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded bg-[#0a1240]">
-                <LogoMark id="report-mark" className="h-4 w-4 text-argon" />
+                <LogoMark className="h-4 w-4 text-argon" />
               </span>
               <span className="text-[12px] font-semibold tracking-[0.12em] text-[#0a1240]">
                 ARGON

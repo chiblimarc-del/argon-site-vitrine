@@ -80,7 +80,7 @@ export function PlanningBoard() {
       <div className="glass-strong overflow-hidden rounded-[var(--radius-lg)]">
         {/* ---------- Barre d'application ---------- */}
         <div className="flex items-center gap-2.5 border-b border-line-soft bg-surface-2/60 px-4 py-3">
-          <LogoMark id="planning-mark" className="h-4 w-4 shrink-0 text-argon" />
+          <LogoMark className="h-4 w-4 shrink-0 text-argon" />
           <span className="text-[11px] font-semibold tracking-[0.14em] text-ink">
             ARGON
           </span>

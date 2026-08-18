@@ -36,7 +36,7 @@ export function MobilePanel() {
           <div className="overflow-hidden rounded-[22px] bg-canvas">
             {/* Barre d'application */}
             <div className="flex items-center gap-2 border-b border-line-soft bg-surface-2/60 px-3.5 py-2.5">
-              <LogoMark id="mobile-mark" className="h-3.5 w-3.5 shrink-0 text-argon" />
+              <LogoMark className="h-3.5 w-3.5 shrink-0 text-argon" />
               <span className="text-[10px] font-semibold tracking-[0.14em] text-ink">
                 ARGON
               </span>
