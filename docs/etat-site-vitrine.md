@@ -1,6 +1,12 @@
-# Site vitrine Argon — EN LIGNE, fermé aux moteurs (18/08/2026, 15h00)
+# Site vitrine Argon — EN LIGNE ET OUVERT AUX MOTEURS (18/08/2026, 16h00)
 
-**https://www.argon-mobility.com** — déployé, fonctionnel, **volontairement invisible de Google** tant que les mentions légales ne sont pas publiées.
+**https://www.argon-mobility.com** — déployé, fonctionnel, **ouvert à l'indexation depuis le 18/08/2026**.
+
+Les 16 pages de contenu sont indexables ; `/demande-envoyee`, `/mentions-legales`
+et `/politique-de-confidentialite` restent en `noindex, follow`, et les seize
+duplicatas `.txt` que Next produit à côté des pages sont tenus hors de l'index
+par la règle `FilesMatch` du `.htaccess` — vérifié en production le jour de
+l'ouverture, c'est elle et elle seule qui les protège désormais.
 
 **Code : https://github.com/chiblimarc-del/argon-site-vitrine** (branche `main`, à jour).
 **SaaS : github.com/chiblimarc-del/argon-mobility** (branche `master`, à jour) — pour la configuration Caddy.
@@ -170,7 +176,17 @@ formulaire.
    `argon-config.php` de la vitrine, que rien ne synchronise. Une rotation les
    touche tous si la clé est partagée.
 
-4. **Ouvrir** : `npm run deploy:ouvrir` → redéployer **tout** (le `.htaccess` change) → soumettre le sitemap en Search Console.
+4. *(Fait le 18/08)* **Ouverture aux moteurs.** Contrôlé après téléversement :
+   16 pages en `index, follow`, 3 en `noindex, follow`, sitemap de 16 URLs
+   cohérent avec le registre, canonical corrects, duplicatas `.txt` toujours en
+   `noindex`, `robots.txt` sans en-tête et portant la ligne `Sitemap:`.
+
+   ⚠️ **Ne jamais relancer `deploy-argon.sh` après un `deploy:ouvrir`** : il
+   reconstruit en mode FERMÉ et ferait retomber le site hors de l'index sans
+   rien signaler. Utiliser `televerser.sh`, qui envoie `dist/` tel quel et
+   annonce l'état lu dans le `.htaccess` avant d'envoyer.
+
+   *(Ancienne procédure :)* **Ouvrir** : `npm run deploy:ouvrir` → redéployer **tout** (le `.htaccess` change) → soumettre le sitemap en Search Console.
    ⚠️ Vérifier alors que `/index.txt` porte toujours `noindex` et que `/robots.txt` n'en porte plus :
    ```bash
    curl -sI https://www.argon-mobility.com/index.txt  | grep -i x-robots-tag   # noindex, nofollow
@@ -241,6 +257,7 @@ plusieurs commandes muettes le 18/08.
 | `rotation-mailjet.sh` | envoie et lance la rotation des clés sur le serveur |
 | `poser-cles-mailjet.sh` | remplace les deux clés dans `argon-config.php` (tourne SUR le serveur) |
 | `poser-cle-turnstile.sh` | pose la clé secrète Turnstile (tourne SUR le serveur) |
+| `televerser.sh` | envoie `dist/` **tel quel**, sans reconstruire — à utiliser après `deploy:ouvrir` |
 | `commit-etat.sh` | verse ce document dans le dépôt |
 
 Tous suivent la même règle : sauvegarde, écriture **dans** le fichier existant
