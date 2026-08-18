@@ -65,9 +65,14 @@ $emplacements = [
 ];
 
 $config = null;
+$dossierConfig = '';
 foreach ($emplacements as $emplacement) {
     if (is_readable($emplacement)) {
         $config = require $emplacement;
+        // Le compteur d'envois vivra à côté : même dossier, mêmes garanties
+        // d'accès. Si la configuration est hors de la racine web, le compteur
+        // l'est aussi.
+        $dossierConfig = dirname($emplacement);
         break;
     }
 }
@@ -99,6 +104,145 @@ if ($manquants !== []) {
         . '. La demande n\'a PAS ete envoyee.',
     );
     redirige('erreur');
+}
+
+/* --------------------------------------------------------------------------
+   ORIGINE DE LA REQUÊTE
+   Un robot qui poste directement sur ce point d'entrée n'a aucune raison
+   d'envoyer un en-tête `Origin` ou `Referer` cohérent : il n'est jamais passé
+   par la page.
+
+   ⚠️ L'absence des DEUX en-têtes ne bloque pas. Certains navigateurs et
+   certaines extensions de confidentialité les suppriment, et refuser sur cette
+   base perdrait des demandes légitimes sans que personne ne le sache jamais.
+   On ne refuse que sur une origine PRÉSENTE et ÉTRANGÈRE : c'est un signal,
+   pas une absence de signal.
+   -------------------------------------------------------------------------- */
+
+const ORIGINE_ATTENDUE = 'https://www.argon-mobility.com';
+
+$origine  = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+$referent = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+
+if ($origine !== '' && !str_starts_with($origine, ORIGINE_ATTENDUE)) {
+    error_log('[demande-demo] Origine etrangere : ' . $origine . '. Aucun envoi.');
+    redirige('succes');
+}
+if ($origine === '' && $referent !== '' && !str_starts_with($referent, ORIGINE_ATTENDUE)) {
+    error_log('[demande-demo] Referent etranger : ' . $referent . '. Aucun envoi.');
+    redirige('succes');
+}
+
+/* --------------------------------------------------------------------------
+   ADRESSE RÉELLE DU VISITEUR
+   ⚠️ `REMOTE_ADDR` NE CONVIENT PAS ICI. Le conteneur est derrière Caddy : il
+   voit l'adresse du proxy, pas celle du visiteur. Le journal du 18/08/2026 le
+   montre — « [client 172.18.0.3] » pour toutes les demandes, quelle qu'en soit
+   la provenance.
+
+   Une limitation fondée sur `REMOTE_ADDR` ne serait donc pas seulement
+   inefficace : elle compterait TOUS les visiteurs comme un seul et les
+   bloquerait tous après quelques envois.
+
+   `X-Forwarded-For` est renseigné par le proxy, qui AJOUTE à droite : la
+   première entrée est l'adresse d'origine. On ne s'y fie que parce qu'on sait
+   qui est devant — cet en-tête est trivialement falsifiable sur un serveur
+   directement exposé.
+   -------------------------------------------------------------------------- */
+
+function adresseVisiteur(): string
+{
+    $transmise = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+    if ($transmise !== '') {
+        $premiere = trim(explode(',', $transmise)[0]);
+        if (filter_var($premiere, FILTER_VALIDATE_IP) !== false) {
+            return $premiere;
+        }
+    }
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+}
+
+/* --------------------------------------------------------------------------
+   LIMITATION DU NOMBRE D'ENVOIS
+   Le champ piège et le contrôle de délai arrêtent un robot naïf. Un robot qui
+   remplit les cinq champs visibles et attend trois secondes passe — et, sans
+   ce compteur, peut recommencer indéfiniment.
+
+   Les seuils sont volontairement larges : personne ne demande légitimement six
+   démonstrations en une heure, mais quelqu'un qui se trompe deux fois de
+   numéro de téléphone avant d'y arriver, si. On compte TOUTES les tentatives
+   parvenues jusqu'ici, y compris celles que la validation refusera ensuite :
+   sinon un robot pourrait marteler avec des données invalides sans jamais être
+   compté.
+
+   L'adresse n'est pas stockée : seule son empreinte l'est, salée avec la clé
+   secrète Mailjet — un secret qui existe déjà, plutôt qu'un secret de plus à
+   gérer. Le fichier ne permet donc pas de reconstituer la liste des visiteurs.
+
+   Le fichier porte l'extension `.php` et non `.json` : servi par erreur, il
+   serait exécuté et ne rendrait rien, au lieu d'exposer son contenu.
+   -------------------------------------------------------------------------- */
+
+const ENVOIS_MAX_PAR_HEURE = 5;
+const ENVOIS_MAX_PAR_JOUR  = 15;
+
+$fichierLimites = $dossierConfig . '/argon-limites.php';
+$empreinte = hash('sha256', adresseVisiteur() . '|' . (string) $config['secretKey']);
+
+$historique = [];
+if (is_readable($fichierLimites)) {
+    $lu = @include $fichierLimites;
+    if (is_array($lu)) {
+        $historique = $lu;
+    }
+}
+
+$maintenant = time();
+
+// Purge : au-delà de 24 h, une trace ne sert plus à rien et ne doit pas rester.
+foreach ($historique as $cle => $instants) {
+    $recents = array_values(array_filter(
+        (array) $instants,
+        static fn($t): bool => is_int($t) && $t > $maintenant - 86400,
+    ));
+    if ($recents === []) {
+        unset($historique[$cle]);
+    } else {
+        $historique[$cle] = $recents;
+    }
+}
+
+$miens = $historique[$empreinte] ?? [];
+$surUneHeure = count(array_filter($miens, static fn(int $t): bool => $t > $maintenant - 3600));
+$surUnJour   = count($miens);
+
+if ($surUneHeure >= ENVOIS_MAX_PAR_HEURE || $surUnJour >= ENVOIS_MAX_PAR_JOUR) {
+    error_log(sprintf(
+        '[demande-demo] Limite atteinte : %d envoi(s) sur une heure, %d sur 24 h. Aucun envoi.',
+        $surUneHeure,
+        $surUnJour,
+    ));
+    // `erreur` et non `succes` : un humain qui atteint la limite doit le voir
+    // et pouvoir appeler. Lui afficher une confirmation mensongère serait
+    // exactement la panne silencieuse que ce fichier passe son temps à éviter.
+    redirige('erreur');
+}
+
+$historique[$empreinte] = [...$miens, $maintenant];
+
+if (@file_put_contents(
+    $fichierLimites,
+    "<?php\n\n// Compteur d'envois. Empreintes salees, purge a 24 h. Genere automatiquement.\n\nreturn "
+        . var_export($historique, true) . ";\n",
+    LOCK_EX,
+) === false) {
+    // Un compteur qu'on ne peut pas écrire est un compteur qui n'existe pas.
+    // Le dire fort : le mode de panne à éviter est celui où la limitation est
+    // inactive depuis des mois sans que rien ne l'ait signalé.
+    error_log(
+        '[demande-demo] ATTENTION : compteur non ecrit (' . $fichierLimites
+        . '). La limitation d envois est INACTIVE. Verifier chown 33:33 et chmod 600.',
+    );
 }
 
 /* --------------------------------------------------------------------------
@@ -199,6 +343,73 @@ if ($secteur === '' || $longueur($secteur) > 60) {
     $refus[] = 'secteur (« ' . $secteur . ' »)';
 }
 
+/* --------------------------------------------------------------------------
+   CONTENU MANIFESTEMENT AUTOMATISÉ
+   Le formulaire n'a aucun champ libre : « nom » et « entreprise » n'ont donc
+   aucune raison de contenir une URL. Quand ils en contiennent une, ce n'est
+   pas une maladresse de saisie, c'est une charge utile de spam.
+   Traité comme le champ piège : on répond « succès » sans rien envoyer. Le
+   robot n'apprend rien, le journal dit tout.
+   -------------------------------------------------------------------------- */
+
+const MOTIF_LIEN = '~(https?://|www\.|\[url|</?a\s)~i';
+
+if (preg_match(MOTIF_LIEN, $nom) === 1 || preg_match(MOTIF_LIEN, $entreprise) === 1) {
+    error_log('[demande-demo] Lien detecte dans un champ nominatif. Aucun envoi.');
+    redirige('succes');
+}
+
+/* --------------------------------------------------------------------------
+   DOMAINE DE L'ADRESSE
+   Deux contrôles de nature différente, et c'est important de ne pas les
+   confondre.
+
+   1. Les messageries jetables sont REFUSÉES. Une adresse temporaire ne permet
+      ni de rappeler, ni de suivre l'échange : elle ne correspond à aucune
+      demande de démonstration sérieuse.
+
+   2. L'existence du domaine est seulement SIGNALÉE, jamais bloquante. Une
+      résolution DNS peut échouer parce que le domaine est faux — ou parce que
+      le résolveur du serveur a hoqueté. Refuser sur ce doute reviendrait à
+      perdre une vraie demande pour une panne réseau de trois secondes.
+      La demande part donc, avec la mention dans le mail reçu.
+
+   ⚠️ Ce contrôle N'ATTRAPE PAS les fautes de frappe sur un domaine qui existe.
+   Vérifié : « gamil.com » — la coquille du test du 18/08 — possède de vrais
+   enregistrements MX, c'est un typosquat enregistré. Le DNS le déclare donc
+   valide, et il l'est. Seule la suggestion affichée dans le navigateur peut
+   rattraper ce cas ; les deux contrôles sont complémentaires, aucun ne
+   remplace l'autre. Ce qui est attrapé ici, ce sont les domaines qui
+   n'existent pas du tout.
+   -------------------------------------------------------------------------- */
+
+const DOMAINES_JETABLES = [
+    'yopmail.com', 'yopmail.fr', 'jetable.org', 'mailinator.com',
+    'guerrillamail.com', 'guerrillamail.info', 'sharklasers.com',
+    'temp-mail.org', 'tempmail.com', 'throwawaymail.com', '10minutemail.com',
+    '10minutemail.net', 'trashmail.com', 'trashmail.fr', 'getnada.com',
+    'maildrop.cc', 'dispostable.com', 'fakeinbox.com', 'mohmal.com',
+    'emailondeck.com', 'moakt.com', 'tempr.email', 'discard.email',
+    'spamgourmet.com', 'mailnesia.com', 'burnermail.io',
+];
+
+$domaineEmail = strtolower((string) substr((string) strrchr($email, '@'), 1));
+
+if ($domaineEmail !== '' && in_array($domaineEmail, DOMAINES_JETABLES, true)) {
+    $refus[] = 'email (messagerie jetable : ' . $domaineEmail . ')';
+}
+
+$domaineResolu = true;
+if ($domaineEmail !== '' && $refus === [] && function_exists('checkdnsrr')) {
+    $domaineResolu = checkdnsrr($domaineEmail, 'MX') || checkdnsrr($domaineEmail, 'A');
+    if (!$domaineResolu) {
+        error_log(
+            '[demande-demo] Domaine sans enregistrement MX ni A : ' . $domaineEmail
+            . '. La demande PART quand meme, signalee dans le mail.',
+        );
+    }
+}
+
 if ($refus !== []) {
     error_log('[demande-demo] Demande refusee - champs invalides : ' . implode(', ', $refus));
     redirige('erreur');
@@ -237,6 +448,14 @@ $corps = implode("\n", [
     'Téléphone    : ' . $telephone,
     'Activité     : ' . $activite,
 ]);
+
+// Le doute sur l'adresse est porté jusque dans la boîte de réception : c'est
+// là qu'on décide de rappeler par téléphone plutôt que d'écrire dans le vide.
+if (!$domaineResolu) {
+    $corps .= "\n\n"
+        . '⚠️ Le domaine « ' . $domaineEmail . ' » n\'a pas pu être résolu. '
+        . 'L\'adresse est peut-être mal saisie : préférez le téléphone.';
+}
 
 $charge = [
     'Messages' => [[

@@ -24,21 +24,20 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  * champ supplémentaire apparaît un jour, CETTE PAGE se met à jour dans le même
  * commit — pas plus tard.
  *
- * ⚠️ POINT OUVERT — BASE LÉGALE, À FAIRE CONFIRMER PAR UN JURISTE
+ * BASE LÉGALE — ARBITRÉE LE 18/08/2026
  *
  * L'article 13.1.c du RGPD impose d'indiquer la base juridique du traitement.
- * Deux qualifications sont plausibles pour ce formulaire, et le choix entre
- * elles n'appartient pas à celui qui écrit le code :
+ * Deux qualifications étaient plausibles ; le choix s'est porté sur l'article
+ * 6.1.b, mesures précontractuelles prises à la demande de la personne.
  *
- *   — art. 6.1.b, mesures précontractuelles prises à la demande de la
- *     personne : c'est le visiteur qui sollicite une démonstration ;
- *   — art. 6.1.f, intérêt légitime : qualification retenue par beaucoup
- *     d'éditeurs pour la prospection entre professionnels.
+ * Le motif : c'est le prospect lui-même qui sollicite une démonstration, et
+ * les cinq données servent exclusivement à le recontacter, préparer la
+ * présentation et suivre l'échange. L'intérêt légitime (art. 6.1.f), l'autre
+ * candidat, décrit une prospection que nous n'engageons pas — nous ne
+ * constituons aucun fichier à partir d'autres sources.
  *
- * En attendant cette validation, la page décrit le fondement du traitement
- * SANS citer d'article — elle dit ce qui déclenche la collecte, ce qui est
- * exact et vérifiable. La référence devra être ajoutée une fois tranchée :
- * une politique muette sur ce point reste incomplète au regard de l'article 13.
+ * Le sujet est donc clos : ne pas le rouvrir sans un motif nouveau, et si la
+ * qualification devait changer, corriger la page ET ce commentaire ensemble.
  */
 
 const PATH = "/politique-de-confidentialite";
@@ -63,11 +62,13 @@ const technique = [
   "Comme tout serveur web, celui qui sert ce site enregistre les requêtes qu'il reçoit : adresse IP, date et heure, page demandée, navigateur utilisé. Ces journaux servent au diagnostic technique et à la sécurité, jamais à la prospection, et ne sont jamais recoupés avec les demandes reçues par le formulaire.",
   "Ils ne sont pas conservés pour une durée fixe mais bornés en volume : au plus trois fichiers de dix mégaoctets, les entrées les plus anciennes étant écrasées à mesure que de nouvelles arrivent. Leur profondeur d'historique dépend donc du trafic, et reste de l'ordre de quelques semaines.",
   "Le formulaire mesure par ailleurs la durée de sa saisie et comporte un champ invisible destiné aux robots. Ces deux mesures servent uniquement à écarter les soumissions automatisées ; elles ne sont pas conservées.",
+  "Pour empêcher qu'un automate ne sature le formulaire, le nombre d'envois est borné. Le serveur conserve à cette seule fin une empreinte chiffrée de votre adresse IP, effacée au bout de vingt-quatre heures : l'adresse elle-même n'est pas enregistrée, et l'empreinte ne permet pas de la reconstituer.",
+  "Le domaine de l'adresse électronique que vous indiquez fait l'objet d'une vérification technique — nous demandons au réseau si ce domaine reçoit du courrier. Aucun message ne vous est envoyé à cette occasion, et un domaine non vérifiable n'empêche jamais votre demande d'aboutir.",
 ];
 
 const finalite = [
   "Vos données servent à répondre à votre demande de démonstration : vous recontacter, préparer la présentation et assurer le suivi de l'échange. Elles ne servent à rien d'autre.",
-  "Le traitement repose entièrement sur la démarche que vous engagez : sans votre demande, aucune de ces données ne serait collectée. Nous ne constituons aucun fichier de prospection à partir d'autres sources.",
+  "Le traitement repose entièrement sur la démarche que vous engagez : sans votre demande, aucune de ces données ne serait collectée. Sa base légale est l'exécution de mesures précontractuelles prises à votre demande, au sens de l'article 6.1.b du RGPD. Nous ne constituons aucun fichier de prospection à partir d'autres sources.",
   "Vos données ne sont ni vendues, ni louées, ni cédées, ni utilisées à des fins publicitaires.",
 ];
 

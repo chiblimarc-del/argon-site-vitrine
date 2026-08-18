@@ -10,6 +10,7 @@ import {
   CHAMP_INSTANT,
   MOTIF_EMAIL,
   MOTIF_TELEPHONE,
+  suggererAdresse,
   type ChampDemo,
 } from "@/lib/demo-request";
 import { NavLink } from "@/components/navigation/NavLink";
@@ -107,6 +108,13 @@ export function DemoForm() {
   const ouvertureRef = useRef<number | null>(null);
   const champDureeRef = useRef<HTMLInputElement | null>(null);
 
+  /**
+   * Adresse corrigée proposée au visiteur, ou `null`. Recalculée à la sortie
+   * du champ : pendant la frappe, toute adresse incomplète ressemblerait à une
+   * faute et la suggestion clignoterait à chaque caractère.
+   */
+  const [adresseSuggeree, setAdresseSuggeree] = useState<string | null>(null);
+
   return (
     <form
       method="post"
@@ -132,9 +140,27 @@ export function DemoForm() {
       </Suspense>
 
       <div className="space-y-5">
-        {champs.map((champ) => (
-          <Champ key={champ.nom} {...champ} />
-        ))}
+        {champs.map((champ) =>
+          champ.nom === "email" ? (
+            <Champ
+              key={champ.nom}
+              {...champ}
+              onBlur={(evenement) =>
+                setAdresseSuggeree(suggererAdresse(evenement.currentTarget.value))
+              }
+              aide={
+                adresseSuggeree === null ? null : (
+                  <SuggestionAdresse
+                    adresse={adresseSuggeree}
+                    onAcceptee={() => setAdresseSuggeree(null)}
+                  />
+                )
+              }
+            />
+          ) : (
+            <Champ key={champ.nom} {...champ} />
+          ),
+        )}
 
         <SelecteurSecteur />
       </div>
@@ -222,6 +248,8 @@ function Champ({
   placeholder,
   motif,
   titre,
+  onBlur,
+  aide,
 }: {
   nom: ChampDemo;
   libelle: string;
@@ -230,6 +258,10 @@ function Champ({
   placeholder?: string;
   motif?: string;
   titre?: string;
+  /** Sortie du champ. Utilisé par l'e-mail pour proposer une correction. */
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  /** Message affiché sous le champ. Jamais bloquant. */
+  aide?: React.ReactNode;
 }) {
   return (
     <div>
@@ -245,9 +277,45 @@ function Champ({
         pattern={motif}
         title={titre}
         required
+        onBlur={onBlur}
         className={classesChamp}
       />
+      {aide}
     </div>
+  );
+}
+
+/**
+ * Proposition de correction d'adresse.
+ *
+ * Le champ est retrouvé par le formulaire du bouton plutôt que par une `ref` :
+ * le bouton est DANS le formulaire, `elements` le lui donne, et cela évite de
+ * faire traverser une ref à travers une frontière de props — ce que la règle
+ * `react-hooks/immutability` refuse, à juste titre.
+ */
+function SuggestionAdresse({
+  adresse,
+  onAcceptee,
+}: {
+  adresse: string;
+  onAcceptee: () => void;
+}) {
+  return (
+    <p className="mt-2 text-[13px] text-ink-soft">
+      Vouliez-vous dire{" "}
+      <button
+        type="button"
+        onClick={(evenement) => {
+          const champ = evenement.currentTarget.form?.elements.namedItem("email");
+          if (champ instanceof HTMLInputElement) champ.value = adresse;
+          onAcceptee();
+        }}
+        className="font-medium text-accent-text underline underline-offset-4 transition-colors hover:text-ink"
+      >
+        {adresse}
+      </button>
+      {" ?"}
+    </p>
   );
 }
 

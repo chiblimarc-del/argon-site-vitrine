@@ -16,6 +16,28 @@
  * remplacées par les vraies clés, jamais par des valeurs de test.
  */
 
+/*
+ * ---------------------------------------------------------------------------
+ * FICHIER VOISIN : argon-limites.php
+ *
+ * `demande.php` borne le nombre d'envois par visiteur et tient son compteur
+ * dans `argon-limites.php`, DANS CE MÊME DOSSIER. Il le crée tout seul — à
+ * condition de pouvoir y écrire.
+ *
+ * ⚠️ Apache tourne sous l'uid 33 dans le conteneur. Si le dossier ne lui est
+ * pas accessible en écriture, le compteur n'est jamais écrit et la limitation
+ * est INACTIVE. Le cas est journalisé à chaque envoi, en toutes lettres — mais
+ * autant le prévenir :
+ *
+ *     touch  /home/argon/vitrine/argon-limites.php
+ *     chown  33:33 /home/argon/vitrine/argon-limites.php
+ *     chmod  600   /home/argon/vitrine/argon-limites.php
+ *
+ * Le fichier ne contient que des empreintes salées et des horodatages : ni
+ * adresse IP, ni donnée personnelle en clair. Purge automatique à 24 h.
+ * ---------------------------------------------------------------------------
+ */
+
 return [
     // Mailjet > Account settings > REST API > API Key Management
     'apiKey'    => '',
