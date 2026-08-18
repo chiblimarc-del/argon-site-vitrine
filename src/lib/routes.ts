@@ -23,6 +23,53 @@
  * - `/secteurs/cvc` cible « logiciel gestion interventions CVC »
  *   (et non « maintenance climatisation », qui cannibaliserait /maintenance).
  * - `/ressources` n'est pas déclarée tant qu'aucun contenu réel n'existe.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * POINT DE SURVEILLANCE — RECOUVREMENT ENTRE `/` ET GESTION-INTERVENTIONS
+ *
+ * Les deux mots-clés ne diffèrent que par un mot :
+ *
+ *     /                                  logiciel gestion interventions terrain
+ *     /solutions/gestion-interventions   logiciel gestion des interventions
+ *
+ * La règle « une intention = une seule route » est tenue au sens strict, et
+ * `npm run seo:check` la fait respecter — mais il compare des CHAÎNES EXACTES.
+ * Deux mots-clés quasi identiques passent le contrôle sans alerte, alors qu'un
+ * moteur y verra la même intention. Le contrôle automatique ne peut donc pas
+ * trancher ce cas : c'est un point de vigilance humain.
+ *
+ * L'arbitrage a déjà été rendu une fois — le terme a été retiré des mots-clés
+ * secondaires de gestion-interventions — et il est délibéré, pas subi.
+ *
+ * CE QU'IL FAUT REGARDER, une fois le site ouvert et les données accumulées
+ * (compter deux à trois mois, pas deux semaines) :
+ *
+ *   Search Console > Performances > filtrer par requête contenant
+ *   « logiciel gestion intervention ». Pour chaque requête, regarder QUELLES
+ *   pages remontent.
+ *
+ * COMMENT DÉCIDER :
+ *
+ *   — une seule des deux pages remonte, systématiquement → rien à faire, la
+ *     séparation fonctionne ;
+ *   — les deux remontent sur la même requête et leurs positions alternent d'une
+ *     semaine à l'autre → c'est la cannibalisation. Google hésite, et
+ *     l'hésitation coûte des positions aux deux.
+ *
+ * SI LE SECOND CAS SE PRÉSENTE, dans l'ordre de préférence :
+ *
+ *   1. Différencier les <title> et les H1 sur l'angle réel de chaque page —
+ *      l'accueil vend la plateforme, la page solution vend le module. C'est le
+ *      geste le moins destructeur, et souvent suffisant.
+ *   2. Déplacer le mot-clé de l'accueil vers un terme plus large, l'accueil
+ *      ayant vocation à porter la marque et la catégorie, pas une requête
+ *      fonctionnelle précise.
+ *   3. En dernier recours seulement, canonicaliser l'une vers l'autre — on perd
+ *      alors une page indexable, et c'est rarement le bon prix à payer.
+ *
+ * ⚠️ Ne rien changer AVANT d'avoir les données. Arbitrer sur une intuition
+ * reviendrait à défaire un choix documenté au profit d'un autre, sans preuve.
+ * ─────────────────────────────────────────────────────────────────────────
  * - SUPPRIMÉE `/solutions/suivi-terrain` : intention quasi identique à
  *   gestion-interventions, repliée dedans.
  * - SUPPRIMÉE `/fonctionnalites` : fourre-tout qui concurrençait chaque page

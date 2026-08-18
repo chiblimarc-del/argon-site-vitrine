@@ -25,10 +25,18 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  * l'absence de cookie — Turnstile n'en pose aucun tant que le mode
  * « pre-clearance » reste désactivé, ce qui est son état par défaut.
  *
- * POINT À CONFIRMER : le mécanisme exact encadrant le transfert vers
- * Cloudflare (clauses contractuelles types, Data Privacy Framework) n'a pas
- * pu être vérifié à la source. La page décrit le fait sans nommer le
- * mécanisme. À compléter quand la réponse sera connue.
+ * MÉCANISME DE TRANSFERT — VÉRIFIÉ LE 18/08/2026
+ * Source : l'addendum de traitement des données publié par Cloudflare
+ * (cloudflare.com/cloudflare-customer-dpa/), qui énonce deux fondements
+ * cumulés — les clauses contractuelles types de la Commission européenne,
+ * module 2 lorsque le client est responsable de traitement, et l'adhésion de
+ * Cloudflare au Data Privacy Framework UE–États-Unis. La partie contractante
+ * est Cloudflare, Inc.
+ *
+ * ⚠️ Une adhésion au Data Privacy Framework se vérifie, et peut être retirée.
+ * Si ce cadre venait à être invalidé — les deux précédents, Safe Harbor puis
+ * Privacy Shield, l'ont été — les clauses contractuelles types subsisteraient,
+ * mais cette page devrait être relue.
  *
  * Une politique qui promet moins que la réalité est un mensonge ; une politique
  * qui promet plus est une faute. Si un traceur, une mesure d'audience ou un
@@ -112,7 +120,8 @@ const sousTraitants = [
 
 const transferts = [
   "L'hébergement et l'acheminement des messages se font sur des infrastructures situées dans l'Union européenne.",
-  "Le contrôle anti-robot fait exception : Cloudflare est une société américaine, et le traitement de votre adresse IP à cette occasion peut impliquer un transfert hors de l'Union européenne, encadré par les garanties contractuelles que Cloudflare met en œuvre auprès de ses clients. Ce traitement se limite à la page de demande de démonstration, et les données correspondantes ne nous sont jamais transmises.",
+  "Le contrôle anti-robot fait exception : Cloudflare, Inc. est une société américaine, et le traitement de votre adresse IP à cette occasion implique un transfert hors de l'Union européenne. Ce transfert repose sur deux fondements cumulés, que Cloudflare énonce dans son addendum de traitement des données : les clauses contractuelles types adoptées par la Commission européenne, et son adhésion au Data Privacy Framework entre l'Union européenne et les États-Unis.",
+  "Ce traitement se limite à la page de demande de démonstration, et les données correspondantes ne nous sont jamais transmises : nous ne recevons que le verdict, humain ou automate.",
 ];
 
 const cookies = [
