@@ -98,6 +98,11 @@ const faq: QuestionFaq[] = [
       "Non. Il n'y a ni navigation embarquée, ni calcul d'itinéraire, ni suivi de position du technicien. Ce que le bureau suit, c'est l'avancement des interventions — pas le déplacement des personnes.",
   },
   {
+    question: "Le client voit-il l'avancement de l'intervention ?",
+    answer:
+      "Oui. Dès que l'intervenant valide sa première étape sur son téléphone, un lien part au client : il suit l'avancement lui-même et récupère le compte rendu à la fin. Ce que le technicien valide sur le terrain est ce que le client voit.",
+  },
+  {
     question: "Que se passe-t-il quand le technicien clôture sa mission ?",
     answer:
       "Le compte rendu est généré en PDF avec les photos et la signature, puis transmis au client. Si le technicien a signalé une anomalie, elle remonte à l'exploitation, qui décide s'il y a un supplément à facturer.",

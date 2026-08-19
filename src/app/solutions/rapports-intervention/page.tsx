@@ -127,6 +127,33 @@ export default function RapportsInterventionPage() {
             <ReportDocument />
           </div>
         </div>
+
+        {/*
+          Le lien de suivi, ajouté le 19/08/2026 après contrôle produit.
+
+          Placé ici et nulle part ailleurs sur cette page : la section demande
+          « ce que reçoit votre client », et le compte rendu n'est pas la
+          première chose qu'il reçoit — le lien part bien avant, dès la
+          première étape validée.
+
+          Aucun nouveau titre : ce n'est pas une intention de recherche de plus,
+          c'est un prolongement de celle-ci.
+
+          Le jeton de suivi est porté par la MISSION (`lienSuiviToken`), pas par
+          une entité propre au transport : le mécanisme vaut pour tous les
+          métiers. Vérifié dans le code du SaaS, pas déduit.
+        */}
+        <p className="mt-12 max-w-3xl border-l-2 border-line pl-5 text-[15px] leading-relaxed text-ink-soft">
+          <span className="font-medium text-ink">
+            Et votre client n&apos;a pas à vous appeler pour savoir où ça en
+            est.
+          </span>{" "}
+          Dès que l&apos;intervenant valide sa première étape, un lien part au
+          client : il suit l&apos;avancement lui-même, et récupère le compte
+          rendu à la fin. Ce qui vous vaut le moins d&apos;appels, ce
+          n&apos;est pas de mieux répondre — c&apos;est de ne plus être la
+          seule source d&apos;information.
+        </p>
       </Section>
 
       {/* ---------- Ce que ça remplace ---------- */}
