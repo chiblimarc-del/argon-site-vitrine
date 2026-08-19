@@ -4,6 +4,17 @@ import { breadcrumbsFor } from "@/lib/routes";
 import { cn } from "@/lib/cn";
 
 /**
+ * ⚠️ COMPOSANT NON MONTÉ DEPUIS LE 19/08/2026.
+ *
+ * Le fil d'Ariane a été retiré de toutes les pages : sous l'en-tête, la barre
+ * « Accueil / Secteurs » se lisait comme deux onglets sans fonction. Le JSON-LD
+ * `breadcrumbSchema` a été retiré en même temps — voir la note dans lib/seo.ts.
+ *
+ * Le fichier est gardé pour que le retour arrière soit un import, pas une
+ * réécriture. Si personne ne le remonte, `git rm` est le bon geste.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *
  * Fil d'Ariane visible, dérivé du registre de routes.
  * Doit toujours être accompagné du JSON-LD `breadcrumbSchema(path)` :
  * Google exige que les données structurées reflètent un contenu visible.

@@ -1,5 +1,4 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { InterventionPanel } from "@/components/product-ui/InterventionPanel";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
@@ -8,7 +7,7 @@ import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { EngagementsSection } from "@/components/sections/depth/EngagementsSection";
 import { TableauDeBordSection } from "@/components/sections/depth/TableauDeBordSection";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * PAGE SOLUTION — GESTION DES INTERVENTIONS.
@@ -132,8 +131,6 @@ const faq: QuestionFaq[] = [
 export default function GestionInterventionsPage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <SolutionHero
         path={PATH}
         eyebrow="Gestion des interventions"
@@ -254,7 +251,6 @@ export default function GestionInterventionsPage() {
       />
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

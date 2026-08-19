@@ -1,12 +1,11 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { MobilePanel } from "@/components/product-ui/MobilePanel";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * PAGE SOLUTION — APPLICATION MOBILE TECHNICIEN.
@@ -112,8 +111,6 @@ const faq: QuestionFaq[] = [
 export default function ApplicationMobilePage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <SolutionHero
         path={PATH}
         eyebrow="Application mobile"
@@ -207,7 +204,6 @@ export default function ApplicationMobilePage() {
       />
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

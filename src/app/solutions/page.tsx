@@ -1,10 +1,9 @@
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { NavLink } from "@/components/navigation/NavLink";
 import { Button, ArrowRight } from "@/components/ui/Button";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 import { getRoute, solutionRoutes } from "@/lib/routes";
 import { primaryCta } from "@/lib/site";
 
@@ -51,8 +50,6 @@ export default function SolutionsPage() {
 
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <section className="relative overflow-hidden border-b border-line-soft">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
           <div className="grid-bg absolute inset-0" />
@@ -142,7 +139,6 @@ export default function SolutionsPage() {
       </Section>
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

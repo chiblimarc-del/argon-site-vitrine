@@ -1,5 +1,4 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { BillingPanel } from "@/components/product-ui/BillingPanel";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
@@ -8,7 +7,7 @@ import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { EncaissementSection } from "@/components/sections/depth/EncaissementSection";
 import { DocumentsSection } from "@/components/sections/depth/DocumentsSection";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * PAGE SOLUTION — DEVIS & FACTURATION.
@@ -176,8 +175,6 @@ const faq: QuestionFaq[] = [
 export default function DevisFacturationPage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <SolutionHero
         path={PATH}
         eyebrow="Devis & facturation"
@@ -346,7 +343,6 @@ export default function DevisFacturationPage() {
       />
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

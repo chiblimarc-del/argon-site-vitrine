@@ -1,12 +1,11 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ReportDocument } from "@/components/product-ui/ReportDocument";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * PAGE SOLUTION — RAPPORTS D'INTERVENTION.
@@ -92,8 +91,6 @@ const faq: QuestionFaq[] = [
 export default function RapportsInterventionPage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <SolutionHero
         path={PATH}
         eyebrow="Rapports d'intervention"
@@ -218,7 +215,6 @@ export default function RapportsInterventionPage() {
       />
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

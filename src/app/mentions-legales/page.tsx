@@ -1,4 +1,3 @@
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { NavLink } from "@/components/navigation/NavLink";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -7,7 +6,7 @@ import {
   LegalBloc,
   LegalIdentite,
 } from "@/components/sections/legal/LegalLayout";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * MENTIONS LÉGALES.
@@ -76,8 +75,6 @@ const litiges = [
 export default function MentionsLegalesPage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <LegalHero
         path={PATH}
         chapo="Informations relatives à l'éditeur du site, à son hébergeur et aux conditions d'utilisation de son contenu."
@@ -125,7 +122,6 @@ export default function MentionsLegalesPage() {
       </LegalCorps>
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

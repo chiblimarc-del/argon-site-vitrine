@@ -1,8 +1,7 @@
 import { Container } from "@/components/ui/Container";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { DemoForm } from "@/components/forms/DemoForm";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 import { getRoute } from "@/lib/routes";
 
 /**
@@ -45,8 +44,6 @@ export default function DemanderUneDemoPage() {
 
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <Container width="wide">
         <div className="grid gap-12 py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:gap-16 lg:py-24">
           {/* ---------- Colonne éditoriale ---------- */}
@@ -91,7 +88,6 @@ export default function DemanderUneDemoPage() {
       </Container>
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

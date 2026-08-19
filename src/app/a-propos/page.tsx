@@ -1,10 +1,9 @@
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * PAGE À PROPOS.
@@ -77,8 +76,6 @@ const choix = [
 export default function AProposPage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <SolutionHero
         path={PATH}
         eyebrow="À propos"
@@ -165,7 +162,6 @@ export default function AProposPage() {
       />
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }

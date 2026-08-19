@@ -158,11 +158,27 @@ export function webPageSchema(path: string) {
 /**
  * BreadcrumbList — dérivé du registre, jamais écrit à la main.
  *
+ * ⚠️ PLUS AUCUNE PAGE N'ÉMET CE SCHÉMA DEPUIS LE 19/08/2026.
+ *
+ * Le fil d'Ariane visible a été retiré de toutes les pages : la barre
+ * « Accueil / Secteurs » sous l'en-tête se lisait comme deux onglets inutiles.
+ * Le schéma est parti avec lui, et ce n'est pas un oubli : Google interdit de
+ * baliser un contenu que le visiteur ne voit pas. C'est la règle que ce fichier
+ * applique déjà à `faqSchema`. La garder pour le fil d'Ariane et l'enfreindre
+ * ici exposerait le site à une action manuelle pour données structurées
+ * trompeuses — un prix sans rapport avec le gain.
+ *
+ * CE QU'ON PERD : l'affichage du chemin dans les résultats de recherche. Google
+ * y substitue l'URL, déjà lisible (argon-mobility.com › solutions › planning).
+ *
+ * La fonction est CONSERVÉE, pas supprimée : le jour où un fil d'Ariane visible
+ * revient — sous une autre forme, dans le hero par exemple — il faudra réémettre
+ * ce schéma en même temps. Les deux vont ensemble, dans les deux sens.
+ *
  * Le schéma n'est émis que si TOUTE la chaîne est publiée. Un fil d'Ariane
  * structuré qui pointe vers une URL en 404 est signalé comme erreur dans la
  * Search Console, et Google exige une chaîne contiguë : on ne peut pas se
- * contenter de retirer le maillon manquant. Le fil visible, lui, reste affiché
- * pour l'utilisateur — voir components/seo/Breadcrumbs.
+ * contenter de retirer le maillon manquant.
  */
 export function breadcrumbSchema(path: string) {
   const trail = breadcrumbsFor(path);

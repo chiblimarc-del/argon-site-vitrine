@@ -1,4 +1,3 @@
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   LegalHero,
@@ -6,7 +5,7 @@ import {
   LegalBloc,
   LegalIdentite,
 } from "@/components/sections/legal/LegalLayout";
-import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
+import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
  * POLITIQUE DE CONFIDENTIALITÉ.
@@ -148,8 +147,6 @@ const modifications = [
 export default function PolitiqueConfidentialitePage() {
   return (
     <>
-      <Breadcrumbs path={PATH} />
-
       <LegalHero
         path={PATH}
         chapo="Ce site collecte très peu de données, et cette page dit exactement lesquelles, pourquoi, pendant combien de temps, et comment les faire supprimer."
@@ -221,7 +218,6 @@ export default function PolitiqueConfidentialitePage() {
       </LegalCorps>
 
       <JsonLd data={webPageSchema(PATH)} />
-      <JsonLd data={breadcrumbSchema(PATH)} />
     </>
   );
 }
