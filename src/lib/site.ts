@@ -129,6 +129,28 @@ export const secondaryCta = {
   href: "/solutions",
 } as const;
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ACCÈS À L'APPLICATION — « Connexion client »
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * L'espace client vit dans le SaaS, sur un autre domaine. Il n'a donc RIEN à
+ * faire dans `src/lib/routes.ts` : ce registre ne décrit que les pages de la
+ * vitrine, celles qui ont un title, une description et une place dans le
+ * sitemap. Y déclarer une URL externe casserait le sitemap et les breadcrumbs.
+ *
+ * ⚠️ Le lien est donc rendu par un <a> natif et NON par `NavLink` ou `Button` :
+ * ces deux composants passent par `next/link`, qui préfetche et intercepte la
+ * navigation — inutile et contre-productif vers un domaine tiers.
+ *
+ * `rel="noopener"` est posé côté composant. Le lien reste dans le même onglet :
+ * un client qui se connecte quitte la vitrine, c'est le comportement attendu.
+ */
+export const espaceClient = {
+  label: "Connexion client",
+  href: "https://app.argon-mobility.com/login",
+} as const;
+
 /** Construit une URL absolue à partir d'un chemin interne. */
 export function absoluteUrl(path: string): string {
   return `${siteUrl}${path === "/" ? "" : path}`;

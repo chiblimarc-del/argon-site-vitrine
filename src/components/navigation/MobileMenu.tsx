@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "@/components/navigation/NavLink";
 import { Button, ArrowRight } from "@/components/ui/Button";
+import { TelephoneLink } from "@/components/navigation/TelephoneLink";
+import { EspaceClient } from "@/components/navigation/EspaceClient";
 import { primaryCta } from "@/lib/site";
 import { solutionRoutes, secteurRoutes } from "@/lib/routes";
 
@@ -93,8 +95,26 @@ export function MobileMenu() {
             </ul>
           </nav>
 
-          <div className="mt-8">
-            <Button href={primaryCta.href} size="lg" className="w-full">
+          {/*
+            Le menu mobile garde les TROIS actions, là où l'en-tête n'en montre
+            que deux : c'est un panneau, pas une barre, et l'espace n'y est pas
+            disputé. Un visiteur mobile qui ouvre le menu cherche une action —
+            se connecter, appeler, ou demander une démonstration.
+          */}
+          <div className="mt-8 space-y-3">
+            <EspaceClient taille="lg" className="w-full" />
+            <TelephoneLink taille="lg" className="w-full justify-center" />
+            {/*
+              « Demander une démo » passe en variante secondaire : deux pastilles
+              indigo empilées ne hiérarchisent rien. La couleur pleine reste à
+              l'action mise en avant depuis le 19/08/2026, la connexion client.
+            */}
+            <Button
+              href={primaryCta.href}
+              variant="secondary"
+              size="lg"
+              className="w-full"
+            >
               {primaryCta.label}
               <ArrowRight />
             </Button>
