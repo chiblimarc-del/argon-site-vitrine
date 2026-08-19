@@ -97,7 +97,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Le technicien peut-il signaler un problème constaté sur place ?",
     answer:
-      "Oui. Il signale l'anomalie depuis l'application mobile — pièce manquante, accès impossible, prestation à revoir. L'intervention entre alors dans le SAS d'anomalie plutôt que de partir automatiquement au client, et elle est analysée avant d'aller plus loin.",
+      "Oui. Il signale l'anomalie depuis l'application mobile — pièce manquante, accès impossible, prestation à revoir. Elle remonte à l'exploitation, qui décide s'il y a un supplément à facturer, et l'intervention n'avance pas vers la facture avant cette décision.",
   },
 ];
 

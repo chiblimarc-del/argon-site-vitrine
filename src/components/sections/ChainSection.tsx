@@ -4,8 +4,8 @@ import { Section, SectionHeading } from "@/components/ui/Section";
  * SECTION 3 — LA CHAÎNE DE GESTION.
  *
  * Raconte la continuité réelle du produit : commercial → exploitation →
- * administration, avec le SAS d'anomalie en charnière entre le terrain et la
- * facturation.
+ * administration, avec le contrôle avant facturation en charnière entre le
+ * terrain et la facture.
  *
  * Écho visuel inversé de la section 2 : là où les liaisons étaient rompues et
  * les surfaces désalignées, tout est ici relié et aligné. Même vocabulaire
@@ -17,7 +17,8 @@ import { Section, SectionHeading } from "@/components/ui/Section";
  * Présenté ici, car confirmé disponible :
  *   CRM / gestion clients · devis · relances clients · planning et affectation
  *   application mobile technicien · photos terrain · signature client
- *   compte rendu d'intervention · génération PDF · SAS d'anomalie
+ *   compte rendu d'intervention · génération PDF · fenêtre Anomalies
+ *   SAS de Contrôle (prix et bon de commande, avant facturation)
  *   génération et envoi des factures
  *
  * INTERDIT dans cette section, car non disponible :
@@ -231,10 +232,29 @@ function Connecteur() {
 }
 
 /**
- * Le SAS d'anomalie — charnière entre le compte rendu terrain et la facture.
- * Décrit exactement le parcours défini côté produit : le compte rendu part
- * automatiquement au client, sauf en cas d'anomalie ; l'intervention est alors
- * mise en attente, analysée, puis validée ou corrigée avant facturation.
+ * La charnière entre le terrain et la facture.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * TROIS DISPOSITIFS DISTINCTS — corrigé le 18/08/2026 après contrôle produit.
+ *
+ *   · Fenêtre Anomalies — l'exploitation décide s'il y a un supplément à
+ *     facturer. Le client est informé par mail. La course n'avance pas avant
+ *     la décision. Sert aussi de TRACE : le supplément est justifié à la date
+ *     où il s'est produit, pas au moment de la facture.
+ *   · SAS de Commande — la tour de contrôle : état de la course, historique,
+ *     documents. Vocabulaire transport ; NE PAS l'exposer sur le site tant que
+ *     la question du périmètre métier n'est pas tranchée.
+ *   · SAS de Contrôle — prix et bon de commande, avant facturation. TOUTES
+ *     les courses y passent.
+ *
+ * « SAS d'anomalie » n'existe pas dans le produit : ce nom recouvrait deux
+ * dispositifs à la fois. Ne jamais le réintroduire.
+ *
+ * Et surtout : le compte rendu et le lien de suivi partent au client
+ * INDÉPENDAMMENT de tout cela — le lien part dès la première étape validée.
+ * Ne jamais écrire qu'une anomalie suspend l'information du client. Elle
+ * suspend la facturation. Le site a affirmé le contraire quatre fois.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 function AnomalyGate() {
   return (
@@ -257,21 +277,40 @@ function AnomalyGate() {
 
         <div className="lg:flex-1">
           <p className="text-[15px] leading-relaxed text-ink-soft">
-            À la clôture, le compte rendu est transmis automatiquement au
-            client. Sauf si le technicien a signalé une anomalie : pièce
-            manquante, accès impossible, prestation modifiée sur place.
-            L&apos;intervention entre alors dans le{" "}
-            <span className="font-medium text-ink">SAS d&apos;anomalie</span>,
-            où elle est analysée avant d&apos;être validée ou corrigée.
+            Quand le technicien signale une anomalie — pièce manquante, accès
+            impossible, prestation modifiée sur place —, l&apos;exploitation
+            décide s&apos;il y a un supplément à facturer, et le client en est
+            informé.{" "}
+            <span className="font-medium text-ink">
+              Tant que ce n&apos;est pas tranché, la course n&apos;avance pas
+              vers la facturation.
+            </span>
+          </p>
+
+          {/*
+            La trace, et c'est le vrai argument de ce bloc. Le supplément n'est
+            pas justifié au moment de la facture — il l'a été le jour où il
+            s'est produit, avec sa date et son mail au client. Une facture
+            contestée se défend avec ce qui a été dit AVANT elle.
+          */}
+          <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
+            Un supplément ne se justifie pas au moment de la facture :{" "}
+            <span className="font-medium text-ink">
+              il a été signalé, daté et notifié au client le jour où il s&apos;est
+              produit
+            </span>
+            . Puis, avant que la facture existe, le prix est vérifié, la remise
+            appliquée si elle a été promise, et les commandes sans bon de
+            commande client sont signalées. Toutes les courses y passent.
           </p>
 
           {/* Représentation du parcours de l'anomalie. */}
           <div className="mt-5 flex flex-wrap items-center gap-x-2.5 gap-y-2 text-[12px]">
-            <Jalon>Compte rendu</Jalon>
+            <Jalon ton="alerte">Anomalie signalée</Jalon>
             <Fleche />
-            <Jalon ton="alerte">SAS d&apos;anomalie</Jalon>
+            <Jalon>Décision</Jalon>
             <Fleche />
-            <Jalon>Contrôle</Jalon>
+            <Jalon>SAS de Contrôle</Jalon>
             <Fleche />
             <Jalon>Facture</Jalon>
           </div>

@@ -68,7 +68,7 @@ const preuve = [
   {
     titre: "Le contrôle protège la facture",
     texte:
-      "Si l'intervenant a signalé une réserve, l'intervention n'entre pas en facturation. Elle passe par le SAS d'anomalie et vous décidez ce qui part au client.",
+      "Si l'intervenant a signalé une réserve, l'intervention n'entre pas en facturation tant que vous n'avez pas décidé ce qui sera facturé. Le client est informé de la réserve le jour même : trois mois plus tard, la trace existe.",
   },
 ];
 
@@ -86,7 +86,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Que se passe-t-il si le client émet une réserve à la réception ?",
     answer:
-      "L'intervenant signale l'anomalie depuis son mobile. L'intervention entre alors dans le SAS d'anomalie plutôt que de partir automatiquement au client : elle est analysée, puis validée ou corrigée avant de poursuivre vers la facturation.",
+      "L'intervenant signale la réserve depuis son mobile. Elle remonte à l'exploitation, qui tranche ce qui sera facturé, et le client en est informé. La facturation attend cette décision.",
   },
   {
     question: "Argon gère-t-il le matériel et l'approvisionnement du chantier ?",

@@ -25,8 +25,8 @@ import { NavLink } from "@/components/navigation/NavLink";
  *
  * Présenté : CRM et gestion clients · devis · relances clients · planning et
  * affectation · interventions terrain · application mobile technicien · photos
- * terrain · signature client · comptes rendus · génération PDF · SAS
- * d'anomalie · génération et envoi des factures.
+ * terrain · signature client · comptes rendus · génération PDF · fenêtre
+ * Anomalies · SAS de Contrôle · génération et envoi des factures.
  *
  * INTERDIT : IA, géolocalisation avancée, optimisation automatique de
  * tournées, gestion de stocks, RH, BI avancée, TENUE de comptabilité. Argon

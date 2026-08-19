@@ -70,7 +70,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Le compte rendu est-il envoyé au client automatiquement ?",
     answer:
-      "Oui, à la clôture — sauf si une anomalie a été signalée. Dans ce cas l'intervention entre dans le SAS d'anomalie et le document ne part pas tant que la situation n'a pas été analysée. C'est ce qui évite d'envoyer au client un compte rendu contestable.",
+      "Oui, à la clôture. Si une anomalie a été signalée, elle remonte en parallèle à l'exploitation, qui décide de ce qui sera facturé — et le client en est informé le jour même. C'est cette trace, datée, qui fera tenir le supplément au moment de la facture.",
   },
   {
     question: "Peut-on retrouver un compte rendu plusieurs mois après ?",
@@ -156,15 +156,16 @@ export default function RapportsInterventionPage() {
             Le meilleur compte rendu est parfois celui qui ne part pas.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-ink-soft">
-            L&apos;envoi automatique est confortable jusqu&apos;au jour où il
-            expédie au client un document qui reconnaît un problème que personne
-            n&apos;a encore arbitré.{" "}
+            Un supplément qu&apos;on découvre au moment de la facture se
+            discute. Un supplément signalé le jour où il s&apos;est produit,
+            daté et notifié au client, se constate.{" "}
             <span className="font-medium text-ink">
-              Une anomalie signalée sur le terrain suspend l&apos;envoi
+              Une anomalie signalée sur le terrain suspend la facturation, pas
+              l&apos;information
             </span>{" "}
-            : l&apos;intervention passe par le SAS d&apos;anomalie, et c&apos;est
-            vous qui décidez de ce qui part. L&apos;automatisation s&apos;arrête
-            exactement là où elle deviendrait risquée.
+            : le client est prévenu, et c&apos;est vous qui décidez de ce qui
+            sera facturé. L&apos;automatisation s&apos;arrête exactement là où
+            elle deviendrait risquée.
           </p>
         </div>
       </Section>

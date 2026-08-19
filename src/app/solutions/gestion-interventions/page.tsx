@@ -33,7 +33,7 @@ import { metadataFor, webPageSchema, breadcrumbSchema } from "@/lib/seo";
  *
  * RÈGLE DE VÉRITÉ (V2 §31) — présenté ici, car validé produit : demande,
  * affectation, planning, application mobile, photos, signature client, compte
- * rendu PDF, SAS d'anomalie, historique client et site.
+ * rendu PDF, fenêtre Anomalies, SAS de Contrôle, historique client et site.
  * INTERDIT : IA, géolocalisation avancée, optimisation de tournées, stocks,
  * RH, BI, comptabilité. Ni ERP, ni logiciel comptable. Aucune offre
  * commerciale, aucun délai promis, aucun chiffre de performance.
@@ -77,7 +77,7 @@ const cycle = [
     etape: "05",
     titre: "Le contrôle",
     texte:
-      "L'intervention est vérifiée avant d'entrer en facturation. Une anomalie signalée sur le terrain suspend l'envoi automatique.",
+      "L'intervention est vérifiée avant d'entrer en facturation. Une anomalie signalée sur le terrain suspend la facturation, le temps que l'exploitation tranche.",
   },
 ];
 
@@ -121,7 +121,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Que se passe-t-il si quelque chose s'est mal passé sur place ?",
     answer:
-      "Si le technicien signale une anomalie — pièce manquante, accès impossible, prestation modifiée —, l'intervention entre dans le SAS d'anomalie au lieu de partir automatiquement au client. Elle est analysée, puis validée ou corrigée avant de poursuivre son cours.",
+      "Si le technicien signale une anomalie — pièce manquante, accès impossible, prestation modifiée —, elle remonte à l'exploitation, qui décide s'il y a un supplément à facturer et le dit au client. La course reprend son cours une fois la décision prise, et le supplément est justifié à la date où il s'est produit.",
   },
 ];
 
@@ -218,15 +218,16 @@ export default function GestionInterventionsPage() {
           </h2>
           <p className="mt-5 text-base leading-relaxed text-ink-soft">
             C&apos;est la différence entre suivre des interventions et les
-            piloter. Quand le technicien signale une anomalie, le compte rendu
-            ne part pas automatiquement au client :{" "}
+            piloter. Quand le technicien signale une anomalie,{" "}
             <span className="font-medium text-ink">
-              l&apos;intervention entre dans le SAS d&apos;anomalie
-            </span>
-            , où elle est analysée avant d&apos;être validée ou corrigée. Ce
-            point de contrôle évite deux choses également coûteuses — facturer
-            une prestation contestable, et découvrir le problème au moment de la
-            relance.
+              la course n&apos;avance plus tant que l&apos;exploitation
+              n&apos;a pas décidé
+            </span>{" "}
+            s&apos;il y a un supplément à facturer. Le client est informé, et
+            rien ne progresse vers la facture avant cette décision. Ce point de
+            contrôle évite deux choses également coûteuses — facturer un
+            supplément que personne n&apos;a arbitré, et devoir le justifier
+            trois semaines plus tard sans rien pour le prouver.
           </p>
         </div>
       </Section>
