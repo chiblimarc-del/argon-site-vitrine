@@ -137,7 +137,7 @@ export function ProblemSection() {
         className="max-w-3xl"
       />
 
-      <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+      <ul className="grille-diagnostic mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
         {artefacts.map((artefact) => (
           <li
             key={artefact.source}

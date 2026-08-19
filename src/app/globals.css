@@ -251,6 +251,73 @@ p {
   }
 }
 
+/* --------------------------------------------------------------------------
+   GRILLE DU DIAGNOSTIC — mise en avant au survol
+   Utilisée par ProblemSection, les huit artefacts du quotidien.
+
+   Trois gestes simultanés, tous rendus par le compositeur du navigateur, donc
+   sans recalcul de mise en page :
+
+   — la carte survolée se soulève de 3 px, sa surface passe au palier supérieur
+     du système (`surface` → `surface-2`), sa bordure s'éclaircit et son liseré
+     supérieur — la lumière rasante déjà posée par `.card` — double d'intensité ;
+   — une ombre portée s'installe sous elle. Sur fond sombre une ombre seule ne
+     se voit pas : c'est la combinaison surface plus claire + ombre plus dense
+     qui produit l'élévation ;
+   — les sept autres cartes descendent à 55 % d'opacité.
+
+   POURQUOI L'ATTÉNUATION DES VOISINES, et pas seulement un survol isolé : la
+   section dit qu'on ne peut pas tenir huit sources d'information à la fois.
+   Ne pouvoir en regarder qu'une seule, c'est exactement son propos. L'effet
+   sert le texte au lieu de le décorer.
+
+   RÈGLES TENUES :
+   — `@media (hover: hover) and (pointer: fine)` : sur écran tactile, `:hover`
+     reste collé après un appui. Une carte resterait soulevée et les sept autres
+     éteintes, sans moyen d'en sortir. L'effet n'existe donc pas au doigt ;
+   — aucune affordance de clic. Pas de curseur `pointer`, pas de flèche, pas de
+     changement de couleur du texte : ces cartes ne mènent nulle part, et le
+     survol ne doit pas promettre un lien qui n'existe pas ;
+   — aucune couleur inventée. La bordure est dérivée des jetons existants par
+     `color-mix`, jamais écrite en dur ;
+   — `prefers-reduced-motion` annule le soulèvement ET l'atténuation. La règle
+     globale plus haut ne ferait qu'accélérer les transitions à 0,01 ms : les
+     voisines s'éteindraient d'un coup, ce qui est plus agressif que l'effet
+     lui-même, pas moins.
+   -------------------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  .grille-diagnostic > li {
+    transition:
+      transform 220ms var(--ease-out-expo),
+      opacity 220ms var(--ease-out-expo),
+      background-color 220ms var(--ease-out-expo),
+      border-color 220ms var(--ease-out-expo),
+      box-shadow 220ms var(--ease-out-expo);
+  }
+
+  .grille-diagnostic:hover > li:not(:hover) {
+    opacity: 0.55;
+  }
+
+  .grille-diagnostic > li:hover {
+    transform: translateY(-3px);
+    background: var(--color-surface-2);
+    border-color: color-mix(in srgb, var(--color-line) 55%, var(--color-ink-muted));
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
+      0 14px 30px -14px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grille-diagnostic:hover > li:not(:hover) {
+    opacity: 1;
+  }
+  .grille-diagnostic > li:hover {
+    transform: none;
+  }
+}
+
 /* Masque le contenu visuellement mais le laisse aux lecteurs d'écran. */
 .sr-only-focusable:not(:focus):not(:focus-within) {
   position: absolute;
