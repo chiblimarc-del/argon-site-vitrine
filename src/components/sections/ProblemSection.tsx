@@ -20,9 +20,21 @@ import { Section, SectionHeading } from "@/components/ui/Section";
  *
  * Dialogue visuel avec le Hero : le panneau Argon y est parfaitement aligné,
  * une seule surface, une seule grille. Ici, mêmes composants et mêmes jetons
- * de couleur, mais huit surfaces autonomes, légèrement désalignées, reliées par
- * des traits qui ne se rejoignent pas. La composition dit la dispersion avant
- * que le texte ne la nomme.
+ * de couleur, mais huit surfaces autonomes reliées par des traits qui ne se
+ * rejoignent pas. La composition dit la dispersion avant que le texte ne la
+ * nomme.
+ *
+ * ⚠️ NE PAS REMETTRE D'INCLINAISON SUR LES CARTES — retirée le 19/08/2026.
+ *
+ * Chaque carte portait une rotation de 0,4° à 0,9°, censée figurer la
+ * dispersion. L'effet a été lu comme un défaut d'alignement, pas comme une
+ * intention : sous 1°, l'œil ne voit pas un parti pris, il voit un travail mal
+ * fait. Une inclinaison assez franche pour se lire aurait, elle, rendu les
+ * cartes pénibles à parcourir.
+ *
+ * La dispersion reste dite deux fois, et mieux : par les liaisons rompues en
+ * fond (BrokenLinks) et par le contenu même des huit artefacts. Elle n'a pas
+ * besoin d'une troisième voix qui coûte la lisibilité de la grille.
  *
  * Règle de vérité (V2 §31) : aucune statistique, aucun pourcentage, aucun coût
  * chiffré. Les contenus des cartes — horodatages, numéro de devis, nombre
@@ -42,8 +54,6 @@ type Artefact = {
   contenu: string;
   /** Le problème de fond que cet artefact illustre. */
   probleme: string;
-  /** Inclinaison en grand écran. Volontairement faible. */
-  inclinaison: string;
   ton: "neutre" | "alerte";
 };
 
@@ -53,7 +63,6 @@ const artefacts: Artefact[] = [
     repere: "09:14",
     contenu: "« Tu es où ? Le client a rappelé, il attend toujours. »",
     probleme: "Des équipes difficiles à coordonner en temps réel",
-    inclinaison: "lg:-rotate-[0.9deg]",
     ton: "alerte",
   },
   {
@@ -61,7 +70,6 @@ const artefacts: Artefact[] = [
     repere: "modifié il y a 8 min",
     contenu: "planning_semaine_37_v4_FINAL(2).xlsx",
     probleme: "Un planning qui change plus vite que le fichier",
-    inclinaison: "lg:rotate-[0.7deg]",
     ton: "neutre",
   },
   {
@@ -69,7 +77,6 @@ const artefacts: Artefact[] = [
     repere: "sans réponse",
     contenu: "Devis n° 2214 — envoyé il y a 11 jours",
     probleme: "Des devis qui s'oublient faute de relance",
-    inclinaison: "lg:rotate-[0.5deg]",
     ton: "neutre",
   },
   {
@@ -77,7 +84,6 @@ const artefacts: Artefact[] = [
     repere: "matinée",
     contenu: "Agence Sud · 3 appels manqués",
     probleme: "Le suivi qui repose sur le téléphone",
-    inclinaison: "lg:-rotate-[0.5deg]",
     ton: "alerte",
   },
   {
@@ -85,7 +91,6 @@ const artefacts: Artefact[] = [
     repere: "hier, 18:42",
     contenu: "RE: RE: TR: Report de l'intervention de jeudi ?",
     probleme: "Des informations dispersées entre les outils",
-    inclinaison: "lg:-rotate-[0.6deg]",
     ton: "neutre",
   },
   {
@@ -93,7 +98,6 @@ const artefacts: Artefact[] = [
     repere: "à ressaisir",
     contenu: "Pièce manquante sur site — prévoir un second passage",
     probleme: "Des remontées terrain qui arrivent trop tard",
-    inclinaison: "lg:rotate-[0.8deg]",
     ton: "neutre",
   },
   {
@@ -101,7 +105,6 @@ const artefacts: Artefact[] = [
     repere: "en attente",
     contenu: "Rapport d'intervention — récupéré en fin de semaine",
     probleme: "Un suivi administratif toujours en retard sur le terrain",
-    inclinaison: "lg:-rotate-[0.4deg]",
     ton: "neutre",
   },
   {
@@ -112,7 +115,6 @@ const artefacts: Artefact[] = [
     // Argon ni une moyenne constatée chez ses utilisateurs.
     contenu: "6 interventions réalisées · non facturées",
     probleme: "Du travail réalisé qui n'arrive jamais sur une facture",
-    inclinaison: "lg:rotate-[0.6deg]",
     ton: "alerte",
   },
 ];
@@ -139,7 +141,7 @@ export function ProblemSection() {
         {artefacts.map((artefact) => (
           <li
             key={artefact.source}
-            className={`card flex flex-col p-5 transition-transform duration-300 ${artefact.inclinaison} hover:rotate-0`}
+            className="card flex flex-col p-5"
           >
             <div className="flex items-center gap-2">
               <span
