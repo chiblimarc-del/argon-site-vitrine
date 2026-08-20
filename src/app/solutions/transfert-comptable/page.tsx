@@ -58,12 +58,16 @@ import { metadataFor, webPageSchema } from "@/lib/seo";
  *
  * ⚠️ RETIRÉ DU PLAN INITIAL — « PARAMÉTRAGE AUX CODES COMPTABLES ».
  *
- * L'onglet Comptabilité de la fiche entreprise porte bien cinq réglages
- * (journal des ventes, TVA intracommunautaire, type de TVA, préfixe de code
- * comptable client, préfixe de libellé de transfert), MAIS aucun code ne les
- * lit : ni le backend, ni les exports. Recherche menée sur `backend/src` hors
- * `generated/`, sur `frontend-next` et sur `packages` — les seules occurrences
- * sont la déclaration Prisma et le formulaire qui les enregistre.
+ * L'onglet Comptabilité de la fiche entreprise porte cinq réglages. QUATRE ne
+ * sont lus par aucun code, ni le backend, ni les exports : le journal des
+ * ventes, le type de TVA, le préfixe de code comptable client et le préfixe de
+ * libellé de transfert. Leurs seules occurrences sont la déclaration Prisma et
+ * le formulaire qui les enregistre.
+ *
+ * Le cinquième, `tvaIntracommunautaire`, est bien vivant : il est imprimé dans
+ * les mentions légales de la facture PDF, aux côtés du SIRET et du RCS
+ * (`pdf-generator.service.ts:1695`). C'est une mention obligatoire, il ne se
+ * touche pas.
  *
  * L'argument aurait donc été une preuve fabriquée. Il est consigné au registre
  * de dette technique, et il ne s'écrira ici que le jour où le code le fera.
