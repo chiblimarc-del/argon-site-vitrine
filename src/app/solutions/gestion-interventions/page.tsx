@@ -239,9 +239,9 @@ export default function GestionInterventionsPage() {
           "/solutions/devis-facturation",
           "/solutions/application-mobile-technicien",
           "/solutions/rapports-intervention",
+          "/solutions/transfert-comptable",
           "/secteurs/maintenance",
           "/secteurs/depannage",
-          "/secteurs/installation",
         ]}
       />
 

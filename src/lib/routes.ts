@@ -288,6 +288,42 @@ const solutions: RouteDef[] = [
     pitch: "La bonne information, au bon moment, sur le mobile.",
   },
   {
+    path: "/solutions/transfert-comptable",
+    label: "Transfert comptable",
+    title: "Transmettre ses factures à son expert-comptable | Argon",
+    description:
+      "Ventes, règlements, TVA, avoirs, factures en PDF et fichier clients : Argon prépare par période le dossier que votre expert-comptable attend.",
+    h1: "Ce que votre expert-comptable attend est déjà prêt.",
+    /**
+     * Longue traîne assumée, arbitrée le 19/08/2026.
+     *
+     * « export comptable » a été ÉCARTÉ malgré son volume : sa première page
+     * appartient aux éditeurs comptables, et l'audience qu'on y croiserait
+     * cherche un logiciel de comptabilité — pas un logiciel d'intervention.
+     * Même raisonnement que celui qui a écarté « CRM » du site : on ne se bat
+     * pas sur une requête dont la tête ne nous appartient pas et dont le
+     * visiteur ne nous appartient pas non plus.
+     *
+     * La requête retenue décrit le travail réel que la page supprime.
+     */
+    keyword: "transmettre ses factures à son expert-comptable",
+    secondaryKeywords: [
+      "transfert comptable",
+      "export comptable intervention",
+      "export factures expert-comptable",
+      "récapitulatif TVA export",
+      "fichier clients comptable",
+    ],
+    priority: "P1",
+    published: true,
+    indexable: true,
+    parent: "/solutions",
+    sitemapPriority: 0.8,
+    changeFrequency: "monthly",
+    group: "solutions",
+    pitch: "Le dossier du mois, prêt pour le cabinet.",
+  },
+  {
     path: "/solutions/rapports-intervention",
     label: "Rapports d'intervention",
     title: "Rapport d'intervention digital | Argon",

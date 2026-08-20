@@ -60,9 +60,19 @@ export function DocumentsSection() {
         </>
       }
       /*
-       * Aucune passerelle : /solutions/transfert-comptable n'existe pas
-       * encore. Un lien creux coûte plus qu'un lien absent.
+       * Passerelle ouverte le 19/08/2026, jour où la page a été écrite.
+       * Elle était volontairement absente jusque-là : un lien creux coûte plus
+       * qu'un lien absent.
+       *
+       * Le bloc garde ses trois preuves et ne renvoie vers la page que pour le
+       * détail — les six extractions, leur contenu colonne par colonne, et ce
+       * que le cabinet voit de son côté. Un bloc de profondeur annonce, il
+       * n'épuise pas.
        */
+      passerelle={{
+        href: "/solutions/transfert-comptable",
+        libelle: "Le détail de ce qui part au cabinet",
+      }}
     />
   );
 }
