@@ -7,6 +7,7 @@ import { RelatedPages } from "@/components/sections/solution/RelatedPages";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { EncaissementSection } from "@/components/sections/depth/EncaissementSection";
 import { DocumentsSection } from "@/components/sections/depth/DocumentsSection";
+import { EncoursSection } from "@/components/sections/depth/EncoursSection";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
 /**
@@ -321,6 +322,10 @@ export default function DevisFacturationPage() {
           </p>
         </div>
       </Section>
+
+      {/* L encours client — le manque le plus couteux releve a l audit :
+          « le sujet qui decide d un achat en tresorerie n est nulle part ». */}
+      <EncoursSection />
 
       {/*
         Le bon de commande client, remonte au Lot 4. Il ne vivait que dans un
