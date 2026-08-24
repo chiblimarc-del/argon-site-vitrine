@@ -2,15 +2,21 @@ import { Container } from "@/components/ui/Container";
 import { Button, ArrowRight } from "@/components/ui/Button";
 import { AppPreview } from "@/components/product-ui/AppPreview";
 import { primaryCta, secondaryCta } from "@/lib/site";
-import { findRoute, secteurRoutes } from "@/lib/routes";
+import { findRoute, getRoute, secteurRoutes } from "@/lib/routes";
 
 /**
  * HERO de la page d'accueil.
  *
- * Le H1 et l'accroche sont ceux du cahier V2 §5 et du registre de routes
- * (`getRoute("/").h1`). Ils sont écrits littéralement ici parce que le mot-clé
- * « opérations terrain » porte un dégradé : le rendu exige du balisage, pas une
- * chaîne. Toute modification doit être répercutée dans src/lib/routes.ts.
+ * ⚠️ LE H1 EST LU AU REGISTRE, il n'est plus écrit ici.
+ * Il l'était, en double avec `routes.ts`, et c'était l'unique exception du
+ * site : `seo:check` ne lit aucun fichier de page, une divergence entre les
+ * deux serait donc passée inaperçue. Le dégradé — qui était la raison de la
+ * duplication — s'applique désormais à un segment repéré DANS la chaîne du
+ * registre, sans la recopier.
+ *
+ * Pour changer le H1 : modifier `routes.ts`, et rien d'autre. Si le segment
+ * accentué n'existe plus dans la nouvelle phrase, le titre s'affiche en entier
+ * sans dégradé — dégradation visible, jamais un titre faux.
  *
  * Aucune preuve commerciale fabriquée (V2 §31) : pas de logo client, pas de
  * témoignage, pas de chiffre d'affaires, pas d'essai gratuit. La bande basse
@@ -18,6 +24,16 @@ import { findRoute, secteurRoutes } from "@/lib/routes";
  *
  * Server Component, zéro JavaScript côté client, aucune image à charger.
  */
+
+const H1_ACCUEIL = getRoute("/").h1;
+
+/**
+ * Le fragment du H1 qui porte le dégradé de marque.
+ * Il doit exister mot pour mot dans `getRoute("/").h1`. S'il n'y est pas, le
+ * titre s'affiche en entier sans dégradé — on perd un effet, jamais du sens.
+ */
+const SEGMENT_ACCENTUE = "Saisi une fois.";
+
 export function Hero() {
   /**
    * Le CTA secondaire ne s'affiche que si sa destination est publiée au
@@ -26,6 +42,18 @@ export function Hero() {
    * Il réapparaîtra de lui-même le jour où le hub sera construit.
    */
   const secondaireDisponible = findRoute(secondaryCta.href)?.published ?? false;
+
+  /* Le titre vient du registre. Le segment accentué est repéré dedans, jamais
+     recopié : impossible d'afficher autre chose que ce que Google recevra. */
+  const avecAccent = H1_ACCUEIL.includes(SEGMENT_ACCENTUE);
+  const [avantAccent, apresAccent] = avecAccent
+    ? [
+        H1_ACCUEIL.slice(0, H1_ACCUEIL.indexOf(SEGMENT_ACCENTUE)),
+        H1_ACCUEIL.slice(
+          H1_ACCUEIL.indexOf(SEGMENT_ACCENTUE) + SEGMENT_ACCENTUE.length,
+        ),
+      ]
+    : [H1_ACCUEIL, ""];
 
   return (
     <section className="relative overflow-hidden border-b border-line-soft">
@@ -46,14 +74,17 @@ export function Hero() {
             </p>
 
             <h1 className="mt-6 text-[2.4rem] font-semibold leading-[1.08] text-ink sm:text-5xl xl:text-[3.4rem]">
-              Pilotez vos{" "}
-              <span className="text-gradient">opérations terrain</span>{" "}
-              depuis une seule plateforme.
+              {avantAccent}
+              {avecAccent && (
+                <span className="text-gradient">{SEGMENT_ACCENTUE}</span>
+              )}
+              {apresAccent}
             </h1>
 
             <p className="mt-6 text-base leading-relaxed text-ink-soft sm:text-lg">
-              Interventions, planning, équipes, missions et suivi terrain :
-              Argon centralise votre activité opérationnelle.
+              La demande, le devis, l&apos;intervention, le compte rendu et la
+              facture sont le même dossier, vu à cinq moments. Personne ne
+              recopie ce que quelqu&apos;un d&apos;autre a déjà saisi.
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">

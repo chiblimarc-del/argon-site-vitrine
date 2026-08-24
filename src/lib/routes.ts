@@ -140,8 +140,8 @@ const accueil: RouteDef[] = [
     label: "Accueil",
     title: "Logiciel de gestion des interventions terrain | Argon",
     description:
-      "Centralisez vos interventions, plannings et équipes dans une seule plateforme. Argon pilote l'activité terrain des entreprises d'intervention et de transport.",
-    h1: "Pilotez vos opérations terrain depuis une seule plateforme.",
+      "Une demande saisie une fois devient un devis, une intervention, un compte rendu et une facture. Argon relie le bureau, le terrain et la facturation.",
+    h1: "Saisi une fois. Le devis, le planning, le compte rendu et la facture suivent.",
     keyword: "logiciel gestion interventions terrain",
     secondaryKeywords: [
       "logiciel intervention terrain",
@@ -551,7 +551,7 @@ const autres: RouteDef[] = [
     label: "Demander une démo",
     title: "Demander une démo Argon",
     description:
-      "Échangez avec notre équipe et découvrez Argon appliqué à votre activité terrain. Démonstration personnalisée, sans engagement.",
+      "Échangez avec notre équipe et découvrez Argon appliqué à votre activité terrain. Nous vous dirons franchement si ce n'est pas le bon outil.",
     h1: "Découvrez Argon en action.",
     keyword: null, // page de conversion, pas d'ambition de trafic organique
     secondaryKeywords: [],
