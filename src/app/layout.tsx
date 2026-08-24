@@ -80,7 +80,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang={site.lang} className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang={site.lang}
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} h-full antialiased`}
+    >
+      {/*
+        `data-scroll-behavior="smooth"` declare au routeur que le lissage du
+        defilement est VOULU sur les ancres internes — et l autorise a le
+        couper le temps d une transition de route.
+
+        Sans cet attribut, `scroll-behavior: smooth` (globals.css:75)
+        s applique aussi au retour en haut de page que Next effectue apres
+        chaque navigation : au lieu d un saut instantane, le visiteur VOIT la
+        page remonter. Le symptome etait net depuis les menus deroulants, ou
+        l on clique souvent apres avoir descendu la page.
+
+        Next.js emettait l avertissement correspondant dans le journal de
+        developpement. Ne pas retirer cet attribut sans retirer aussi le
+        `scroll-behavior: smooth` de globals.css : les deux vont ensemble.
+      */}
       <body className="flex min-h-full flex-col bg-canvas font-sans text-ink">
         {/* Accessibilité : permet de sauter la navigation au clavier. */}
         <a
