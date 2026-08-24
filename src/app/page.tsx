@@ -4,6 +4,7 @@ import { ChainSection } from "@/components/sections/ChainSection";
 import { ModulesSection } from "@/components/sections/ModulesSection";
 import { SectorsSection } from "@/components/sections/SectorsSection";
 import { ProfondeurGrid } from "@/components/sections/depth/ProfondeurGrid";
+import { TemoignageSection } from "@/components/sections/TemoignageSection";
 import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { metadataFor, webPageSchema } from "@/lib/seo";
@@ -29,6 +30,10 @@ export default function HomePage() {
       <ModulesSection />
       <SectorsSection />
       <ProfondeurGrid />
+      {/* La seule preuve exterieure du site. Placee ici, et nulle part
+          ailleurs : un temoignage qui apparait sur chaque page perd sa
+          force, et l accueil est la seule page que tout le monde voit. */}
+      <TemoignageSection />
       <FinalCtaSection />
       <JsonLd data={webPageSchema(PATH)} />
     </>
