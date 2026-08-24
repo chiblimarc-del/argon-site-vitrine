@@ -38,25 +38,11 @@ import { NavLink } from "@/components/navigation/NavLink";
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Famille = "vendre" | "organiser" | "executer" | "administrer";
-
-const familles: Record<Famille, { label: string; texte: string; puce: string }> = {
-  vendre: { label: "Vendre", texte: "text-cyan", puce: "bg-cyan" },
-  organiser: {
-    label: "Organiser",
-    texte: "text-accent-mid",
-    puce: "bg-accent-mid",
-  },
-  executer: { label: "Exécuter", texte: "text-accent-text", puce: "bg-accent" },
-  administrer: {
-    label: "Administrer",
-    texte: "text-accent2-text",
-    puce: "bg-accent-2",
-  },
-};
-
 type Module = {
-  famille: Famille;
+  /** Ce que la brique reçoit de la précédente. */
+  recoit: string;
+  /** Ce qu'elle transmet à la suivante. */
+  transmet: string;
   titre: string;
   texte: string;
   icone: React.ReactNode;
@@ -71,47 +57,66 @@ type Module = {
 
 const modules: Module[] = [
   {
-    famille: "vendre",
+    recoit: "la demande du client",
+    transmet: "le devis accepté",
     path: "/solutions/devis-facturation",
-    titre: "CRM & devis",
+    titre: "Clients & devis",
     texte:
-      "Clients, contacts et sites d'intervention réunis sur une fiche. Le devis est établi depuis cette fiche, envoyé, puis retrouvé au même endroit.",
+      "Le devis part de la fiche client et y reste attaché. Vous ne cherchez pas ce que vous avez proposé à qui.",
     icone: <IconeFiche />,
   },
   {
-    famille: "vendre",
+    recoit: "les devis sans réponse",
+    transmet: "la décision de relancer",
+    path: "/solutions/devis-facturation",
     titre: "Relances",
     texte:
-      "Un devis resté sans réponse demeure visible et relançable. Les échanges avec le client restent attachés à son dossier.",
+      "Un devis sans réponse se repère à son état, pas de mémoire. Vous savez lequel relancer, et rien ne part sans vous.",
     icone: <IconeRelance />,
   },
   {
-    famille: "organiser",
+    recoit: "le devis accepté",
+    transmet: "l'intervention affectée",
     path: "/solutions/planning-interventions",
     titre: "Planning & affectation",
     texte:
-      "Affectez chaque intervention à un intervenant et à un créneau. Le planning des équipes se lit d'un seul coup d'œil.",
+      "La journée se réorganise sans que rien ne se perde. Une urgence à 10 h ne coûte pas une demi-heure de téléphone.",
     icone: <IconePlanning />,
   },
   {
-    famille: "executer",
+    recoit: "les absences accordées",
+    transmet: "qui est réellement disponible",
+    path: "/solutions/heures-et-absences",
+    titre: "Heures & absences",
+    texte:
+      "Un congé accordé ferme le planning et remplit la grille des heures au même instant. Personne ne recopie rien.",
+    icone: <IconePlanning />,
+  },
+  {
+    recoit: "l'intervention affectée",
+    transmet: "ce qui s'est passé sur place",
+    path: "/solutions/application-mobile-technicien",
     titre: "Application mobile",
     texte:
-      "Le technicien reçoit sa mission, consulte les informations du site et remonte son compte rendu depuis son téléphone.",
+      "L'intervenant a ce qu'il lui faut avant d'arriver, et remonte ce qu'il a fait sans repasser au bureau.",
     icone: <IconeMobile />,
   },
   {
-    famille: "executer",
+    recoit: "ce qui s'est passé sur place",
+    transmet: "le document reçu par le client",
+    path: "/solutions/rapports-intervention",
     titre: "Comptes rendus",
     texte:
-      "Généré en PDF à la clôture, avec les photos et la signature du client, puis transmis automatiquement.",
+      "Photos, réserves et signature du client dans un PDF daté. Une contestation trois mois plus tard trouve à qui parler.",
     icone: <IconeDocument />,
   },
   {
-    famille: "administrer",
+    recoit: "l'intervention contrôlée",
+    transmet: "la facture, et ce qui reste dû",
+    path: "/solutions/devis-facturation",
     titre: "Facturation",
     texte:
-      "Génération et envoi des factures à partir des interventions réalisées, une fois celles-ci contrôlées.",
+      "Rien ne part en facturation sans avoir été contrôlé. Et une intervention faite ne finit pas par n'être jamais facturée.",
     icone: <IconeFacture />,
   },
 ];
@@ -131,14 +136,11 @@ export function ModulesSection() {
         eyebrow="Les briques d'Argon"
         title={
           <>
-            Tout ce qu&apos;il faut pour gérer une opération,{" "}
-            <span className="text-gradient">
-              du premier contact au compte rendu
-            </span>
-            .
+            Chaque brique reprend là où la précédente s&apos;arrête,{" "}
+            <span className="text-gradient">de la demande à la facture</span>.
           </>
         }
-        description="Sept briques, quatre familles, une seule plateforme. Chacune alimente la suivante — c'est la même donnée qui circule, jamais une ressaisie."
+        description="Huit briques. Aucune ne redemande ce qu'une autre sait déjà : chacune reçoit ce que la précédente a produit."
         className="max-w-3xl"
       />
 
@@ -146,7 +148,7 @@ export function ModulesSection() {
       <article className="card relative mt-14 overflow-hidden">
         <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center lg:gap-12">
           <div>
-            <EtiquetteFamille famille="executer" />
+            <FluxBrique recoit="tout ce qui précède" transmet="une fiche qui fait foi" />
 
             <h3 className="mt-4 text-2xl font-semibold leading-tight text-ink sm:text-3xl">
               <LienBrique path="/solutions/gestion-interventions">
@@ -194,7 +196,7 @@ export function ModulesSection() {
               {module.icone}
             </span>
 
-            <EtiquetteFamille famille={module.famille} />
+            <FluxBrique recoit={module.recoit} transmet={module.transmet} />
 
             <h3 className="mt-2.5 text-base font-semibold text-ink">
               {module.path ? (
@@ -235,18 +237,33 @@ function LienBrique({
   );
 }
 
-/** Étiquette de famille : pastille colorée + libellé. */
-function EtiquetteFamille({ famille }: { famille: Famille }) {
-  const { label, texte, puce } = familles[famille];
+/**
+ * Ce que la brique reçoit, ce qu'elle transmet.
+ *
+ * ⚠️ Remplace l'ancienne étiquette de famille. Quatre familles présentaient
+ * le produit comme quatre paquets de fonctions indépendants — la forme
+ * contredisait la promesse. Ici, chaque carte dit d'où vient sa matière et
+ * où elle va : la grille lue de haut en bas EST la démonstration.
+ *
+ * Ne pas remettre de regroupement par famille.
+ */
+function FluxBrique({
+  recoit,
+  transmet,
+}: {
+  recoit: string;
+  transmet: string;
+}) {
   return (
-    <span className="inline-flex items-center gap-2">
-      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${puce}`} />
-      <span
-        className={`text-[11px] font-medium uppercase tracking-[0.12em] ${texte}`}
-      >
-        {label}
+    <p className="text-[11px] leading-relaxed text-ink-soft">
+      <span className="uppercase tracking-[0.12em]">Reçoit</span>{" "}
+      {recoit}
+      <span aria-hidden="true" className="mx-1.5 text-accent">
+        →
       </span>
-    </span>
+      <span className="uppercase tracking-[0.12em]">transmet</span>{" "}
+      <span className="text-ink">{transmet}</span>
+    </p>
   );
 }
 

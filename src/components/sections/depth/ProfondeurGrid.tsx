@@ -53,23 +53,27 @@ type Porte = {
  */
 const portes: Porte[] = [
   {
-    titre: "Encaissement & documents",
-    texte: "Ce qui rentre, ce qui part au comptable.",
+    titre: "Vous savez ce qui reste dû, et depuis quand",
+    texte:
+      "Le reste dû, la part en retard et son ancienneté. C'est ce qu'on regarde avant d'appeler sa banque.",
     href: "/solutions/devis-facturation",
   },
   {
-    titre: "Engagements",
-    texte: "Ce qui est engagé, avant que la facture arrive.",
+    titre: "La dépense se connaît avant le courrier",
+    texte:
+      "Ce qui est engagé sur le terrain est enregistré au moment où on l'engage, pas à l'ouverture de la facture.",
     href: "/solutions/gestion-interventions",
   },
   {
-    titre: "Pilotage",
-    texte: "Ce qui attend, ce qui bloque, ce qui est rentré.",
+    titre: "L'endroit où ça s'accumule se désigne tout seul",
+    texte:
+      "Sept dossiers en attente sur « Contrôle » : vous ne cherchez pas où ça bloque, l'écran vous le dit.",
     href: "/solutions/gestion-interventions",
   },
   {
-    titre: "Équipes",
-    texte: "Les heures et les absences, dans le même planning.",
+    titre: "Un congé accordé ferme le planning",
+    texte:
+      "Avant qu'on affecte une mission à quelqu'un qui ne sera pas là — et la grille des heures suit au même instant.",
     href: "/solutions/planning-interventions",
   },
 ];
@@ -107,8 +111,11 @@ export function ProfondeurGrid() {
                 aria-hidden="true"
                 className="absolute left-0 top-[7px] h-[11px] w-[11px] rounded-full border-2 border-canvas-2 bg-accent lg:top-0"
               />
-              <h3 className="text-[15px] font-semibold text-ink">
-                <NavLink href={porte.href} className="hover:text-accent-text">
+              <h3 className="text-[15px] font-semibold leading-snug text-ink">
+                <NavLink
+                  href={porte.href}
+                  className="underline decoration-line underline-offset-4 transition-colors hover:text-accent-text hover:decoration-accent after:absolute after:inset-0 after:content-['']"
+                >
                   {porte.titre}
                 </NavLink>
               </h3>
