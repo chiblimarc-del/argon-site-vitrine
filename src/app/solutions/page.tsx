@@ -23,7 +23,7 @@ import { primaryCta } from "@/lib/site";
  *   3. le déclencheur « Solutions » du menu, qui devient un vrai lien donc
  *      focusable au clavier.
  *
- * Contenu volontairement minimal : cinq cartes et deux phrases. Une page de hub
+ * Contenu volontairement minimal : sept cartes et deux phrases. Une page de hub
  * étoffée artificiellement serait exactement le fourre-tout que nous avons
  * supprimé en retirant /fonctionnalites.
  *
@@ -36,13 +36,15 @@ const PATH = "/solutions";
 
 export const metadata = metadataFor(PATH);
 
-/** Les trois temps de la chaîne, pour ordonner la lecture des cartes. */
+/** L'étiquette de chaque brique, pour ordonner la lecture des cartes. */
 const rythme: Record<string, string> = {
   "/solutions/gestion-interventions": "Le cœur",
   "/solutions/planning-interventions": "L'organisation",
+  "/solutions/heures-et-absences": "Le temps",
   "/solutions/devis-facturation": "La boucle commerciale",
   "/solutions/application-mobile-technicien": "Le terrain",
   "/solutions/rapports-intervention": "La preuve",
+  "/solutions/transfert-comptable": "La transmission",
 };
 
 export default function SolutionsPage() {
@@ -61,7 +63,7 @@ export default function SolutionsPage() {
               {route.h1}
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">
-              Cinq briques, une seule donnée qui circule. Chacune a sa page :
+              Sept briques, une seule donnée qui circule. Chacune a sa page :
               ce qu&apos;elle fait, ce qu&apos;elle ne fait pas, et comment elle
               s&apos;articule avec les autres.
             </p>

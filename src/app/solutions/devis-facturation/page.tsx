@@ -322,6 +322,51 @@ export default function DevisFacturationPage() {
         </div>
       </Section>
 
+      {/*
+        Le bon de commande client, remonte au Lot 4. Il ne vivait que dans un
+        paragraphe de /secteurs/transport-courses : un metier sur cinq le
+        lisait, alors que c'est un argument de tresorerie, et le plus concret
+        de cette page.
+
+        ⚠️ AUCUN DELAI CHIFFRE. « Et repart pour trente jours » est plus fort et
+        reste disponible — il ne s'ecrira que le jour ou ce delai sera une
+        realite metier assumee, pas une formule.
+
+        ⚠️ Bon de commande CLIENT. Ne jamais laisser entendre qu'Argon gere des
+        commandes fournisseurs ou des depenses engagees : ca n'existe pas.
+      */}
+      <Section tone="alt" className="border-b border-line-soft">
+        <div className="max-w-3xl">
+          <h2 className="text-2xl font-semibold leading-tight text-ink sm:text-3xl">
+            Une facture sans bon de commande revient. Vous le savez avant
+            qu&apos;elle parte.
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-ink-soft">
+            Chez un donneur d&apos;ordre, le numéro de bon de commande
+            conditionne le paiement. Argon le porte sur les interventions
+            concernées, et sur toute une période d&apos;un seul geste quand le
+            client travaille au mois —{" "}
+            <span className="font-medium text-ink">pas ligne à ligne</span>. Le
+            mode de chaque client est déclaré : à l&apos;intervention, en fin de
+            mois, ou sans bon de commande.
+          </p>
+          <p className="mt-5 text-base leading-relaxed text-ink-soft">
+            Ce qui disparaît, c&apos;est la facture partie sans son numéro, et
+            l&apos;encours qui vieillit pour un motif qui n&apos;a rien à voir
+            avec le travail fourni.
+          </p>
+          <p className="mt-5 text-base leading-relaxed text-ink-soft">
+            Le contrôle avant facturation compte ce qui manque. Et si le client
+            facture par bon de commande,{" "}
+            <span className="font-medium text-ink">
+              Argon refuse d&apos;en mélanger deux sur une même facture
+            </span>{" "}
+            — un garde-fou, avec un message qui dit quoi faire. Quand le mode
+            n&apos;a pas été renseigné, l&apos;écran affiche « non renseigné » :
+            un blanc honnête vaut mieux qu&apos;une certitude fabriquée.
+          </p>
+        </div>
+      </Section>
       <SolutionFaq items={faq} />
 
       <RelatedPages

@@ -21,7 +21,7 @@ const preuves: TroisPreuves = [
   {
     titre: "Il reste rattaché",
     texte:
-      "Des mois plus tard, vous retrouvez à quoi une somme correspond, et pour quel chantier.",
+      "Des mois plus tard, vous retrouvez à quoi une somme correspond, et pour quelle opération.",
   },
   {
     titre: "Vous voyez quel poste dérive",
@@ -34,7 +34,7 @@ export function EngagementsSection() {
   return (
     <BlocProfondeur
       eyebrow="Avant la dépense"
-      titre="Vous savez où part votre argent avant de recevoir la facture."
+      titre="Vous savez ce qu'une intervention a engagé avant de recevoir la facture."
       chapo="Une dépense n'est plus une surprise à l'ouverture du courrier. Ce qui est engagé sur le terrain est enregistré au moment où on l'engage."
       preuves={preuves}
       frontiere={

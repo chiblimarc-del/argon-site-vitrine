@@ -238,6 +238,41 @@ const solutions: RouteDef[] = [
     pitch: "Affectez, arbitrez et visualisez la charge de vos équipes.",
   },
   {
+    path: "/solutions/heures-et-absences",
+    label: "Heures et absences",
+    title: "Logiciel de suivi des heures et des congés | Argon",
+    description:
+      "Congés, absences, heures et dépassements de forfait au même endroit. Une absence accordée ferme le planning et remplit la grille des heures.",
+    h1: "Une absence saisie une fois. Le planning et les heures suivent.",
+    /**
+     * Longue traîne assumée, arbitrée le 20/08/2026.
+     *
+     * « logiciel de gestion des temps » a été ÉCARTÉ : c'est la tête de marché
+     * des badgeuses et des SIRH, et celui qui la tape cherche une pointeuse.
+     * Même raisonnement que celui qui a écarté « CRM » et « export comptable ».
+     *
+     * ⚠️ Frontière avec /solutions/planning-interventions : cette page-là traite
+     * de l'ARBITRAGE de la journée, celle-ci du COMPTAGE du temps. Ne jamais
+     * employer « logiciel planning interventions » ici.
+     */
+    keyword: "logiciel suivi des heures et des congés",
+    secondaryKeywords: [
+      "suivi des heures salariés",
+      "gestion des congés et absences",
+      "heures supplémentaires suivi",
+      "relevé d'heures mensuel",
+      "dossier salarié documents",
+    ],
+    priority: "P1",
+    published: true,
+    indexable: true,
+    parent: "/solutions",
+    sitemapPriority: 0.8,
+    changeFrequency: "monthly",
+    group: "solutions",
+    pitch: "Une absence saisie une fois, le planning et les heures suivent.",
+  },
+  {
     path: "/solutions/devis-facturation",
     label: "Devis & facturation",
     title: "Logiciel de devis et facturation d'interventions | Argon",

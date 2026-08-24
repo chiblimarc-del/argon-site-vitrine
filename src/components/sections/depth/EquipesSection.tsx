@@ -1,63 +1,68 @@
 import { BlocProfondeur, type TroisPreuves } from "./BlocProfondeur";
 
 /**
- * BLOC 5 — LES ÉQUIPES.
- * /solutions/planning-interventions, après « la journée entière ».
+ * BLOC ÉQUIPES — /solutions/planning-interventions
  *
- * L'angle est LA MÊME PLANIFICATION, pas « un module RH ». C'est ce qui
- * rattache le bloc à la chaîne : les heures et les absences naissent de la
- * planification des interventions, donc d'une information de terrain.
+ * REFAIT AU LOT 4.
  *
- * Onze sujets tiennent dans trois preuves. Ce n'est pas une contrainte subie :
- * un bloc RH complet ferait basculer une page de planning dans le catalogue.
- * La troisième ligne REGROUPE volontairement — l'énumérer les tuerait.
+ * ─────────────────────────────────────────────────────────────────────────
+ * CE QUI A CHANGÉ, ET POURQUOI
  *
- * RÈGLE DE VÉRITÉ : Argon suit le temps et les absences. Il ne fait pas la
- * paie. Interdits : bulletin, cotisation, déclaration sociale, DSN, calcul de
- * majoration légale, congés payés au sens du droit du travail.
+ * L'ancienne version empilait trois territoires — le temps, les absences,
+ * « le reste du suivi ». Trois étiquettes closes sur elles-mêmes, dont la
+ * troisième alignait quatre mots (« notes, frais, acomptes, documents »)
+ * sans en développer aucun.
+ *
+ * Le commentaire assumait le regroupement : « Onze sujets tiennent dans trois
+ * preuves… La troisième ligne REGROUPE volontairement ». Regrouper est
+ * légitime. Mais regrouper n'autorise pas à empiler, et deux des quatre mots
+ * n'avaient aucun mécanisme derrière eux.
+ *
+ * Chaque preuve porte désormais un MÉCANISME et CE QU'IL ÉVITE. C'est la
+ * mécanique éditoriale en quatre temps appliquée au format du bloc :
+ * le chapô porte le bénéfice, chaque preuve porte son comment et son évitement.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * La passerelle ouvre /solutions/heures-et-absences, qui développe les cinq
+ * sujets que ce bloc ne fait que nommer. Elle n'existe QUE parce que la page
+ * existe : un lien creux coûte plus qu'un lien absent.
+ *
+ * Server Component, zéro JavaScript client.
  */
 
-const preuves: TroisPreuves = [
+const PREUVES: TroisPreuves = [
   {
-    titre: "Le temps",
+    titre: "Un congé accordé ferme le planning au même instant.",
     texte:
-      "Heures saisies, récapitulatif mensuel, écart au forfait contractuel. Vous voyez le solde, pas seulement le total.",
+      "La demande part du mobile, le bureau accorde. Le technicien devient non planifiable et le motif apparaît sur sa grille d'heures — sans que personne ne l'ait recopié. Vous n'affectez plus une mission à quelqu'un qui ne sera pas là.",
   },
   {
-    titre: "Les absences",
-    texte: (
-      <>
-        Un congé suit son circuit : demandé, approuvé ou refusé. Une absence
-        validée apparaît dans le planning{" "}
-        <span className="font-medium text-ink">avant</span> qu&apos;on affecte
-        quelqu&apos;un qui ne sera pas là.
-      </>
-    ),
+    titre: "Le dépassement du forfait se voit avant la paie.",
+    texte:
+      "Les heures relevées se confrontent au forfait contractuel, mois après mois, et le reliquat cumule depuis l'origine. Vous arbitrez pendant qu'il est encore temps d'arbitrer, au lieu de constater.",
   },
   {
-    titre: "Le reste du suivi",
+    titre:
+      "Les heures d'un intérimaire restent séparées de celles qui alimentent la paie.",
     texte:
-      "Notes, frais, acomptes, documents et leurs échéances restent attachés au dossier du salarié — au même endroit que ses heures.",
+      "Deux tableaux, jamais un total commun. Celles de l'agence servent à contrôler sa facture ; celles de vos salariés servent à autre chose. Un compteur ne peut plus gonfler sans qu'on sache ce qu'on paie et ce qu'on refacture.",
   },
 ];
 
 export function EquipesSection() {
   return (
     <BlocProfondeur
-      eyebrow="Les mêmes équipes"
-      titre="Le suivi de vos équipes ne se fait plus dans des fichiers à côté."
-      chapo="Ce qui est planifié, ce qui est fait et ce qui est compté sont la même information. Personne ne la ressaisit le vendredi soir."
-      preuves={preuves}
-      frontiere={
-        <>
-          Argon suit le temps et les absences de vos équipes. Il ne fait pas
-          votre paie.
-        </>
-      }
+      eyebrow="Le temps de vos équipes"
+      titre="Une absence saisie une fois. Le planning et les heures suivent."
+      chapo="Le planning ne peut pas contredire les absences, et les absences ne peuvent pas contredire les heures : c'est la même information, lue à trois endroits."
+      preuves={PREUVES}
+      frontiere="Argon ne tient pas de compteur de droits à congés et ne produit aucun bulletin de paie. Il relève, confronte au forfait et garde la trace — la paie se fait ailleurs, avec ces éléments."
       passerelle={{
-        href: "/secteurs/cvc",
-        libelle: "CVC : deux saisons, deux charges",
+        href: "/solutions/heures-et-absences",
+        libelle: "Le détail du suivi des heures et des absences",
       }}
     />
   );
 }
+
+export default EquipesSection;
