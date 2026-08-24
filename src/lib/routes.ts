@@ -597,6 +597,41 @@ const autres: RouteDef[] = [
     group: "systeme",
   },
   {
+    path: "/tarifs",
+    label: "Tarifs",
+    title: "Tarifs Argon — logiciel de gestion d'intervention",
+    description:
+      "Trois offres à partir de 149 € HT par mois, plus vos utilisateurs terrain actifs. Simulateur de prix, comparatif ligne à ligne et mise en service affichés.",
+    h1: "Un prix simple pour toute votre activité.",
+    /**
+     * Intention commerciale, arbitrée le 24/08/2026.
+     *
+     * ⚠️ Frontière avec /solutions/gestion-interventions, qui porte la requête
+     * P0 « logiciel gestion des interventions ». Celle-ci vise le visiteur qui
+     * cherche un PRIX, pas une fonction — intention transactionnelle, pas
+     * documentaire. Ne jamais employer la requête P0 sur cette page.
+     *
+     * ⚠️ Cette page est la seule du site à porter des engagements
+     * contractuels. Toute ligne ajoutée au comparatif est une promesse
+     * opposable : elle ne s'écrit que si le code la porte le jour même.
+     */
+    keyword: "tarif logiciel gestion intervention",
+    secondaryKeywords: [
+      "prix logiciel intervention",
+      "tarif logiciel planning intervention",
+      "abonnement logiciel terrain",
+      "combien coûte un logiciel d'intervention",
+    ],
+    priority: "P1",
+    published: true,
+    indexable: true,
+    parent: "/",
+    sitemapPriority: 0.9,
+    changeFrequency: "monthly",
+    group: "entreprise",
+    pitch: "Trois offres, un simulateur, aucun prix caché.",
+  },
+  {
     path: "/a-propos",
     label: "À propos",
     title: "À propos d'Argon",
