@@ -632,6 +632,45 @@ const autres: RouteDef[] = [
     pitch: "Trois offres, un simulateur, aucun prix caché.",
   },
   {
+    path: "/expert-comptable",
+    label: "Experts-comptables",
+    title: "Argon pour les experts-comptables",
+    description:
+      "Ce que vos clients qui interviennent sur le terrain peuvent vous transmettre, et selon quelles règles. Six extractions, un accès cloisonné, aucune surprise.",
+    h1: "Ce que vos clients peuvent vous transmettre, et comment.",
+    /**
+     * ⚠️ RECOUVREMENT CONNU ET ASSUMÉ avec /solutions/transfert-comptable.
+     *
+     * Les deux pages traitent du même sujet pour deux publics : celle-là
+     * s'adresse au DIRIGEANT qui doit transmettre, celle-ci au CABINET qui
+     * reçoit. Les mots-clés diffèrent, mais `seo:check` ne compare que les
+     * chaînes à l'identique — il ne détecterait pas une dérive sémantique.
+     *
+     * C'est le plus fragile des trois recouvrements du site. À surveiller en
+     * Search Console d'ici deux à trois mois : si Google hésite entre les deux
+     * URL sur les mêmes requêtes, c'est cette page-ci qui cède, parce que
+     * l'autre est indexée depuis le 20/08 et porte l'intention d'achat.
+     *
+     * ⚠️ Cette page NE VEND PAS. Le cabinet est prescripteur, pas acheteur :
+     * son CTA demande un avis, pas une démonstration. Ne jamais y remonter le
+     * CTA commercial du reste du site.
+     */
+    keyword: "logiciel intervention compatible expert-comptable",
+    secondaryKeywords: [
+      "accès expert-comptable logiciel gestion",
+      "pièces comptables entreprise intervention",
+      "documents comptables fin de mois",
+    ],
+    priority: "P2",
+    published: true,
+    indexable: true,
+    parent: "/",
+    sitemapPriority: 0.6,
+    changeFrequency: "yearly",
+    group: "entreprise",
+    pitch: "Ce que le cabinet reçoit, et selon quelles règles.",
+  },
+  {
     path: "/a-propos",
     label: "À propos",
     title: "À propos d'Argon",
