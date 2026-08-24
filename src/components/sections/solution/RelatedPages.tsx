@@ -19,10 +19,22 @@ export function RelatedPages({
   titre,
   chapo,
   paths,
+  motifs,
 }: {
   titre: string;
   chapo?: string;
   paths: string[];
+  /**
+   * Motif du lien, par chemin cible. Facultatif : sans lui, le pitch du
+   * registre s'affiche comme avant, et les usages existants ne changent pas.
+   *
+   * ⚠️ Le motif PRIME sur le pitch, et c'est tout l'objet. Le pitch décrit la
+   * page d'arrivée pour tout le monde ; le motif dit pourquoi ce lien-là
+   * depuis CETTE page-ci. C'est ce qui distingue un maillage d'une liste de
+   * liens — l'audit du 20/08 relevait que les cinq pages métier renvoyaient
+   * au même triplet, dans un ordre à peine différent.
+   */
+  motifs?: Record<string, string>;
 }) {
   const routes = paths.map(findRoute).filter((route) => route !== undefined);
   if (!routes.length) return null;
@@ -37,9 +49,9 @@ export function RelatedPages({
             <article className="card flex h-full flex-col p-5">
               <h3 className="text-[15px] font-semibold text-ink">{route.label}</h3>
 
-              {route.pitch ? (
+              {motifs?.[route.path] ?? route.pitch ? (
                 <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">
-                  {route.pitch}
+                  {motifs?.[route.path] ?? route.pitch}
                 </p>
               ) : null}
 

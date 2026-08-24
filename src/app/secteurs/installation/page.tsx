@@ -4,6 +4,7 @@ import { InterventionPanel } from "@/components/product-ui/InterventionPanel";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
+import { cheminsDe, motifsDe } from "@/lib/maillage-metiers";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
@@ -170,14 +171,8 @@ export default function InstallationPage() {
       <RelatedPages
         titre="Les briques utiles à l'installation"
         chapo="Du devis signé à la facture, en passant par la preuve de réception."
-        paths={[
-          "/solutions/devis-facturation",
-          "/solutions/gestion-interventions",
-          "/solutions/planning-interventions",
-          "/secteurs/maintenance",
-          "/secteurs/cvc",
-          "/secteurs/depannage",
-        ]}
+        paths={cheminsDe(PATH)}
+        motifs={motifsDe(PATH)}
       />
 
       <SolutionCta

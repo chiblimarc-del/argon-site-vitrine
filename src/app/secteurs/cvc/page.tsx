@@ -4,6 +4,7 @@ import { PlanningBoard } from "@/components/product-ui/PlanningBoard";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
+import { cheminsDe, motifsDe } from "@/lib/maillage-metiers";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
@@ -173,14 +174,8 @@ export default function CvcPage() {
       <RelatedPages
         titre="Les briques utiles en CVC"
         chapo="Le planning pour la saison haute, l'historique pour l'entretien, le devis pour ce qui se révèle en cours de route."
-        paths={[
-          "/solutions/planning-interventions",
-          "/solutions/gestion-interventions",
-          "/solutions/devis-facturation",
-          "/secteurs/maintenance",
-          "/secteurs/depannage",
-          "/secteurs/installation",
-        ]}
+        paths={cheminsDe(PATH)}
+        motifs={motifsDe(PATH)}
       />
 
       <SolutionCta

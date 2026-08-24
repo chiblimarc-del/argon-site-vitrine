@@ -4,6 +4,7 @@ import { AppPreview } from "@/components/product-ui/AppPreview";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
+import { cheminsDe, motifsDe } from "@/lib/maillage-metiers";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
@@ -192,14 +193,8 @@ export default function TransportCoursesPage() {
       <RelatedPages
         titre="Les briques utiles au transport"
         chapo="L'organisation de la journée, la preuve de livraison, la facturation."
-        paths={[
-          "/solutions/planning-interventions",
-          "/solutions/gestion-interventions",
-          "/solutions/devis-facturation",
-          "/secteurs/depannage",
-          "/secteurs/maintenance",
-          "/secteurs/installation",
-        ]}
+        paths={cheminsDe(PATH)}
+        motifs={motifsDe(PATH)}
       />
 
       <SolutionCta

@@ -4,6 +4,7 @@ import { PlanningBoard } from "@/components/product-ui/PlanningBoard";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
+import { cheminsDe, motifsDe } from "@/lib/maillage-metiers";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
@@ -173,14 +174,8 @@ export default function DepannagePage() {
       <RelatedPages
         titre="Les briques utiles au dépannage"
         chapo="Le planning et la fiche d'intervention font l'essentiel du travail."
-        paths={[
-          "/solutions/planning-interventions",
-          "/solutions/gestion-interventions",
-          "/solutions/devis-facturation",
-          "/secteurs/cvc",
-          "/secteurs/maintenance",
-          "/secteurs/installation",
-        ]}
+        paths={cheminsDe(PATH)}
+        motifs={motifsDe(PATH)}
       />
 
       <SolutionCta

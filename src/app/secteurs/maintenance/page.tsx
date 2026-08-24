@@ -4,6 +4,7 @@ import { InterventionPanel } from "@/components/product-ui/InterventionPanel";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq, type QuestionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
+import { cheminsDe, motifsDe } from "@/lib/maillage-metiers";
 import { SolutionCta } from "@/components/sections/solution/SolutionCta";
 import { metadataFor, webPageSchema } from "@/lib/seo";
 
@@ -170,14 +171,8 @@ export default function MaintenancePage() {
       <RelatedPages
         titre="Les briques utiles à la maintenance"
         chapo="Ce que vous utiliserez au quotidien, et les autres métiers qui partagent le même socle."
-        paths={[
-          "/solutions/gestion-interventions",
-          "/solutions/planning-interventions",
-          "/solutions/devis-facturation",
-          "/secteurs/cvc",
-          "/secteurs/depannage",
-          "/secteurs/installation",
-        ]}
+        paths={cheminsDe(PATH)}
+        motifs={motifsDe(PATH)}
       />
 
       <SolutionCta
