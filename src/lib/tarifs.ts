@@ -76,11 +76,33 @@ export const planParId = (id: IdPlan): Plan =>
   PLANS.find((p) => p.id === id) ?? PLANS[1];
 
 /** prix plateforme + terrains × prix terrain */
+/**
+ * Remise consentie au règlement annuel, en %.
+ * ⚠️ Elle porte sur la part PLATEFORME uniquement. Les utilisateurs
+ * terrain restent au tarif plein — arbitré par le dirigeant le 24/08/2026.
+ * Ne jamais l'appliquer à `plan.terrain`.
+ */
+export const REDUCTION_ANNUELLE = 10;
+
 export const prixMensuel = (plan: Plan, terrains: number): number =>
   plan.plateforme + Math.max(0, terrains) * plan.terrain;
 
 export const prixAnnuel = (plan: Plan, terrains: number): number =>
   prixMensuel(plan, terrains) * 12;
+
+/**
+ * Prix annuel réglé en une fois.
+ * ⚠️ La remise porte sur la part PLATEFORME uniquement. Les utilisateurs
+ * terrain sont à tarif plein — arbitré par le dirigeant le 24/08/2026.
+ * C'est la seule fonction autorisée à appliquer REDUCTION_ANNUELLE.
+ */
+export const prixAnnuelRegleDavance = (plan: Plan, terrains: number): number =>
+  plan.plateforme * 12 * (1 - REDUCTION_ANNUELLE / 100) +
+  terrains * plan.terrain * 12;
+
+/** Ce que le règlement annuel fait gagner, en euros sur l'année. */
+export const economieAnnuelle = (plan: Plan): number =>
+  plan.plateforme * 12 * (REDUCTION_ANNUELLE / 100);
 
 /**
  * Le point de bascule entre deux offres : le nombre d'utilisateurs terrain
@@ -106,8 +128,50 @@ export const pointDeBascule = (bas: Plan, haut: Plan): number | null => {
 export const REGLES_FACTURATION = [
   "Les utilisateurs bureau sont inclus, sans limite de nombre.",
   "Seuls les utilisateurs terrain actifs sont facturés.",
+  "Un utilisateur terrain devient facturable le jour où son compte est créé et où son profil est chargé sur un téléphone. Tant que ce chargement n'a pas eu lieu, il ne l'est pas.",
   "Un utilisateur terrain suspendu ou archivé n'est pas facturé.",
   "Le nombre d'utilisateurs terrain ne déclenche aucun changement de forfait : vous choisissez votre offre selon les fonctions et le niveau de pilotage dont vous avez besoin.",
+] as const;
+
+/* ────────────────────────────────────────────────────────────────
+   2 bis. ENGAGEMENT ET PAIEMENT
+   ⚠️ ENGAGEMENTS CONTRACTUELS. Chaque ligne d'ici est opposable.
+   Ne jamais modifier sans décision du dirigeant.
+   ⚠️ Le terme « sans engagement » est INTERDIT sur tout le site.
+   Il l'est d'autant plus ici qu'il serait faux : l'engagement est de 12 mois.
+   ──────────────────────────────────────────────────────────────── */
+
+export const ENGAGEMENT = [
+  {
+    libelle: "Abonnement mensuel",
+    detail:
+      "La période facturée est de 30 jours. Le mois entamé est facturé en entier.",
+  },
+  {
+    libelle: "Engagement de 12 mois",
+    detail:
+      "Reconduit d'année en année à la date anniversaire, sauf préavis.",
+  },
+  {
+    libelle: "Préavis d'un mois",
+    detail:
+      "Vous prévenez un mois avant la date anniversaire, et l'abonnement s'arrête à cette date.",
+  },
+] as const;
+
+export const PAIEMENT = [
+  {
+    libelle: "Première échéance",
+    detail: "Par carte, au moment de la mise en service.",
+  },
+  {
+    libelle: "Ensuite",
+    detail: "Par prélèvement mensuel.",
+  },
+  {
+    libelle: "Ou à l'année",
+    detail: `Réglé en une fois, l'abonnement plateforme est réduit de ${REDUCTION_ANNUELLE} %. Les utilisateurs terrain restent au tarif plein.`,
+  },
 ] as const;
 
 /* ────────────────────────────────────────────────────────────────
@@ -359,71 +423,131 @@ export type Levier = {
   note: string;
 };
 
-export const LEVIERS_TEMPS: readonly Levier[] = [
+/* ────────────────────────────────────────────────────────────────
+   LE SIMULATEUR DE VALEUR — trois questions, des hypothèses ouvertes
+
+   ⚠️ RÈGLE FONDATRICE : le visiteur ne renseigne QUE ce qu'il connaît
+   sans réfléchir — son effectif et son volume d'interventions. Tout le
+   reste est une hypothèse AFFICHÉE et MODIFIABLE, jamais un coefficient
+   caché. Une page de prix qui calcule en secret ne se rattrape pas.
+
+   ⚠️ Aucune promesse. « Estimation de gains potentiels », toujours.
+   Un solde négatif s'affiche tel quel : c'est ce qui rend le reste
+   croyable.
+   ──────────────────────────────────────────────────────────────── */
+
+/** Les trois questions posées. Réponses à zéro : le visiteur les fournit. */
+export type Question = {
+  id: "bureau" | "terrain" | "interventions";
+  libelle: string;
+  unite: string;
+  defaut: number;
+  min: number;
+  max: number;
+};
+
+export const QUESTIONS: readonly Question[] = [
   {
-    id: "ressaisie",
-    question: "Temps passé chaque semaine à ressaisir la même information",
-    unite: "h / semaine",
-    defaut: 6,
+    id: "bureau",
+    libelle: "Personnes au bureau",
+    unite: "personnes",
+    defaut: 0,
     min: 0,
-    max: 60,
-    pas: 0.5,
-    parMois: 4.33,
-    partReduiteDefaut: 50,
-    note: "Demandes reprises, informations client recopiées, comptes rendus retapés, documents recherchés.",
+    max: 200,
   },
   {
-    id: "planning",
-    question: "Temps passé chaque semaine à faire et refaire le planning",
-    unite: "h / semaine",
-    defaut: 5,
+    id: "terrain",
+    libelle: "Personnes sur le terrain",
+    unite: "personnes",
+    defaut: 0,
     min: 0,
-    max: 60,
-    pas: 0.5,
-    parMois: 4.33,
-    partReduiteDefaut: 40,
-    note: "Création et modification, appels de confirmation, erreurs d'affectation, temps mort.",
+    max: 500,
   },
   {
-    id: "comptable",
-    question: "Temps passé chaque mois à préparer la facturation et la comptabilité",
-    unite: "h / mois",
-    defaut: 8,
+    id: "interventions",
+    libelle: "Interventions par mois",
+    unite: "interventions",
+    defaut: 0,
+    min: 0,
+    max: 20000,
+  },
+];
+
+/**
+ * Les hypothèses. Chacune est rattachée à UNE des trois questions, ce qui
+ * rend le calcul lisible : on voit d'où vient chaque heure.
+ * `parMois` ramène la cadence de l'hypothèse à un mois.
+ */
+export type Hypothese = {
+  id: string;
+  question: Question["id"];
+  libelle: string;
+  /** Ce que l'hypothèse recouvre, en une ligne. */
+  note: string;
+  unite: string;
+  defaut: number;
+  min: number;
+  max: number;
+  pas: number;
+  parMois: number;
+};
+
+export const HYPOTHESES: readonly Hypothese[] = [
+  {
+    id: "saisie",
+    question: "interventions",
+    libelle: "Temps administratif par intervention",
+    note: "Reprendre la demande, retaper le compte rendu, préparer la ligne de facture.",
+    unite: "min / intervention",
+    defaut: 12,
     min: 0,
     max: 120,
     pas: 1,
     parMois: 1,
-    partReduiteDefaut: 50,
-    note: "Préparation des factures, recherche de documents, vérification, transmission au cabinet.",
+  },
+  {
+    id: "recherche",
+    question: "bureau",
+    libelle: "Temps passé chaque jour à chercher une information",
+    note: "Retrouver un devis, un document, l'historique d'un client, le dernier échange.",
+    unite: "min / jour / personne",
+    defaut: 20,
+    min: 0,
+    max: 240,
+    pas: 5,
+    parMois: 21,
+  },
+  {
+    id: "replanification",
+    question: "terrain",
+    libelle: "Temps passé chaque semaine à refaire le planning",
+    note: "Urgences, absences, débordements, appels de confirmation.",
+    unite: "min / semaine / personne",
+    defaut: 15,
+    min: 0,
+    max: 300,
+    pas: 5,
+    parMois: 4.33,
   },
 ];
 
-export const LEVIER_DEPENSES: Levier = {
-  id: "depenses",
-  question: "Dépenses opérationnelles mensuelles",
-  unite: "€ / mois",
-  defaut: 3000,
+/** Part de ce temps que le visiteur estime pouvoir supprimer. Curseur visible. */
+export const PART_SUPPRIMABLE = {
+  defaut: 40,
   min: 0,
-  max: 200000,
-  pas: 100,
-  parMois: 1,
-  partReduiteDefaut: 5,
-  note: "Déplacements inutiles, erreurs de planning, interventions mal préparées, reprises et corrections, dépenses non suivies.",
+  max: 100,
+  pas: 5,
+  note: "Argon ne supprime pas tout ce temps. Ce curseur dit ce que vous pensez pouvoir en retirer.",
 };
 
 export const COUT_HORAIRE = {
+  /* Seule hypothèse monétaire. Elle ne décrit pas l'activité du visiteur mais
+     un ordre de grandeur de marché — d'où sa valeur de départ, affichée. */
   defaut: 35,
-  min: 10,
+  min: 0,
   max: 200,
   pas: 1,
   note: "Coût horaire chargé moyen de la personne qui passe ce temps. C'est vous qui le connaissez.",
-};
-
-export const CAPACITE = {
-  interventionsDefaut: 120,
-  valeurMoyenneDefaut: 180,
-  note: "Le temps récupéré ne devient de la capacité que si vous le réaffectez à de la production. Ce curseur dit quelle part vous comptez réaffecter.",
-  partReaffecteeDefaut: 30,
 };
 
 export const MENTION_SIMULATEUR =
@@ -437,6 +561,21 @@ export const MENTION_CONFIDENTIALITE =
    ──────────────────────────────────────────────────────────────── */
 
 export const FAQ_TARIFS = [
+  {
+    question: "À partir de quand un utilisateur terrain est-il facturé ?",
+    answer:
+      "Le jour où son compte est créé et où son profil est chargé sur un téléphone. Un compte créé mais jamais chargé sur un appareil n'est pas facturé, et un compte suspendu ou archivé cesse de l'être.",
+  },
+  {
+    question: "Sur quelle durée s'engage-t-on ?",
+    answer:
+      "L'abonnement est mensuel, par période de 30 jours, avec un engagement de douze mois reconduit à chaque date anniversaire. Pour l'arrêter, vous prévenez un mois avant cette date. Le mois entamé est facturé en entier.",
+  },
+  {
+    question: "Comment se règle l'abonnement ?",
+    answer:
+      "La première échéance se règle par carte, au moment de la mise en service, puis par prélèvement mensuel. Vous pouvez aussi régler l'année en une fois : l'abonnement plateforme est alors réduit de 10 %. Cette remise ne porte que sur la part plateforme — les utilisateurs terrain restent au tarif plein.",
+  },
   {
     question: "Les utilisateurs bureau sont-ils facturés ?",
     answer:

@@ -11,8 +11,11 @@ import {
   FAQ_TARIFS,
   HORS_ABONNEMENT,
   MISE_EN_SERVICE,
+  ENGAGEMENT,
   OPTIONS,
+  PAIEMENT,
   PLANS,
+  REDUCTION_ANNUELLE,
   REGLES_FACTURATION,
   SERVICES,
   SOCLE,
@@ -390,6 +393,63 @@ export default function TarifsPage() {
               </div>
             ))}
           </dl>
+        </div>
+      </Section>
+
+      {/* ══ ENGAGEMENT ET PAIEMENT ═════════════════════════════════
+          ⚠️ CONTENU CONTRACTUEL, arbitré par le dirigeant le 24/08/2026.
+          Chaque ligne est opposable. Ne rien y reformuler sans décision.
+
+          ⚠️ Le terme « sans engagement » est interdit sur tout le site, et
+          ici il serait faux : l'engagement est de douze mois. La page le dit
+          en clair — un prospect qui le découvre au contrat se retourne, un
+          prospect qui le lit ici décide. */}
+      <Section containerWidth="wide" className="border-b border-line-soft">
+        <SectionHeading
+          title="Ce que vous signez."
+          description="Pas de découverte au moment du contrat."
+        />
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+            <h3 className="text-lg font-bold text-ink">Durée et engagement</h3>
+            <dl className="mt-6 divide-y divide-line-soft">
+              {ENGAGEMENT.map((e) => (
+                <div key={e.libelle} className="py-4 first:pt-0 last:pb-0">
+                  <dt className="font-medium text-ink">{e.libelle}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-ink-soft">
+                    {e.detail}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+            <h3 className="text-lg font-bold text-ink">Règlement</h3>
+            <dl className="mt-6 divide-y divide-line-soft">
+              {PAIEMENT.map((p) => (
+                <div key={p.libelle} className="py-4 first:pt-0 last:pb-0">
+                  <dt className="font-medium text-ink">{p.libelle}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed text-ink-soft">
+                    {p.detail}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-6 rounded-lg bg-surface-alt px-4 py-3 text-sm leading-relaxed text-ink-soft">
+              Sur une offre Business à {formaterEuros(PLANS[1].plateforme)} HT
+              par mois, régler l&apos;année en une fois représente{" "}
+              <span className="font-medium text-ink">
+                {formaterEuros(
+                  PLANS[1].plateforme * 12 * (REDUCTION_ANNUELLE / 100),
+                )}{" "}
+                de moins sur l&apos;année
+              </span>
+              . La remise porte sur l&apos;abonnement plateforme uniquement :
+              les utilisateurs terrain restent au tarif plein.
+            </p>
+          </div>
         </div>
       </Section>
 

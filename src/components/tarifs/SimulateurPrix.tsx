@@ -26,8 +26,10 @@ import {
   PLAN_PAR_DEFAUT,
   formaterEuros,
   formaterNombre,
+  REDUCTION_ANNUELLE,
+  economieAnnuelle,
   pointDeBascule,
-  prixAnnuel,
+  prixAnnuelRegleDavance,
   prixMensuel,
   type IdPlan,
 } from "@/lib/tarifs";
@@ -43,6 +45,9 @@ export function SimulateurPrix({
 }) {
   const [terrains, setTerrains] = useState(12);
   const [retenu, setRetenu] = useState<IdPlan>(PLAN_PAR_DEFAUT);
+  /* Le rythme de règlement. Il ne change rien à l'offre, seulement au
+     montant affiché — et la remise ne porte que sur la part plateforme. */
+  const [annuel, setAnnuel] = useState(false);
 
   const majTerrains = (v: number) => {
     const n = Math.min(MAX, Math.max(MIN, Math.round(v || 0)));
@@ -130,15 +135,59 @@ export function SimulateurPrix({
         className="mt-6 w-full accent-[--color-accent]"
       />
 
+      {/* ── Le rythme de règlement ─────────────────────────────── */}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div
+          className="inline-flex rounded-lg border border-line p-1"
+          role="group"
+          aria-label="Rythme de règlement"
+        >
+          {[
+            { valeur: false, libelle: "Au mois" },
+            { valeur: true, libelle: "À l'année" },
+          ].map((choix) => (
+            <button
+              key={choix.libelle}
+              type="button"
+              onClick={() => setAnnuel(choix.valeur)}
+              aria-pressed={annuel === choix.valeur}
+              className={[
+                "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                annuel === choix.valeur
+                  ? "bg-accent text-white"
+                  : "text-ink-soft hover:bg-surface-alt",
+              ].join(" ")}
+            >
+              {choix.libelle}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm text-ink-soft" aria-live="polite">
+          {annuel ? (
+            <>
+              L&apos;abonnement plateforme est réduit de {REDUCTION_ANNUELLE} %.
+              Les utilisateurs terrain restent au tarif plein.
+            </>
+          ) : (
+            <>
+              Réglé à l&apos;année, l&apos;abonnement plateforme est réduit de{" "}
+              {REDUCTION_ANNUELLE} %.
+            </>
+          )}
+        </p>
+      </div>
+
       {/* ── Les trois prix, ensemble ───────────────────────────── */}
       <div
-        className="mt-8 grid gap-3 sm:grid-cols-3"
+        className="mt-6 grid gap-3 sm:grid-cols-3"
         role="group"
-        aria-label="Prix mensuel des trois offres"
+        aria-label="Prix des trois offres"
       >
         {PLANS.map((plan) => {
           const actif = plan.id === retenu;
           const mensuel = prixMensuel(plan, terrains);
+          const annuelRegle = prixAnnuelRegleDavance(plan, terrains);
 
           return (
             <button
@@ -166,19 +215,27 @@ export function SimulateurPrix({
               </span>
 
               <span className="mt-2 block text-2xl font-bold tabular-nums text-ink">
-                {formaterEuros(mensuel)}
+                {formaterEuros(annuel ? annuelRegle : mensuel)}
                 <span className="ml-1 text-sm font-normal text-ink-soft">
-                  HT / mois
+                  HT / {annuel ? "an" : "mois"}
                 </span>
               </span>
 
-              <span className="mt-1 block text-xs text-ink-soft tabular-nums">
+              <span className="mt-1 block text-xs tabular-nums text-ink-soft">
                 {formaterEuros(plan.plateforme)} + {terrains} ×{" "}
                 {formaterEuros(plan.terrain)}
+                {annuel ? ", sur douze mois" : ""}
               </span>
 
-              <span className="mt-2 block text-xs text-ink-soft tabular-nums">
-                soit {formaterEuros(prixAnnuel(plan, terrains))} HT / an
+              <span className="mt-2 block text-xs tabular-nums text-ink-soft">
+                {annuel ? (
+                  <>
+                    soit {formaterEuros(economieAnnuelle(plan))} de moins que
+                    douze mensualités
+                  </>
+                ) : (
+                  <>soit {formaterEuros(mensuel * 12)} HT / an</>
+                )}
               </span>
             </button>
           );
