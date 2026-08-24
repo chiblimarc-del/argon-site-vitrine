@@ -163,6 +163,14 @@ export function DesktopNav({ className }: { className?: string }) {
 
         <li>
           <NavLink
+            href="/tarifs"
+            className="rounded-md px-1 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
+          >
+            Tarifs
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
             href="/a-propos"
             className="rounded-md px-1 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
           >

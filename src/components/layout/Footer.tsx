@@ -27,7 +27,7 @@ const columns = [
 ];
 
 const produit = ["/demander-une-demo"];
-const entreprise = ["/a-propos", "/contact"];
+const entreprise = ["/tarifs", "/a-propos", "/contact"];
 
 export function Footer() {
   const year = new Date().getFullYear();

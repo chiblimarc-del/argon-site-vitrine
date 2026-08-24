@@ -83,6 +83,11 @@ export function MobileMenu() {
 
             <ul className="mt-8 space-y-1 border-t border-line-soft pt-6">
               <li>
+                <NavLink href="/tarifs" className="block py-2.5 text-base text-ink">
+                  Tarifs
+                </NavLink>
+              </li>
+              <li>
                 <NavLink href="/a-propos" className="block py-2.5 text-base text-ink">
                   À propos
                 </NavLink>
