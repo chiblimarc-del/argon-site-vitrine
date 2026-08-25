@@ -514,8 +514,8 @@ const secteurs: RouteDef[] = [
     label: "CVC",
     title: "Logiciel de gestion des interventions CVC | Argon",
     description:
-      "Argon aide les entreprises de chauffage, ventilation et climatisation à organiser leurs interventions, leurs techniciens et leur suivi terrain.",
-    h1: "Simplifiez la gestion de vos interventions CVC.",
+      "Les urgences font tourner votre activité, les entretiens doivent être honorés. Argon vous montre ce qui a été décalé, et ce qui reste à faire.",
+    h1: "En pleine saison, chaque urgence peut décaler une visite due.",
     // Corrigé après audit : ne cible plus « logiciel gestion maintenance
     // climatisation », dont la tête cannibaliserait /secteurs/maintenance.
     keyword: "logiciel gestion interventions CVC",
@@ -527,7 +527,22 @@ const secteurs: RouteDef[] = [
       "logiciel chauffage climatisation",
     ],
     priority: "P1",
-    // À CONFIRMER COMMERCIALEMENT avant publication (cahier V2 §19).
+    /**
+     * Réserve du cahier V2 §19 LEVÉE le 25/08/2026.
+     *
+     * La page n'avait pas de douleur propre : sa saison creuse était la page
+     * maintenance, sa saison haute la page dépannage. Elle en a une désormais,
+     * et c'est la seule des cinq à la connaître — l'urgence acceptée
+     * aujourd'hui décale un entretien dû aujourd'hui. Ni la maintenance ni le
+     * dépannage ne vivent cet arbitrage : l'une planifie sans urgence, l'autre
+     * traite l'urgence sans contrat à honorer.
+     *
+     * ⚠️ « peut décaler » et non « décale ». La formule nomme un risque, pas
+     *    une fatalité — c'est précisément ce risque qu'Argon adresse.
+     *
+     * ⚠️ Une page sectorielle sans problème spécifique ne mérite ni son URL ni
+     *    la lecture d'un prospect. Vaut pour les cinq.
+     */
     published: true,
     indexable: true,
     parent: "/secteurs",

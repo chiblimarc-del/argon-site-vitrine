@@ -20,10 +20,23 @@ import { metadataFor, webPageSchema } from "@/lib/seo";
  * climatisation » cannibaliserait /secteurs/maintenance. Décision V3.
  * ⚠️ Ne pas employer les mots-clés des pages voisines.
  *
- * ANGLE — LA SAISONNALITÉ. Ce métier a deux régimes dans l'année : l'entretien
- * quand c'est calme, le dépannage quand tout tombe en panne en même temps.
- * C'est la seule des cinq pages construite sur un cycle annuel plutôt que sur
- * une journée.
+ * ANGLE — LA TENSION URGENCE ↔ ENGAGEMENT, arbitrée le 25/08/2026.
+ *
+ * ⚠️ La page décrivait auparavant deux saisons juxtaposées. Elle n'avait donc
+ *    aucune douleur propre : sa saison creuse était /secteurs/maintenance, sa
+ *    saison haute /secteurs/depannage. Trois pages racontaient la même chose,
+ *    et rien ne disait au prospect pourquoi lire celle-ci plutôt qu'une autre.
+ *
+ * La douleur qui n'appartient qu'au CVC : en pleine saison, à effectif
+ * constant, CHAQUE URGENCE ACCEPTÉE PEUT DÉCALER UN ENTRETIEN DÛ. Ni la
+ * maintenance ni le dépannage ne vivent cet arbitrage — l'une planifie sans
+ * urgence, l'autre traite l'urgence sans contrat à honorer.
+ *
+ * ⚠️ « peut décaler », jamais « décale ». C'est un risque, pas une fatalité :
+ *    la nuance est ce qu'Argon adresse.
+ *
+ * ⚠️ Une page sectorielle sans problème spécifique ne mérite ni son URL ni la
+ *    lecture d'un prospect. Vaut pour les cinq.
  *
  * RÈGLE DE VÉRITÉ : validé uniquement — fiches client et site, historique,
  * planning et affectation, mobile, photos, signature, comptes rendus,
@@ -36,20 +49,25 @@ const PATH = "/secteurs/cvc";
 
 export const metadata = metadataFor(PATH);
 
-const saisons = [
+/**
+ * Les deux termes de la tension. Ils sont vrais EN MÊME TEMPS, et c'est
+ * exactement là qu'un dirigeant CVC se reconnaît. Ne pas les présenter comme
+ * deux saisons qui se succèdent : ce serait revenir au défaut corrigé.
+ */
+const tension = [
   {
-    periode: "La saison creuse",
-    titre: "L'entretien",
+    periode: "Ce qui rentre",
+    titre: "Les urgences font tourner votre activité",
     texte:
-      "Les visites s'enchaînent sur des sites déjà connus. Le sujet, c'est de les répartir sans laisser de trou dans le planning, et de savoir ce qui a été fait au passage précédent.",
-    ton: "text-cyan",
+      "Un appel à 9 h, un technicien qui part. C'est la marge de la saison, et personne ne la refuse. Mais l'intervenant qui part était attendu ailleurs.",
+    ton: "text-warn",
   },
   {
-    periode: "La saison haute",
-    titre: "Le dépannage",
+    periode: "Ce qui engage",
+    titre: "Les entretiens doivent être honorés",
     texte:
-      "Tout tombe en panne la même semaine. Le sujet devient : qui peut partir maintenant, et qu'est-ce qu'on décale. Ce n'est plus le même métier, avec les mêmes équipes.",
-    ton: "text-warn",
+      "Une visite décalée reste due. Elle ne disparaît pas parce que la semaine a été chargée — elle se rappelle en fin d'année, quand le client compte ses passages.",
+    ton: "text-cyan",
   },
 ];
 
@@ -105,20 +123,19 @@ export default function CvcPage() {
       <SolutionHero
         path={PATH}
         eyebrow="CVC — climatisation & chauffage"
-        accentue="vos interventions CVC"
-        chapo="Deux saisons, deux métiers : l'entretien quand c'est calme, le dépannage quand tout tombe en panne la même semaine. Avec les mêmes équipes, les mêmes clients et les mêmes sites."
+        chapo="Vous ne refuserez pas l'urgence, et vous ne renoncerez pas à l'entretien. Ce qui manque, c'est de voir ce qui a été décalé avant que le client le compte à votre place."
       />
 
       <Section containerWidth="wide" className="border-b border-line-soft">
         <SectionHeading
           as="h2"
-          eyebrow="Deux régimes dans l'année"
-          title="Votre activité change deux fois par an. Pas votre outil."
-          description="Peu de métiers connaissent un écart de charge aussi net entre la saison creuse et la saison haute — et c'est le même effectif qui absorbe les deux."
+          eyebrow="Le conflit de la saison"
+          title="Deux obligations, un seul effectif."
+          description="En pleine saison, l'urgence que vous acceptez et la visite que vous devez tomberont le même jour. C'est le seul arbitrage que le CVC connaît et que les autres métiers d'intervention ignorent."
           className="max-w-3xl"
         />
         <ul className="mt-14 grid gap-5 sm:grid-cols-2">
-          {saisons.map((saison) => (
+          {tension.map((saison) => (
             <li key={saison.titre} className="card p-6 sm:p-7">
               <p
                 className={`text-[11px] font-medium uppercase tracking-[0.12em] ${saison.ton}`}
@@ -140,7 +157,7 @@ export default function CvcPage() {
         <SectionHeading
           as="h2"
           eyebrow="Ce qu'Argon apporte"
-          title="Le même socle, quelle que soit la saison."
+          title="Réorganiser sans perdre de vue ce qui reste dû."
           className="max-w-3xl"
         />
         <div className="mt-12">
