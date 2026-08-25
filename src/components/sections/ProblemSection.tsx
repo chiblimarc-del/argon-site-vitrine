@@ -62,7 +62,8 @@ const artefacts: Artefact[] = [
     source: "SMS",
     repere: "09:14",
     contenu: "« Tu es où ? Le client a rappelé, il attend toujours. »",
-    probleme: "Des équipes difficiles à coordonner en temps réel",
+    probleme:
+      "Des journées qui changent sans cesse, des équipes qui doivent s'adapter",
     ton: "alerte",
   },
   {
