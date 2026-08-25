@@ -216,7 +216,7 @@ export const SOCLE: readonly DomaineSocle[] = [
   {
     domaine: "Finance",
     benefice: "Rien ne part en facturation sans avoir été contrôlé, et rien de facturé ne s'oublie.",
-    fonctions: ["Facturation", "Relances", "Gestion des dépenses", "Export comptable"],
+    fonctions: ["Facturation", "Relances", "Gestion des dépenses", "Transfert comptable"],
     lien: "/solutions/transfert-comptable",
   },
   {
@@ -291,7 +291,7 @@ export const COMPARATIF: readonly GroupeComparatif[] = [
     lignes: [
       { fonction: "Facturation", essentiel: true, business: true, enterprise: true },
       { fonction: "Relances", essentiel: true, business: true, enterprise: true },
-      { fonction: "Export comptable", essentiel: true, business: true, enterprise: true },
+      { fonction: "Transfert comptable", essentiel: true, business: true, enterprise: true },
       { fonction: "Gestion des dépenses", essentiel: true, business: true, enterprise: true },
       { fonction: "Exports avancés", essentiel: false, business: true, enterprise: true },
     ],
