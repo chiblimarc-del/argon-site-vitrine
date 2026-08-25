@@ -157,19 +157,33 @@ export function TemoignageSection() {
           </blockquote>
 
           <figcaption className="mt-10 flex flex-wrap items-center gap-5 border-t border-line-soft pt-8">
-            {/* Dimensions au ratio réel du logo (2,689) : pas de saut de mise
-                en page au chargement. eslint-disable car export statique. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={SIGNATURE.logo}
-              srcSet={`${SIGNATURE.logo} 1x, ${SIGNATURE.logo2x} 2x`}
-              alt={SIGNATURE.entreprise}
-              className="h-10 w-auto"
-              width={108}
-              height={40}
-              loading="lazy"
-              decoding="async"
-            />
+            {/*
+              ⚠️ CARTOUCHE BLANC — le logo porte un texte NOIR sur fond
+              transparent. Sur le fond sombre du site, « D-TRANS EXPRESS »
+              disparaissait : seules les deux fleches restaient visibles.
+
+              Le cartouche resout le probleme SANS TOUCHER AU FICHIER. C est
+              deliberе : le logo d un client s affiche tel qu il l a fourni.
+              Le repeindre en blanc sortirait de l accord donne le 23/08, et
+              le prochain logo client arriverait dans une autre teinte.
+
+              Ne pas retirer ce fond en le croyant decoratif.
+            */}
+            <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">
+              {/* Dimensions au ratio réel du logo (2,689) : pas de saut de mise
+                  en page au chargement. eslint-disable car export statique. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={SIGNATURE.logo}
+                srcSet={`${SIGNATURE.logo} 1x, ${SIGNATURE.logo2x} 2x`}
+                alt={SIGNATURE.entreprise}
+                className="h-10 w-auto"
+                width={108}
+                height={40}
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
             <div>
               <p className="font-semibold text-ink">{SIGNATURE.nom}</p>
               <p className="text-sm text-ink-soft">
