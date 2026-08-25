@@ -55,7 +55,7 @@ export const PLANS: TroisOffres = [
     verbe: "Optimiser",
     plateforme: 249,
     terrain: 17,
-    promesse: "Pour automatiser, optimiser et mieux piloter votre organisation.",
+    promesse: "Pour piloter plusieurs sites, consolider et garder la main sur l'ensemble.",
     cta: "Choisir Business",
     recommande: true,
   },
