@@ -15,7 +15,8 @@
     "check": "npm run typecheck && npm run lint && npm run seo:check",
     "deploy:pack": "node --experimental-strip-types scripts/prepare-deploy.ts",
     "deploy:build": "node --experimental-strip-types scripts/deploy.ts",
-    "deploy:ouvrir": "node --experimental-strip-types scripts/deploy.ts --ouvrir"
+    "deploy:ouvrir": "node --experimental-strip-types scripts/deploy.ts --ouvrir",
+    "controle": "node scripts/controle-editorial.mjs"
   },
   "dependencies": {
     "next": "16.3.1",
