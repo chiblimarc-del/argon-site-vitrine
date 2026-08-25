@@ -122,6 +122,9 @@ export default function RapportsInterventionPage() {
 
           <div className="min-w-0 lg:sticky lg:top-24">
             <ReportDocument />
+            <p className="mt-3 text-center text-xs text-ink-soft">
+              Interface Argon reproduite en code — données d&apos;illustration.
+            </p>
           </div>
         </div>
 

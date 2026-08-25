@@ -160,7 +160,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Argon est-il un logiciel de comptabilité ?",
     answer:
-      "Non, et ce n'est pas son objet. Argon génère et envoie les factures issues de vos interventions, suit ce qui a été réglé et ce qui reste dû, et cadre la relance des impayés. Il ne tient pas votre comptabilité : ni écritures, ni déclaration de TVA, ni rapprochement bancaire. Ces travaux restent du ressort de votre outil comptable et de votre cabinet.",
+      "Non, et ce n'est pas son objet. Argon génère et envoie les factures issues de vos interventions, suit ce qui a été réglé et ce qui reste dû, et cadre la relance des impayés. Argon ne tient pas votre comptabilité. Il prépare, centralise et alimente les informations et documents nécessaires à leur exploitation. Les écritures, la déclaration de TVA et le rapprochement bancaire restent du ressort de votre outil comptable et de votre cabinet.",
   },
   {
     question: "Argon relance-t-il automatiquement les devis et les factures ?",
