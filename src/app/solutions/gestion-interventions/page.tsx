@@ -70,7 +70,7 @@ const cycle = [
     etape: "04",
     titre: "Le compte rendu",
     texte:
-      "À la clôture, le compte rendu est généré en PDF avec les photos et la signature, puis transmis au client automatiquement.",
+      "À la clôture, le compte rendu part au client. Rien n'est retapé au bureau.",
   },
   {
     etape: "05",

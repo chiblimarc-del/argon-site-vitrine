@@ -104,7 +104,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Que se passe-t-il quand le technicien clôture sa mission ?",
     answer:
-      "Le compte rendu est généré en PDF avec les photos et la signature, puis transmis au client. Si le technicien a signalé une anomalie, elle remonte à l'exploitation, qui décide s'il y a un supplément à facturer.",
+      "Le technicien clôture depuis son téléphone, et le compte rendu part au client. S'il a signalé une anomalie, elle remonte à l'exploitation, qui décide s'il y a un supplément à facturer.",
   },
 ];
 

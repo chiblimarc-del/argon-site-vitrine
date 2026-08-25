@@ -64,7 +64,7 @@ const faq: QuestionFaq[] = [
   {
     question: "Comment le compte rendu est-il produit ?",
     answer:
-      "Il est généré automatiquement en PDF à la clôture de l'intervention, à partir de ce que l'intervenant a saisi sur place : description, photos, signature du client. Personne ne le rédige au bureau, et il n'y a pas de ressaisie.",
+      "Il est produit en PDF à la clôture de l'intervention, à partir de ce que l'intervenant a saisi sur place : description, photos, signature du client, sans que personne ne le rédige au bureau.",
   },
   {
     question: "Le compte rendu est-il envoyé au client automatiquement ?",
@@ -188,8 +188,8 @@ export default function RapportsInterventionPage() {
               l&apos;information
             </span>{" "}
             : le client est prévenu, et c&apos;est vous qui décidez de ce qui
-            sera facturé. L&apos;automatisation s&apos;arrête exactement là où
-            elle deviendrait risquée.
+            sera facturé. Argon prépare la décision ; il ne la prend pas à
+            votre place.
           </p>
         </div>
       </Section>
