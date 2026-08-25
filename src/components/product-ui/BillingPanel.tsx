@@ -14,24 +14,50 @@ import { LogoMark } from "@/components/ui/Logo";
  * sans réponse, intervention, contrôle avant facturation, génération et envoi
  * de la facture.
  *
- * INTERDIT ABSOLU ici — aucune de ces briques n'existe :
- *   · statut « Payée », suivi des règlements, échéances, encaissement
+ * INTERDIT ABSOLU ici :
  *   · TVA, écritures, export comptable, rapprochement bancaire
  *   · recouvrement ou relance de facture automatisés
  *   · « pilotage financier », « comptabilité automatisée »
  *
- * Le fil des statuts s'arrête donc volontairement à « Envoyée ». Ajouter un
- * statut de paiement transformerait cette maquette en fausse promesse.
+ * ─────────────────────────────────────────────────────────────────────────
+ * LA LIMITE A BOUGÉ, ET IL FAUT SAVOIR POURQUOI
+ *
+ * Ce fichier s'arrêtait à « Envoyée », avec ce motif : « ajouter un statut de
+ * paiement transformerait cette maquette en fausse promesse ». C'était juste
+ * au moment où ça a été écrit.
+ *
+ * Ça ne l'est plus. Le contrôle produit du 18/08 a établi que le suivi des
+ * règlements existe — le modèle `Reglement`, et un acompte qui laisse la
+ * facture en « partielle ». La page revendique ce suivi depuis, et porte
+ * désormais un bloc encours deux écrans plus bas. C'est donc l'INVERSE qui
+ * était devenu vrai : la maquette sous-vendait ce que la page affirme.
+ *
+ * ⚠️ « Partiellement réglée » et NON « Payée ». Les deux seraient exacts, mais
+ * « Payée » est ce que montre n'importe quel outil de facturation. L'état
+ * partiel est celui qui prouve qu'on suit vraiment les règlements — et c'est
+ * la situation réelle d'un dirigeant qui attend le solde.
+ *
+ * La règle elle-même n'a pas changé : une maquette ne montre que ce que le
+ * produit fait. Ne pas y ajouter d'échéancier, de relance partie seule, ni
+ * aucun statut que le code ne porte pas.
+ * ─────────────────────────────────────────────────────────────────────────
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Etat = "accepte" | "termine" | "valide" | "envoye" | "attente";
+type Etat = "accepte" | "termine" | "valide" | "envoye" | "partiel" | "attente";
 
 const etats: Record<Etat, { libelle: string; pastille: string; puce: string }> = {
   accepte: { libelle: "Accepté", pastille: "bg-ok/12 text-ok", puce: "bg-ok" },
   termine: { libelle: "Terminée", pastille: "bg-ok/12 text-ok", puce: "bg-ok" },
   valide: { libelle: "Validée", pastille: "bg-ok/12 text-ok", puce: "bg-ok" },
   envoye: { libelle: "Envoyée", pastille: "bg-info/12 text-info", puce: "bg-info" },
+  /* Le règlement partiel se signale comme une attente, pas comme un défaut :
+     rien n'est en retard, il manque le solde. La couleur le dit. */
+  partiel: {
+    libelle: "Partiellement réglée",
+    pastille: "bg-warn/12 text-warn",
+    puce: "bg-warn",
+  },
   attente: {
     libelle: "Sans réponse",
     pastille: "bg-warn/12 text-warn",
@@ -74,6 +100,13 @@ const fil: {
     objet: "Établie depuis l'intervention",
     repere: "envoyée le 25/09",
     etat: "envoye",
+  },
+  {
+    ref: "FA-1187",
+    type: "Règlement",
+    objet: "Acompte reçu, solde attendu",
+    repere: "le 08/10",
+    etat: "partiel",
   },
 ];
 
