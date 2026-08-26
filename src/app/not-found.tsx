@@ -13,6 +13,20 @@ import { primaryCta } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Page introuvable | Argon",
   robots: { index: false, follow: true },
+  /**
+   * ⚠️ `canonical: null` ANNULE l'héritage du layout racine, qui déclare
+   * `alternates: { canonical: "/" }`. Sans cette ligne, la page 404 se
+   * déclare canonique de l'ACCUEIL : chaque URL erronée du site portait une
+   * balise canonical vers `/`. Sans conséquence aujourd'hui — la page est en
+   * noindex, Google ne suit pas le canonical d'une page qu'il n'indexe pas —
+   * mais c'est un signal contradictoire, et le genre de ligne qu'on ne
+   * retrouve jamais le jour où elle nuit.
+   *
+   * Toutes les autres pages passent par `metadataFor`, qui pose leur propre
+   * canonical. Celle-ci est la seule à ne pas le faire : elle n'a pas de
+   * route au registre.
+   */
+  alternates: { canonical: null },
 };
 
 export default function NotFound() {
