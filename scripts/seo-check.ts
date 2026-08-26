@@ -12,9 +12,12 @@
  *  4. H1 unique sur tout le site
  *  5. mot-clé principal unique — c'est le garde-fou anti-cannibalisation
  *  6. route parente déclarée (cohérence des breadcrumbs)
+ *  7. table des métiers de deploy/api/demande.php synchrone avec le registre
  */
 
-import { routes } from "../src/lib/routes.ts";
+import { readFileSync } from "node:fs";
+
+import { routes, secteurRoutes } from "../src/lib/routes.ts";
 
 const TITLE_MAX = 60;
 const DESCRIPTION_MAX = 160;
@@ -92,6 +95,65 @@ for (const route of routes) {
   }
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   7 — LA TABLE DES MÉTIERS DE `deploy/api/demande.php`
+
+   Le sélecteur « Votre activité » poste le CHEMIN de la page secteur, et
+   `demande.php` le traduit en libellé lisible à partir d'une table codée en
+   dur, qui duplique le registre sans que rien ne les relie.
+
+   Renommer une route `/secteurs/*` ne casse donc pas le build : l'e-mail reçu
+   affiche un chemin brut à la place du métier, et personne ne s'en aperçoit
+   avant de lire une demande — c'est-à-dire au pire moment. Ce contrôle est le
+   lien qui manquait.
+   ────────────────────────────────────────────────────────────────────────── */
+
+const CHEMIN_PHP = new URL("../deploy/api/demande.php", import.meta.url);
+let sourcePhp: string | null = null;
+
+try {
+  sourcePhp = readFileSync(CHEMIN_PHP, "utf8");
+} catch {
+  // Le fichier est absent d'une copie de travail partielle : on le signale,
+  // on ne fait pas échouer le contrôle sur une absence.
+  warnings.push("deploy/api/demande.php introuvable — table des métiers non vérifiée.");
+}
+
+if (sourcePhp) {
+  const bloc = sourcePhp.match(/\$libelles\s*=\s*\[([\s\S]*?)\];/);
+
+  if (!bloc) {
+    errors.push(
+      "deploy/api/demande.php : bloc `$libelles` introuvable. Le motif a changé — " +
+        "ce contrôle ne vérifie plus rien tant qu'il n'est pas remis à jour.",
+    );
+  } else {
+    const clesPhp = new Set([...bloc[1].matchAll(/'([^']+)'\s*=>/g)].map((m) => m[1]));
+    const attendues = secteurRoutes.map((r) => r.path);
+
+    for (const path of attendues) {
+      if (!clesPhp.has(path)) {
+        errors.push(
+          `deploy/api/demande.php : « ${path} » absent de $libelles — l'e-mail reçu afficherait le chemin brut.`,
+        );
+      }
+    }
+
+    for (const cle of clesPhp) {
+      if (cle !== "autre" && !attendues.includes(cle)) {
+        errors.push(
+          `deploy/api/demande.php : « ${cle} » ne correspond à aucune route secteur du registre.`,
+        );
+      }
+    }
+
+    // Le sélecteur ajoute toujours « Autre activité » après les routes.
+    if (!clesPhp.has("autre")) {
+      errors.push("deploy/api/demande.php : la clé « autre » manque à $libelles.");
+    }
+  }
+}
+
 const published = routes.filter((r) => r.published);
 
 /**
@@ -117,7 +179,9 @@ for (const warning of warnings) console.log(`AVERTISSEMENT  ${warning}`);
 for (const error of errors) console.error(`ERREUR         ${error}`);
 
 if (errors.length) {
-  console.error(`\n${errors.length} erreur(s). Corrigez src/lib/routes.ts.`);
+  console.error(
+    `\n${errors.length} erreur(s). Corrigez src/lib/routes.ts — ou deploy/api/demande.php.`,
+  );
   process.exit(1);
 }
 
