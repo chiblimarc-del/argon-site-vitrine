@@ -73,10 +73,14 @@ détruit à la fin. Cette erreur a coûté une reconstitution complète le 18/08
 
 ### Déploiement
 
-- **`npm run deploy:ouvrir`, JAMAIS `npm run deploy:build`.** Les deux paquets sont
-  identiques à une balise près : `deploy:build` produit le site en `noindex` et le
-  **désindexerait en silence**. Rien dans `dist/` ne signale l'erreur ; elle ne se verrait
+- **En production : `npm run deploy:ouvrir`, JAMAIS `npm run deploy:build`.** Les deux
+  paquets sont identiques à une balise près : `deploy:build` produit le site en `noindex` et
+  le **désindexerait en silence**. Rien dans `dist/` ne signale l'erreur ; elle ne se verrait
   qu'en Search Console, des semaines plus tard.
+- **Sur le staging, c'est l'inverse : `deploy:build` est le paquet qu'il faut**, et son
+  `noindex` est la **seule** chose qui empêche le staging de devenir un duplicata indexé —
+  le bloc Caddy du staging n'en pose aucun (vérifié le 26/08/2026). Procédure complète :
+  `docs/publier.md` § « Publier sur le staging ».
 - **`scp -r dist/.` et jamais `dist/*`.** Le glob du shell ignore les fichiers commençant
   par un point : le `.htaccess` racine — réécriture d'URL, en-têtes de sécurité, cache —
   ne partirait pas.
@@ -162,7 +166,16 @@ unique, `parent` déclaré, deux routes ne peuvent pas partager le même `keywor
 
 **Ne marchent pas en local, et c'est structurel** : le formulaire de démonstration (il poste
 vers `/api/demande.php`, du PHP que `next dev` n'exécute pas) et Turnstile (clé restreinte
-aux domaines déclarés).
+aux domaines déclarés). **Ils se testent sur staging** — `vitrine-staging.argon-mobility.com`, `37.187.183.209` :
+
+```bash
+ssh -l argon 37.187.183.209 ls /home/argon/
+```
+
+⚠️ **Le compte est `argon`, jamais `root`**, et la clé par défaut du poste suffit. Le registre
+a cru cet accès fermé pendant un jour parce qu'un seul essai avait été fait, avec `root@` :
+erreur de diagnostic, levée le 26/08/2026 (registre, entrée 7). Un lot risqué se répète
+désormais sur staging **avant** la production.
 
 ⚠️ **Le site est en export statique.** Les blocs `redirects()` et `headers()` de
 `next.config.ts` sont **silencieusement ignorés** en production : toute règle de redirection
@@ -371,9 +384,17 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
    *Une vérification qui ment est pire qu'une vérification absente.*
 9. **Une recherche partielle ne conclut pas sur un ensemble** — « cinq champs inertes »
    alors que la recherche n'avait porté que sur trois.
-10. **`Disallow: /` n'est pas un `noindex`.** Il empêche l'exploration, donc la lecture du
+10. **Un accès déclaré fermé sur la foi d'un seul essai n'est pas un accès fermé, c'est un
+    essai.** Le staging du vitrine a été inscrit au registre comme inaccessible le 25/08 après
+    un unique `ssh root@…` refusé. Le compte était `argon`. Le 26/08, trois clés ont été
+    essayées successivement — toutes refusées, ce qui **renforçait** la conclusion fausse —
+    avant que quelqu'un change de compte. ⚠️ **Un échec répété ne confirme rien s'il ne fait
+    varier qu'une seule variable** : utilisateur, clé, port, hôte donnent le même
+    `Permission denied (publickey)`. Et la réponse était écrite dans `CLAUDE.md` du monorepo
+    depuis le 19/08, dans un paragraphe qui racontait déjà la même erreur.
+11. **`Disallow: /` n'est pas un `noindex`.** Il empêche l'exploration, donc la lecture du
     `noindex`. Pour sortir un hôte de l'index : exploration autorisée + `X-Robots-Tag`.
-11. **Une alerte Search Console n'est un défaut que si la fonctionnalité visée est
+12. **Une alerte Search Console n'est un défaut que si la fonctionnalité visée est
     atteignable.** Un champ manquant sur une fonctionnalité inéligible n'est pas un manque,
     c'est un mauvais type. *(Leçon des cinq signalements du 26/08 sur `/tarifs`.)*
 
@@ -422,9 +443,9 @@ Voir `claude/registre-dette-technique.md` pour le détail. En résumé, au 26/08
 |---|---|---|
 | 1 | `deployer.sh` applique la configuration Caddy **avant** de la valider (aucun `caddy validate`) | ouvert, **confirmé le 26/08** |
 | 3 | staging non authentifié | ouvert, sans urgence |
-| 4 | `SuiviErreursService` marque « notifiée » sans regarder `sent` | ouvert, **confirmé le 26/08**, et son test est vert à tort |
+| 4 | `SuiviErreursService` marquait « notifiée » sans regarder `sent` | ✅ **corrigé le 26/08** (`2108974` sur `securite-perimetre-super-admin`), test compris — `npm run check --workspace=backend` vert, 4 073 tests |
 | 6 | quatre réglages de l'onglet Comptabilité lus par aucun code | à trancher côté produit |
-| 7 | la clé SSH du poste n'est pas autorisée sur le staging | ouvert — bloque toute validation hors production |
+| 7 | ~~la clé SSH du poste n'est pas autorisée sur le staging~~ | ✅ **erreur de diagnostic, levée le 26/08** — le compte est `argon`, pas `root`. L'accès existait depuis le début |
 | 9 | préchargements Next en 404 (`__next.*.txt`) | **laissé délibérément** : la règle `FilesMatch` qui les couvre épargne `robots.txt` par une assertion négative PCRE ; l'altérer rendrait 20 duplicatas `.txt` indexables |
 
 Décisions produit en attente : une **capture réelle du tableau de bord**
@@ -450,4 +471,4 @@ et `/` ↔ `/solutions/gestion-interventions` — **ne rien changer avant d'avoi
 | 9 | `/expert-comptable` (20ᵉ page) | 25/08 |
 | 10 | CSP + `Permissions-Policy` dans `deploy/.htaccess` | 25/08 |
 | 11 | Témoignage D-Trans Express + logo | 25/08 |
-| — | Données structurées `/tarifs` : `Product` → `SoftwareApplication` | 26/08 |
+| — | Données structurées `/tarifs` : `Product` → `SoftwareApplication` — déployé et vérifié en production, validation Search Console en attente | 26/08 |

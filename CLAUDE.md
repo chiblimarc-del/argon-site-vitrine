@@ -21,9 +21,12 @@ Ce fichier-ci ne contient que ce qu'il serait trop coûteux d'apprendre trop tar
    Contrôle avant tout commit : `git status --short` doit lister une vingtaine de fichiers,
    pas 88.
 
-3. **`npm run deploy:ouvrir`, JAMAIS `npm run deploy:build`** — `deploy:build` produit le
-   même site en `noindex` et le **désindexerait en silence**. Rien dans `dist/` ne signale
-   l'erreur.
+3. **En production : `npm run deploy:ouvrir`, JAMAIS `npm run deploy:build`** —
+   `deploy:build` produit le même site en `noindex` et le **désindexerait en silence**. Rien
+   dans `dist/` ne signale l'erreur.
+   ⚠️ **Sur le staging, c'est l'inverse** : `deploy:build` est le bon paquet, son `noindex`
+   étant la seule chose qui empêche le staging d'être indexé. Voir `docs/publier.md`
+   § « Publier sur le staging ».
 
 4. **`scp -r dist/.` et jamais `dist/*`** — le glob du shell ignore les fichiers commençant
    par un point, et le `.htaccess` racine ne partirait pas. C'est lui qui porte la

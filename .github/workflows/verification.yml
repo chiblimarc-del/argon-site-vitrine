@@ -1,0 +1,90 @@
+# =============================================================================
+# Site vitrine Argon — vérification automatique.
+#
+# ⚠️ CE WORKFLOW NE DÉPLOIE RIEN, ET NE DOIT JAMAIS LE FAIRE.
+#
+# Le site vitrine se met en ligne à la main, depuis le poste :
+#   npm run deploy:ouvrir  →  scp -r dist/. root@164.132.76.117:…
+# C'est délibéré — la clé SSH du VPS vit sur le poste et n'a aucune raison
+# d'entrer dans les secrets GitHub. Ce workflow ne fait qu'une chose : dire si
+# un commit passe les contrôles du projet, AVANT que quelqu'un lance le `scp`.
+#
+# Jusqu'au 26/08/2026, ce dépôt n'avait aucune CI : `npm run check` ne tournait
+# que si l'on pensait à le taper. Rien n'empêchait de déployer un site dont un
+# titre dépassait 60 caractères, ou dont la table des métiers de `demande.php`
+# avait divergé du registre de routes.
+#
+# ⚠️ Volontairement SANS `paths-ignore: '**.md'`. Le dépôt SaaS porte ce filtre
+# et en paie le prix : un lot de commits purement documentaires y fait avancer
+# `master` sans que le staging bouge, et le garde-fou de production refuse
+# ensuite ce HEAD. Ici, une exécution coûte une minute — moins cher qu'une
+# exception à retenir.
+# =============================================================================
+
+name: Vérification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Un push qui en remplace un autre annule la vérification devenue inutile.
+concurrency:
+  group: verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: check + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # `package.json` déclare `engines: node >=22.6`. La borne n'est pas
+      # décorative : `scripts/seo-check.ts` et `scripts/deploy.ts` sont lancés
+      # par `node --experimental-strip-types`, qui n'existe pas avant 22.6.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - run: npm ci
+
+      # Le contrôle qui fait foi : typecheck → lint → seo:check.
+      # Le déploiement échoue si l'un tombe ; la CI doit tomber pareil.
+      - name: npm run check
+        run: npm run check
+
+      # `check` ne construit pas le site. Or le build attrape ce que le
+      # typecheck ne voit pas — une page qui ne se prérend pas, une route du
+      # registre sans fichier, une image manquante.
+      #
+      # NEXT_PUBLIC_SITE_URL est posée pour que canonical, sitemap et robots
+      # soient produits dans les mêmes conditions qu'en production. Sans elle,
+      # le build vise localhost et robots.txt bascule en `Disallow: /`.
+      #
+      # NEXT_PUBLIC_SITE_OPEN reste à sa valeur par défaut (fermé) : le paquet
+      # produit ici n'est jamais publié, et un `noindex` de plus ne coûte rien
+      # alors qu'un paquet ouvert traînant dans un artefact peut tromper.
+      - name: next build
+        run: npx next build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.argon-mobility.com
+
+      # Contrôle éditorial — INFORMATIF pour l'instant.
+      #
+      # Il sort en code 0 même quand il signale, et il signale aujourd'hui dix
+      # affirmations réelles, toutes dans `src/lib/tarifs.ts` (« API »,
+      # « Intégrations standards », « Automatisations avancées »). Le rendre
+      # bloquant maintenant casserait la CI sur un arbitrage non tranché.
+      #
+      # ⚠️ Le jour où ces dix lignes sont arbitrées — reformulées, ou exemptées
+      # nommément dans `scripts/controle-editorial.mjs` — ce pas doit devenir
+      # bloquant. Un contrôle qui signale sans jamais rien empêcher finit par
+      # ne plus être lu : c'est la règle que ce script porte lui-même en tête.
+      - name: npm run controle (informatif)
+        run: npm run controle

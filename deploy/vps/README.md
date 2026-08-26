@@ -69,14 +69,20 @@ dig +short vitrine-staging.argon-mobility.com    # doit renvoyer 37.187.183.209
 
 ### Étape 2 — Déposer le site sur le serveur de staging
 
+> ⚠️ **Corrigé le 26/08/2026 : le compte est `argon`, jamais `root`.**
+> Cette section écrivait `root@37.187.183.209`. Ce refus, pris pour une porte fermée,
+> a fait inscrire au registre de dette une entrée 7 « le staging est hors d'atteinte »
+> qui était fausse, et a fait valider la CSP du Lot 10 directement en production.
+> La clé par défaut du poste suffit ; aucun `-i` n'est nécessaire.
+
 Depuis votre poste, dans le dossier du projet vitrine :
 
 ```bash
-scp -r dist/          root@37.187.183.209:/home/argon/vitrine/site
-scp deploy/vps/docker-compose.yml root@37.187.183.209:/home/argon/vitrine/
-scp deploy/vps/apache-vitrine.conf root@37.187.183.209:/home/argon/vitrine/
-scp argon-config.php  root@37.187.183.209:/home/argon/vitrine/
-scp deploy/vps/vitrine-staging.caddy root@37.187.183.209:/home/argon/argon-deploy/conf.d/
+scp -r dist/          argon@37.187.183.209:/home/argon/vitrine/site
+scp deploy/vps/docker-compose.yml argon@37.187.183.209:/home/argon/vitrine/
+scp deploy/vps/apache-vitrine.conf argon@37.187.183.209:/home/argon/vitrine/
+scp argon-config.php  argon@37.187.183.209:/home/argon/vitrine/
+scp deploy/vps/vitrine-staging.caddy argon@37.187.183.209:/home/argon/argon-deploy/conf.d/
 ```
 
 ⚠️ `argon-config.php` contient les clés Mailjet. Il est déposé dans

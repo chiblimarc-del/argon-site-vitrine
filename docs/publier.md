@@ -92,7 +92,7 @@ Sur le poste Windows, `core.autocrlf=true` normalise en LF au moment du `add` :
 **Le contrôle avant tout commit** : `git status --short` doit lister une
 vingtaine de fichiers, pas 88. S'il en liste 88, ne rien commiter.
 
-### 3. `deploy:ouvrir`, et JAMAIS `deploy:build`
+### 3. `deploy:ouvrir`, et JAMAIS `deploy:build` — EN PRODUCTION
 
 La production est **ouverte aux moteurs** (`<meta name="robots" content="index,
 follow">`). `npm run deploy:build` produirait le même site en `noindex` et le
@@ -102,6 +102,10 @@ Search Console, des semaines plus tard.
 
 Le jour où le site devrait être refermé, ce serait un acte délibéré, jamais un
 effet de bord.
+
+⚠️ **Sur le STAGING, c'est l'inverse : `deploy:build` est le paquet qu'il faut.**
+Son `noindex` est la seule chose qui empêche le staging de devenir un duplicata
+indexé — le bloc Caddy du staging n'en pose aucun. Voir § « Publier sur le staging ».
 
 ### 4. `scp -r dist/.` et jamais `dist/*`
 
@@ -136,6 +140,67 @@ cible**, conservée d'avant la migration. `deploy/vps/README.md` fait foi.
 
 Le conteneur Apache lit les fichiers à chaque requête : **aucun redémarrage
 n'est nécessaire**, c'est en ligne dès la fin du `scp`.
+
+---
+
+## Publier sur le staging
+
+**Établi le 26/08/2026**, le jour où l'on a découvert que le staging était accessible depuis
+le début — voir l'entrée 7 du registre de dette, et le § 9 du document d'amorçage.
+
+```bash
+npm run check
+npm run deploy:build
+scp -r dist/. argon@37.187.183.209:/home/argon/vitrine/site/
+```
+
+Puis, au navigateur : `https://vitrine-staging.argon-mobility.com/`
+
+### Les quatre différences avec la production, et aucune n'est cosmétique
+
+**1. `deploy:build`, pas `deploy:ouvrir`.** La règle n° 3 ci-dessus interdit `deploy:build` —
+elle l'interdit **pour la production**, où il désindexerait le site en silence. Sur le
+staging, c'est exactement le paquet qu'il faut : il porte le `noindex` de pré-lancement, et
+c'est ce qui empêche le staging de devenir un duplicata indexé du site.
+
+⚠️ **Le bloc Caddy du staging ne pose aucun en-tête `noindex`** (`deploy/vps/vitrine-staging.caddy`,
+vérifié le 26/08). Le `noindex` du staging vient donc **uniquement du paquet**. Y envoyer un
+paquet ouvert publierait vingt pages en double sous un autre domaine, sans que rien ne le
+signale.
+
+**2. `argon@`, pas `root@`.** Le compte du staging est `argon`, et la clé par défaut du poste
+suffit. `root@` répond `Permission denied (publickey)` — c'est ce refus, pris pour une porte
+fermée, qui a fait croire pendant un jour que le staging était inaccessible.
+
+⚠️ `deploy/vps/README.md` § « Étape 2 » écrit `root@` : **c'est faux**, et c'est probablement
+l'origine de l'erreur. Cette section-ci fait foi.
+
+**3. Aucun `chown` n'est nécessaire.** `site/` appartient à `argon`, et le `scp` se fait sous
+ce compte : les droits sont bons d'office. Sur la production, où le dépôt se fait en `root`,
+il en allait autrement.
+
+**4. Ne jamais toucher `argon-config.php`.** Il est déjà sur le staging, en `www-data:www-data`
+et mode 600 — soit l'uid 33 attendu par Apache dans le conteneur. Le `scp` ci-dessus ne vise
+que `site/` et ne peut pas l'atteindre. La règle n° 5 — jamais de synchronisation miroir —
+vaut ici comme en production.
+
+### Ce que le staging permet, et qui manquait
+
+Le formulaire de démonstration et Turnstile ne fonctionnent qu'en ligne, par construction.
+C'est ici qu'on les exerce, en attendant **au moins trois secondes** avant de valider —
+sinon la barrière anti-robot renvoie un faux succès sans rien envoyer.
+
+C'est aussi ici que se valide tout changement d'en-tête ou de `.htaccess` : la CSP du Lot 10 a
+été déployée directement en production faute d'avoir cherché le bon compte. Cela ne doit plus
+se reproduire.
+
+### Deux choses à ne pas « corriger » en voyant le staging
+
+- **Les balises canonical y pointent vers `www.argon-mobility.com`.** C'est voulu : le paquet
+  est construit pour la production, et un canonical vers le staging serait pire.
+- **Le staging peut être en retard de plusieurs lots.** Au 26/08/2026 il servait encore la
+  version du 18/08 : `/tarifs` y répondait 404. Un déploiement staging n'est pas automatique —
+  c'est le `scp` ci-dessus, et rien d'autre.
 
 ---
 
