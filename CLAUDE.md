@@ -8,7 +8,7 @@ Ce fichier-ci ne contient que ce qu'il serait trop coûteux d'apprendre trop tar
 
 ---
 
-## Les six interdits
+## Les sept interdits
 
 1. **Ne lancer AUCUNE commande `git` depuis un montage distant** — ni `add`, ni `commit`, ni
    même `status` ou `log`. Le montage interdit la suppression de fichiers : git pose
@@ -38,6 +38,13 @@ Ce fichier-ci ne contient que ce qu'il serait trop coûteux d'apprendre trop tar
 
 6. **Ne jamais coller une sortie de terminal DANS le terminal.** Règle établie après avoir
    effacé `src/` de cette manière, le 24/08/2026.
+
+7. **Rien ne se télécharge.** Claude ne fait jamais télécharger un fichier, quelle qu'en soit
+   l'extension. Soit il l'écrit directement dans le dépôt par le pont, soit — si le chemin est
+   protégé, comme `.github/workflows/` — il livre **un seul `poser-<sujet>.txt`** à lancer
+   depuis la racine. Enfreint quatre fois le 26/08/2026 parce que la règle était écrite en
+   liste d'extensions : elle est désormais un principe. Détail au § 3 de
+   `claude/etat-du-projet.md`.
 
 ---
 

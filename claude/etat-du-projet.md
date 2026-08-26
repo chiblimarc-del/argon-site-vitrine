@@ -90,6 +90,23 @@ détruit à la fin. Cette erreur a coûté une reconstitution complète le 18/08
 - **Jamais relancer `deploy-argon.sh` après un `deploy:ouvrir`** : il reconstruit en mode
   FERMÉ. Utiliser `televerser.sh`, qui envoie `dist/` tel quel.
 
+### Livraison
+
+- **Ne jamais faire télécharger un fichier à l'utilisateur.** Aucune extension, aucune
+  exception : ni `.tsx`, ni `.ts`, ni `.md`, ni `.yml`, ni quoi que ce soit d'autre. Un
+  fichier arrive sur le poste de **deux** façons, et de deux seulement :
+  1. **Claude l'écrit directement dans le dépôt** par le pont, quand le chemin l'autorise.
+     C'est le cas courant, et il n'y a alors rien à livrer du tout.
+  2. **Un seul script `poser-<sujet>.txt`**, quand le pont refuse le chemin — et il refuse
+     `.github/workflows/`, qui est protégé.
+
+  ⚠️ **Cet interdit a été enfreint quatre fois le 26/08/2026**, le jour même où il a été
+  écrit au § 4 de ce fichier. Pourquoi : il y était formulé comme une LISTE d'extensions
+  (« ni `.tsx`, ni `.ts`, ni `.md` ») assortie d'une cause (« le navigateur du poste refuse
+  ces extensions »). Un `.yml` n'était pas dans la liste, donc la règle semblait ne pas
+  s'appliquer. **Une règle écrite en énumération invite à chercher si son cas y figure.**
+  Celle-ci est donc écrite en principe : *rien ne se télécharge*.
+
 ### Terminal
 
 - **Ne jamais coller une sortie de terminal DANS le terminal.** Règle établie le
@@ -134,17 +151,22 @@ scp -r dist/. root@164.132.76.117:/home/argon/vitrine/site/
 
 ### La livraison par script `.txt`
 
-Claude ne livre pas de `.tsx`, `.ts` ni `.md` à télécharger — le navigateur du poste refuse
-ces extensions — mais **un seul fichier `poser-lot-N.txt`** :
+Voir l'interdit au § 3 : **rien ne se télécharge**. Quand le pont ne peut pas écrire le
+fichier lui-même — chemin protégé, `.github/workflows/` par exemple — la livraison est
+**un seul fichier `poser-<sujet>.txt`**, déposé dans le dépôt et lancé depuis sa racine :
 
 ```bash
-cd /c/Users/Utilisateur/Downloads/argon-site-git && bash ~/Downloads/poser-lot-N.txt
+cd /c/Users/Utilisateur/Downloads/argon-site-git && bash _banc/poser-<sujet>.txt
 ```
 
 Six exigences par script : garde-fou d'emplacement (`if [ ! -f package.json ]`), garde
 d'idempotence, sauvegarde `cp "$F" "$F.avant-lot-N"`, heredocs **entre quotes**
 (`<<'FIN_DE_FICHIER_ARGON'` — sinon le shell substitue `$`, backticks et accolades du TSX),
 contrôle en dernière ligne, test à blanc avant livraison.
+
+⚠️ Le garde d'idempotence ne se contente pas de « le fichier existe » quand le fichier
+existe déjà dans une version antérieure : il teste un **marqueur du contenu attendu**,
+et sauvegarde avant d'écraser.
 
 ---
 
