@@ -449,6 +449,16 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
   pas.
 - ⚠️ `paths-ignore: '**.md'` : un lot de commits purement documentaires **avance `master`
   sans mettre le staging à jour**, et le garde-fou refuse ensuite ce HEAD.
+  Remède quand le commit documentaire est justifié : relancer la CI à la main sur ce HEAD,
+  `gh workflow run "CI" --ref master`. Fait le 26/08 pour le doc d'amorçage du monorepo.
+- ⚠️ **`master` est détenu par le worktree `argon-ci`.** `git checkout master` depuis le dépôt
+  principal répond `fatal: 'master' is already used by worktree at ...` et **la branche ne
+  change pas** — mais les commandes collées à la suite, elles, s'exécutent. Toute opération
+  sur `master` se fait depuis `~/argon-ci`.
+- ⚠️ **`argon-ci` n'est synchronisé par rien.** Le 26/08 il avait **369 fichiers et six jours
+  de retard** sur `master`. C'est pourtant lui qui sert de base aux vérifications : un
+  contrôle lancé de là aurait validé un code qui n'est plus celui du dépôt. `git pull github
+  master` d'abord, toujours.
 - ⚠️ **Aucune approbation humaine n'est possible** sur ce dépôt (dépôt privé, GitHub répond
   422). La documentation l'annonçait à quatre endroits ; c'était faux. Le garde-fou
   mécanique la remplace.
@@ -463,7 +473,7 @@ Voir `claude/registre-dette-technique.md` pour le détail. En résumé, au 26/08
 
 | | Sujet | État |
 |---|---|---|
-| 1 | `deployer.sh` applique la configuration Caddy **avant** de la valider (aucun `caddy validate`) | ouvert, **confirmé le 26/08** |
+| 1 | ~~`deployer.sh` applique la configuration Caddy avant de la valider~~ | ✅ **résolu le 26/08** — `deploy/valider-caddy.sh`, conteneur jetable, banc de 20 contrôles |
 | 3 | staging non authentifié | ouvert, sans urgence |
 | 4 | `SuiviErreursService` marquait « notifiée » sans regarder `sent` | ✅ **corrigé le 26/08** (`2108974` sur `securite-perimetre-super-admin`), test compris — `npm run check --workspace=backend` vert, 4 073 tests |
 | 6 | quatre réglages de l'onglet Comptabilité lus par aucun code | à trancher côté produit |
