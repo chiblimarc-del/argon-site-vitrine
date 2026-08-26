@@ -449,8 +449,12 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
   pas.
 - ⚠️ `paths-ignore: '**.md'` : un lot de commits purement documentaires **avance `master`
   sans mettre le staging à jour**, et le garde-fou refuse ensuite ce HEAD.
-  Remède quand le commit documentaire est justifié : relancer la CI à la main sur ce HEAD,
-  `gh workflow run "CI" --ref master`. Fait le 26/08 pour le doc d'amorçage du monorepo.
+  ⚠️ Et le rattrapage n'est pas celui qu'on croit. `gh workflow run "CI" --ref master` fait
+  tourner les six jobs **mais ne déploie rien** : le job `deploy-staging` de `ci.yml` porte
+  `if: github.event_name == 'push'`. Or le garde-fou ne lit pas la CI, il lit le SHA que le
+  staging exécute. Pour rendre un tel HEAD déployable :
+  `gh workflow run deploy.yml --ref master -f environnement=staging -f commit=<sha40>`.
+  Constaté le 26/08/2026, après avoir écrit ici l'inverse.
 - ⚠️ **`master` est détenu par le worktree `argon-ci`.** `git checkout master` depuis le dépôt
   principal répond `fatal: 'master' is already used by worktree at ...` et **la branche ne
   change pas** — mais les commandes collées à la suite, elles, s'exécutent. Toute opération
