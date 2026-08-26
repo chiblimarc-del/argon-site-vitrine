@@ -5,7 +5,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { SolutionHero } from "@/components/sections/solution/SolutionHero";
 import { SolutionFaq } from "@/components/sections/solution/SolutionFaq";
 import { RelatedPages } from "@/components/sections/solution/RelatedPages";
-import { metadataFor, webPageSchema } from "@/lib/seo";
+import { metadataFor, schemaIds, webPageSchema } from "@/lib/seo";
+import { absoluteUrl } from "@/lib/site";
 import {
   DIFFERENCIATION,
   FAQ_TARIFS,
@@ -52,29 +53,64 @@ const PATH = "/tarifs";
 
 export const metadata = metadataFor(PATH);
 
-/** Balisage `Offer` — les prix viennent de `tarifs.ts`, jamais d'une copie. */
+/**
+ * Balisage de l'offre — les prix viennent de `tarifs.ts`, jamais d'une copie.
+ *
+ * ⚠️ TYPE `SoftwareApplication`, JAMAIS `Product` — et jamais les deux.
+ * `Product` déclare un article de catalogue vendu en ligne. Google applique
+ * alors la grille marchande : `image`, `shippingDetails`,
+ * `hasMerchantReturnPolicy`, `aggregateRating`, `review`. Cinq champs signalés
+ * en Search Console le 26/08/2026, dont aucun n'est renseignable ici :
+ * la page ne vend pas — pas de panier, pas de paiement — et Google réserve les
+ * fiches de marchand aux pages « where a shopper can purchase a product ».
+ * Un `"@type": ["Product", "SoftwareApplication"]` rallumerait les deux
+ * rapports : le type mixte déclenche la même validation.
+ *
+ * ⚠️ `name` porte « part plateforme » et la `description` le répète.
+ * Le balisage est servi HORS du tableau qui l'explique : un `lowPrice` nu se
+ * lit « Argon coûte 149 € », alors que le coût réel est plateforme +
+ * utilisateurs terrain actifs. Sur la seule page du site où une ligne publiée
+ * est un engagement opposable, le prix balisé doit porter sa propre limite.
+ *
+ * ⚠️ Le prix par utilisateur terrain (`plan.terrain`) NE MONTE PAS ici.
+ * `UnitPriceSpecification` n'exprime pas proprement « forfait + par siège
+ * actif » ; une approximation deviendrait une seconde source de prix,
+ * divergente de `tarifs.ts`. La règle de la source unique passe avant
+ * l'exhaustivité du balisage.
+ */
 const offresSchema = {
   "@context": "https://schema.org",
-  "@type": "Product",
+  "@type": "SoftwareApplication",
   name: "Argon",
   description:
     "Plateforme de gestion des interventions terrain : demandes, devis, planning, interventions, comptes rendus, équipes et facturation.",
-  brand: { "@type": "Brand", name: "Argon" },
-  offers: PLANS.map((plan) => ({
-    "@type": "Offer",
-    name: `Argon ${plan.libelle}`,
-    description: plan.promesse,
-    price: plan.plateforme,
+  applicationCategory: "BusinessApplication",
+  applicationSubCategory: "Gestion des interventions terrain",
+  operatingSystem: "Web, iOS, Android",
+  url: absoluteUrl(PATH),
+  publisher: { "@id": schemaIds.organization },
+  offers: {
+    "@type": "AggregateOffer",
     priceCurrency: "EUR",
-    priceSpecification: {
-      "@type": "UnitPriceSpecification",
+    offerCount: PLANS.length,
+    lowPrice: Math.min(...PLANS.map((plan) => plan.plateforme)),
+    highPrice: Math.max(...PLANS.map((plan) => plan.plateforme)),
+    offers: PLANS.map((plan) => ({
+      "@type": "Offer",
+      name: `Argon ${plan.libelle} — part plateforme`,
+      description: `${plan.promesse} Part plateforme de l'abonnement mensuel ; les utilisateurs terrain actifs sont facturés en sus.`,
+      url: absoluteUrl(PATH),
       price: plan.plateforme,
       priceCurrency: "EUR",
-      unitText: "MON",
-      valueAddedTaxIncluded: false,
-    },
-    availability: "https://schema.org/InStock",
-  })),
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: plan.plateforme,
+        priceCurrency: "EUR",
+        unitText: "MON",
+        valueAddedTaxIncluded: false,
+      },
+    })),
+  },
 };
 
 const LIEN_PRIMAIRE =
