@@ -1,3 +1,13 @@
+> ⚠️ **DOCUMENT ARCHIVÉ — figé au 18/08/2026, conservé pour son historique.**
+> Il annonce 16 pages ; le site en compte **20** depuis le 25/08/2026. Il décrit un fil
+> d'Ariane et un en-tête retirés depuis. Les décomptes, l'état des chantiers et le tableau
+> de bord ci-dessous ne sont plus à jour.
+>
+> **Le document d'amorçage est [`claude/etat-du-projet.md`](../claude/etat-du-projet.md).**
+> Ce qui reste valide ici et ne figure nulle part ailleurs : le détail des six défauts de
+> recette du 18/08 (§ 3), les contrôles du formulaire (§ 5 bis) et les scripts
+> d'exploitation de `Downloads/` (§ 5 ter).
+
 # Site vitrine Argon — EN LIGNE ET OUVERT AUX MOTEURS (18/08/2026, 16h00)
 
 **https://www.argon-mobility.com** — déployé, fonctionnel, **ouvert à l'indexation depuis le 18/08/2026**.

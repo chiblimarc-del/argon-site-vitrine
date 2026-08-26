@@ -46,6 +46,11 @@ next-env.d.ts
 # Secrets Mailjet : créés directement sur le serveur, jamais versionnés.
 deploy/api/config.php
 
-# Copies locales des docs du projet claude.ai — la source fait foi
-/claude/
+# Documents du projet.
+# Le document d'amorcage et les audits sont VERSIONNES : un depot qui ne les porte pas
+# n'apprend rien a la session qui le clone. Les comptes rendus de lot et les regles
+# restent des copies locales du projet claude.ai, qui fait foi pour eux.
+/claude/*
+!/claude/etat-du-projet.md
+!/claude/audit-2026-08-26.md
 /_to_delete/

@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Site vitrine Argon
 
-## Getting Started
+Le site public d'**Argon**, logiciel de gestion des interventions terrain.
+En ligne sur **https://www.argon-mobility.com** — 20 pages, ouvert à l'indexation depuis le
+18 août 2026.
 
-First, run the development server:
+Next.js 16 en **export statique**, servi par Apache derrière Caddy sur un VPS. Aucun
+processus Node en production.
+
+---
+
+## Démarrer
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Node ≥ 22.6.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Deux choses **ne marchent pas en local**, et c'est structurel : le formulaire de
+démonstration (il poste vers `/api/demande.php`, du PHP que `next dev` n'exécute pas) et le
+widget Turnstile (clé restreinte aux domaines déclarés). Les deux se testent en ligne.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Vérifier
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run check      # typecheck → lint → seo:check
+npm run controle   # contrôle éditorial
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`npm run check` est un préalable au déploiement, qui échoue sans lui. `seo:check` impose
+`title ≤ 60`, `description ≤ 160`, un H1 unique et non vide, un `parent` déclaré, et deux
+routes ne peuvent pas partager le même mot-clé.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Publier
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**La règle complète est dans [`docs/publier.md`](docs/publier.md).** En bref, à coller dans
+Git Bash à la racine du dépôt :
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run check
+git add -- <la liste exacte des fichiers>
+git commit -m "<message>"
+git push
+npm run deploy:ouvrir
+scp -r dist/. root@164.132.76.117:/home/argon/vitrine/site/
+```
+
+⚠️ **`deploy:ouvrir`, jamais `deploy:build`** — le second produit le même site en `noindex`.
+⚠️ **`dist/.`, jamais `dist/*`** — le glob perdrait le `.htaccess`.
+
+Le conteneur Apache lit les fichiers à chaque requête : aucun redémarrage, c'est en ligne
+dès la fin du `scp`.
+
+---
+
+## Où est quoi
+
+| | |
+|---|---|
+| `claude/etat-du-projet.md` | **le document d'amorçage — commencer par là** |
+| `claude/` | règles, comptes rendus de lot, registre de dette, audits |
+| `docs/publier.md` | la règle de publication, dans le détail |
+| `src/lib/routes.ts` | le registre : H1, titres, descriptions, sitemap, navigation, maillage |
+| `src/lib/tarifs.ts` | source unique des prix, plans et comparatif |
+| `deploy/.htaccess` | réécriture d'URL, en-têtes de sécurité, CSP, cache |
+| `deploy/api/demande.php` | traitement du formulaire, six barrières anti-robot |
+
+Le dépôt du SaaS est ailleurs : `chiblimarc-del/argon-mobility`, branche `master`.
