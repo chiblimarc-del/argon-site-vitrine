@@ -78,6 +78,53 @@ const PLOMBERIE = /^\s*(?:import\b|export\s*\*|export\s*\{)/;
 const sansIdentifiants = (ligne) =>
   PLOMBERIE.test(ligne) ? "" : ligne.replace(IDENTIFIANT, " ");
 
+/**
+ * EXEMPTIONS — nommées, motivées, et aussi étroites que possible.
+ *
+ * ⚠️ Une exemption sans motif écrit est une désactivation déguisée. Chacune
+ * porte donc trois choses : le FICHIER, les TERMES précis, et le MOTIF. Jamais
+ * un fichier entier, jamais « tous les termes ».
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * Pourquoi `src/lib/tarifs.ts` en a une (arbitrage du 26/08/2026)
+ *
+ * Deux règles du projet se contredisaient sur ce fichier, et il fallait
+ * trancher plutôt que laisser dix signalements permanents.
+ *
+ *   · La règle éditoriale bannit « API », « intégration » et « automatisation »
+ *     comme du VOCABULAIRE D'ÉDITEUR : un dirigeant qui cherche un logiciel de
+ *     terrain ne parle pas comme ça, et le site refuse de lui vendre en jargon.
+ *
+ *   · La règle du Lot 5 fait de `/tarifs` la seule page où **une ligne cochée
+ *     dans une colonne payante est un engagement contractuel opposable**.
+ *
+ * La première vise la PROSE QUI PERSUADE. La seconde régit une ÉNUMÉRATION DE
+ * CE QUI EST VENDU — lue par le dirigeant, mais aussi par son informaticien et
+ * par son comptable, qui cherchent ces mots-là et pas leurs synonymes.
+ * Rebaptiser « API » en une formule de terrain n'aurait pas rendu la ligne plus
+ * claire : cela aurait rendu l'engagement plus flou.
+ *
+ * ⚠️ L'exemption ne porte QUE sur ces trois noms de fonctions. Dans le même
+ * fichier, « automatiquement », « en temps réel », « sans engagement » et tous
+ * les autres termes restent surveillés — ce sont des PROMESSES, pas des lignes
+ * de contrat, et c'est précisément ce que la règle éditoriale existe pour
+ * arrêter.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+const EXEMPTIONS = [
+  {
+    fichier: "src/lib/tarifs.ts",
+    termes: [/\bAPI\b/, /int[ée]grations?/i, /automatisations?/i],
+    motif: "noms de fonctions du comparatif contractuel (arbitrage du 26/08/2026)",
+  },
+];
+
+/** Ce terme est-il exempté DANS ce fichier ? */
+const exempte = (chemin, motif) =>
+  EXEMPTIONS.some(
+    (e) => e.fichier === chemin && e.termes.some((t) => t.source === motif.source),
+  );
+
 /** La phrase dit qu'Argon ne le fait pas. */
 const NEGATION =
   /\bne\b|\bn['']|aucun|pas de |pas d['']|sans |\bNon\b|jamais|frontiere|frontière/i;
@@ -142,7 +189,13 @@ for (const [motif, raison] of TERMES) {
   let frontiere = 0;
   let question = 0;
 
+  const exemptes = [];
+
   for (const chemin of fichiers) {
+    if (exempte(chemin, motif)) {
+      exemptes.push(chemin);
+      continue;
+    }
     let dansListe = false;
     for (const [n, l] of lignesDeCode(chemin)) {
       if (LISTE_FRONTIERE.test(l)) dansListe = true;
@@ -160,11 +213,18 @@ for (const [motif, raison] of TERMES) {
     defauts += affirme.length;
     console.log(`\n⚠️  « ${nom} » — ${raison}`);
     for (const [f, n, l] of affirme) console.log(`     ${f}:${n}\n       ${l}`);
-  } else if (frontiere || question) {
+  } else if (frontiere || question || exemptes.length) {
     const d = [];
     if (frontiere) d.push(`${frontiere} en frontière`);
     if (question) d.push(`${question} en question de FAQ`);
+    if (exemptes.length) d.push(`${exemptes.length} fichier(s) exempté(s)`);
     console.log(`\n✅  « ${nom} » — ${d.join(", ")}. Conforme.`);
+    // ⚠️ Une exemption qui ne se voit pas finit par être oubliée, puis par
+    // couvrir autre chose que ce pour quoi elle a été écrite.
+    for (const f of exemptes) {
+      const e = EXEMPTIONS.find((x) => x.fichier === f);
+      console.log(`     exempté dans ${f} — ${e.motif}`);
+    }
   }
 }
 console.log(`\n>>> ${defauts} affirmation(s) à examiner`);
@@ -202,6 +262,7 @@ const maquettes = fichiers.filter(
   (f) => f.includes("/mockups/") || f.includes("/product-ui/"),
 );
 if (!maquettes.length) console.log("   ⚠️  aucune maquette trouvée");
+let legendesManquantes = 0;
 
 for (const chemin of maquettes) {
   const nom = basename(chemin).replace(/\.tsx?$/, "");
@@ -218,8 +279,10 @@ for (const chemin of maquettes) {
   }
 
   if (!utilise.length) console.log(`   ·  ${nom} — monté nulle part`);
-  else if (sans.length)
+  else if (sans.length) {
+    legendesManquantes += sans.length;
     console.log(`   ⚠️  ${nom} — légende absente dans : ${sans.join(", ")}`);
+  }
   else console.log(`   ✅ ${nom} (${utilise.length} page(s))`);
 }
 
@@ -246,4 +309,37 @@ for (const chemin of fichiers) {
 }
 if (!vue) console.log("   ⚠️  déclaration introuvable");
 
+/* ══ VERDICT ═════════════════════════════════════════════════════ */
+titre(6, "VERDICT");
+
+/**
+ * ⚠️ Ce contrôle est BLOQUANT depuis le 26/08/2026.
+ *
+ * Jusque-là il sortait en code 0 quoi qu'il signale, et il signalait dix
+ * affirmations permanentes que personne ne pouvait corriger — un contrôle qui
+ * n'empêche jamais rien finit par ne plus être lu. Les dix ont été arbitrées
+ * (voir la table EXEMPTIONS), et il ne reste que de vrais défauts.
+ *
+ * Ce qui FAIT ÉCHOUER : une affirmation en vocabulaire interdit, la formule
+ * comptable reformulée, une apostrophe typographique, une maquette montée sans
+ * sa légende. Chacun se corrige, et chacun est un défaut.
+ *
+ * Ce qui NE FAIT PAS échouer, délibérément : le § 5. `CAPTURE_TABLEAU_DE_BORD`
+ * qui cesse d'être `null` n'est pas une faute — c'est le jour où une vraie
+ * capture arrive, et il serait absurde de bloquer là-dessus. C'est une veille,
+ * pas une barrière.
+ */
+const total = defauts + reformulees + apostrophes + legendesManquantes;
+
+if (!total) {
+  console.log("   ✅ Aucun défaut éditorial.\n");
+  process.exit(0);
+}
+
+console.log(`   ⚠️  ${total} défaut(s) :`);
+if (defauts) console.log(`      ${defauts} affirmation(s) en vocabulaire interdit`);
+if (reformulees) console.log(`      ${reformulees} formule(s) comptable(s) reformulée(s)`);
+if (apostrophes) console.log(`      ${apostrophes} apostrophe(s) typographique(s)`);
+if (legendesManquantes) console.log(`      ${legendesManquantes} maquette(s) sans légende`);
 console.log();
+process.exit(1);

@@ -75,16 +75,19 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: https://www.argon-mobility.com
 
-      # Contrôle éditorial — INFORMATIF pour l'instant.
+      # Contrôle éditorial — BLOQUANT depuis le 26/08/2026.
       #
-      # Il sort en code 0 même quand il signale, et il signale aujourd'hui dix
-      # affirmations réelles, toutes dans `src/lib/tarifs.ts` (« API »,
-      # « Intégrations standards », « Automatisations avancées »). Le rendre
-      # bloquant maintenant casserait la CI sur un arbitrage non tranché.
+      # Il était informatif à sa mise en place le matin même : il sortait en
+      # code 0 quoi qu'il signale, et signalait dix affirmations permanentes
+      # dans `src/lib/tarifs.ts` que personne ne pouvait corriger. Les dix ont
+      # été arbitrées l'après-midi — exemption nommée et motivée dans
+      # `scripts/controle-editorial.mjs`, portant sur les trois seuls noms de
+      # fonctions du comparatif contractuel — et le script rend désormais un
+      # code de sortie.
       #
-      # ⚠️ Le jour où ces dix lignes sont arbitrées — reformulées, ou exemptées
-      # nommément dans `scripts/controle-editorial.mjs` — ce pas doit devenir
-      # bloquant. Un contrôle qui signale sans jamais rien empêcher finit par
-      # ne plus être lu : c'est la règle que ce script porte lui-même en tête.
-      - name: npm run controle (informatif)
+      # Font échouer : vocabulaire interdit affirmé, formule comptable
+      # reformulée, apostrophe typographique, maquette sans légende.
+      # Ne fait PAS échouer : `CAPTURE_TABLEAU_DE_BORD` cessant d'être `null`,
+      # qui serait une bonne nouvelle et non une faute.
+      - name: npm run controle
         run: npm run controle
