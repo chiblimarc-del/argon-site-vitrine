@@ -106,8 +106,20 @@ const offresSchema = {
         "@type": "UnitPriceSpecification",
         price: plan.plateforme,
         priceCurrency: "EUR",
-        unitText: "MON",
         valueAddedTaxIncluded: false,
+        /**
+         * ⚠️ La périodicité se déclare par `referenceQuantity`, pas par
+         * `unitText`. `unitText` est un libellé LIBRE, destiné à être lu :
+         * y écrire « MON » — le code UN/CEFACT du mois — n'a de sens ni pour
+         * une machine, qui attend ce code dans `unitCode`, ni pour un humain.
+         * Le balisage disait donc « 149 € l'unité MON », c'est-à-dire rien.
+         */
+        referenceQuantity: {
+          "@type": "QuantitativeValue",
+          value: 1,
+          unitCode: "MON", // UN/CEFACT : le mois
+          unitText: "mois",
+        },
       },
     })),
   },
