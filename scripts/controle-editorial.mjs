@@ -56,6 +56,28 @@ const TERMES = [
   [/sans engagement/i, "INTERDIT, et faux depuis le Lot 5"],
 ];
 
+/**
+ * Un identifiant de code n'est pas du texte publié.
+ *
+ * `<Connecteur />`, `function Connecteur()` et `const Connecteur =` sont des
+ * noms de composants React : ils ne sortent jamais dans le HTML servi. Les
+ * compter était exactement l'erreur de « affectée » pour FEC — trois
+ * signalements permanents que personne ne peut corriger, dans un contrôle
+ * qu'on finit par ne plus lire.
+ *
+ * ⚠️ On neutralise l'IDENTIFIANT, pas la ligne. `<Card title="API">` continue
+ * d'être lu, et son « API » reste un défaut.
+ *
+ * Les lignes de plomberie de module — `import …`, `export { … }`,
+ * `export * from …` — ne portent que des noms : elles sortent entières.
+ * `export const DIFFERENCIATION = { … }`, lui, porte du texte publié et reste
+ * lu ligne à ligne.
+ */
+const IDENTIFIANT = /(?:<\/?|function\s+|class\s+|const\s+|let\s+)[A-Z][A-Za-z0-9_]*/g;
+const PLOMBERIE = /^\s*(?:import\b|export\s*\*|export\s*\{)/;
+const sansIdentifiants = (ligne) =>
+  PLOMBERIE.test(ligne) ? "" : ligne.replace(IDENTIFIANT, " ");
+
 /** La phrase dit qu'Argon ne le fait pas. */
 const NEGATION =
   /\bne\b|\bn['']|aucun|pas de |pas d['']|sans |\bNon\b|jamais|frontiere|frontière/i;
@@ -125,7 +147,7 @@ for (const [motif, raison] of TERMES) {
     for (const [n, l] of lignesDeCode(chemin)) {
       if (LISTE_FRONTIERE.test(l)) dansListe = true;
       else if (dansListe && /^\s*[\]}]/.test(l)) dansListe = false;
-      if (!motif.test(l)) continue;
+      if (!motif.test(sansIdentifiants(l))) continue;
 
       if (dansListe || NEGATION.test(l) || l.includes("frontiere=")) frontiere++;
       else if (l.includes("question:")) question++;
