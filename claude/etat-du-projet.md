@@ -114,6 +114,15 @@ détruit à la fin. Cette erreur a coûté une reconstitution complète le 18/08
   celles seules sur leur ligne se sont exécutées. Deux fenêtres Git Bash, l'une pour
   `npm run dev` où l'on ne tape rien.
 
+- **Une marche à suivre destinée à un SERVEUR se donne en UNE SEULE commande
+  `ssh … '…'`.** Jamais en bloc à coller dans une session SSH ouverte. Règle établie le
+  27/08/2026, après que deux blocs — donnés sous le titre « à faire sur le staging », mais
+  sans leur ligne `ssh` — ont été exécutés sur le poste Windows : `df` a mesuré le disque
+  local, `docker` répondait `command not found`, et le serveur est resté plein. Coût : deux
+  exécutions de CI condamnées d'avance.
+  *Un bloc qui change de machine en cours de route est un bloc qui sera exécuté sur la
+  mauvaise.* Le copier-coller ne retient pas la frontière ; la commande, elle, la porte.
+
 ### Contenu
 
 - **Aucune fonctionnalité, client, témoignage ou chiffre inventé.** Aucune donnée fictive,
@@ -207,6 +216,17 @@ ou d'en-tête se pose dans `deploy/.htaccess`, unique source.
 distant est tué avant la fin). Le typecheck (≈ 34 s) et `seo:check` passent. Pour vérifier
 le lint depuis une session distante : recopier `src/` + les configs dans l'environnement de
 la session, `npm ci --ignore-scripts`, puis `npx eslint`.
+
+⚠️ **Dans le monorepo SaaS, c'est pire : ni `vitest` ni `tsc` ne tournent depuis le montage**
+(constaté le 27/08/2026). `node_modules` y est installé depuis Windows, donc
+`@rolldown/binding-linux-x64-gnu` est absent et vitest meurt au démarrage sur
+`MODULE_NOT_FOUND` ; le node du montage est en **22.23.2** quand le monorepo exige Node 24 ; et
+`tsc --noEmit` tournait encore après **dix minutes** sans rien produire, parce qu'il lit les
+déclarations de types de `node_modules` à travers un montage réseau. Un `grep -r` sur `app/` +
+`components/` d'un worktree froid dépasse lui aussi la limite du shell distant.
+**Tout contrôle réel du monorepo se fait sous Windows.** Ce qu'on peut faire depuis le montage :
+lire, chercher dans un périmètre restreint, écrire des fichiers, et répliquer un verrou en
+Python quand on connaît exactement ce qu'il vérifie.
 
 ---
 
@@ -428,10 +448,42 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
   faut **jamais** lancer depuis la racine.
 - La branche principale est **`master`**, pas `main`. Le remote s'appelle **`github`**, pas
   `origin`. `deploiement-prod` existe mais ne sert plus.
-- **Trois worktrees du même dépôt**, pas trois clones : `argon-mobility`
-  (`securite-perimetre-super-admin`), `argon-ci` (`master`),
-  `argon-mobility-mail-suivi-client` (`mail-suivi-client`). Écrire dans l'un écrit dans le
-  même dépôt.
+- **Cinq copies de travail du même dépôt**, pas cinq clones : le dépôt principal plus quatre
+  worktrees. Écrire dans l'une écrit dans le même dépôt. Relevé le 27/08/2026 :
+
+  | Chemin | Branche |
+  |---|---|
+  | `~/Desktop/APPLICATION ARGON/argon-mobility` | `suivi-depenses` |
+  | `~/argon-ci` | `master` |
+  | `~/Desktop/APPLICATION ARGON/argon-mobility-creneaux-referentiel` | `creneaux-referentiel` |
+  | `~/Desktop/APPLICATION ARGON/argon-mobility-crm` | `crm` |
+  | `~/Desktop/APPLICATION ARGON/argon-mobility-mail-suivi-client` | `mail-suivi-client` |
+
+  ⚠️ **Cette liste bouge, et ce fichier a déjà menti dessus** : il en annonçait trois, dont le
+  dépôt principal sur `securite-perimetre-super-admin`, jusqu'au 27/08/2026. Ne pas la croire
+  sur parole — elle se relit sans lancer git, dans `.git/worktrees/<nom>/HEAD` et
+  `.git/worktrees/<nom>/gitdir`.
+- ⚠️ **Un worktree qu'on n'a pas préparé soi-même est périmé jusqu'à preuve du contraire.**
+  Le 27/08/2026, un `npm run check --workspace=frontend-next` dans `argon-ci` a sorti
+  **73 erreurs de typecheck dont aucune n'était dans le code qu'on venait d'écrire** — et
+  `eslint .` était passé juste avant. Trois péremptions superposées : `packages/schemas/dist`
+  daté de seize jours plus tôt, `node_modules/@tiptap` absent d'une installation jamais
+  refaite, et un `.next/` dont les types citaient trois routes supprimées depuis.
+
+  ```bash
+  cd ~/argon-ci
+  npm ci                      # `ci` n'écrit pas package-lock.json, `install` peut le réécrire
+  rm -rf frontend-next/.next
+  npm run check:frontend      # = schemas:build PUIS lint + typecheck + test + build
+  ```
+
+  ⚠️ **`npm run check:frontend` depuis la racine, jamais `npm run check --workspace=frontend-next`.**
+  Appeler le workspace en direct **saute la construction des schémas**, et produit exactement la
+  cascade d'erreurs ci-dessus. C'est cette confusion qui a coûté l'aller-retour.
+  ⚠️ `npm ci` laisse quatre paquets à scripts non approuvés (`@prisma/engines`, `bcrypt`,
+  `prisma`, `unrs-resolver`) : sans effet sur le frontend, à traiter par `npm approve-scripts`
+  avant tout travail **backend** depuis ce worktree.
+
 - Après tout changement de branche ou réinstallation : `npm run schemas:build` **et**
   `npm run prisma:generate --workspace=backend`. Ni `packages/schemas/dist/` ni
   `backend/src/generated/prisma/` ne sont versionnés ; sans eux, le build échoue sur des
