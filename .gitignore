@@ -53,4 +53,7 @@ deploy/api/config.php
 /claude/*
 !/claude/etat-du-projet.md
 !/claude/audit-2026-08-26.md
+!/claude/audit-2026-08-31.md
+!/claude/etude-raccord-crm-2026-09-01.md
+!/claude/plan-raccord-crm-2026-09-01.md
 /_to_delete/
