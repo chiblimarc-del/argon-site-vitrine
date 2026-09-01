@@ -56,11 +56,20 @@ verifier('secteur « autre » : accepté', validerChamps(champsValides(['secteur
 
 titre('Le journal ne recopie aucune donnée personnelle');
 
-$refus = validerChamps(champsValides(['telephone' => '06 99 88 77 66 55 44']));
-verifier('un téléphone refusé est signalé', $refus !== []);
+// ⚠️ Vingt-trois caractères, et c'est mesuré, pas estimé. Le motif accepte un caractère
+// initial puis 7 à 19 autres, soit VINGT au total : « 06 99 88 77 66 55 44 » en fait
+// exactement vingt et passe la validation. La première version de ce test l'utilisait en
+// croyant le voir refusé — le test échouait donc en annonçant un défaut du code, là où le
+// code avait raison. Trouvé par la CI le 01/09/2026, à la première exécution des tests PHP.
+$refus = validerChamps(champsValides(['telephone' => '06 99 88 77 66 55 44 33']));
+verifier('un téléphone trop long est refusé', $refus !== []);
 verifier(
     'le numéro saisi n\'apparaît PAS dans le motif de refus — un journal se conserve',
     strpos(implode(' ', $refus), '99 88 77') === false,
+);
+verifier(
+    'vingt caractères restent acceptés : la borne du motif, pas une de moins',
+    validerChamps(champsValides(['telephone' => '06 99 88 77 66 55 44'])) === [],
 );
 
 $refus = validerChamps(champsValides(['email' => 'jean.dupont@yopmail.com']));
