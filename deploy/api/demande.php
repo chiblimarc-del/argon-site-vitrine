@@ -13,12 +13,88 @@
  * que le .htaccess du dossier rend inaccessible depuis le web et qui n'est
  * jamais versionné.
  *
- * Doit rester synchronisé avec src/lib/demo-request.ts (noms de champs et
+ * Doit rester synchronisé avec src/lib/demo-request.ts (noms des champs et
  * motifs de saisie). Toute divergence se traduit par des demandes refusées
  * après un aller-retour réseau, ce qui est invisible côté exploitation.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * L'ORDRE DES ÉTAPES, ET POURQUOI IL EST CELUI-LÀ
+ *
+ *   1. méthode POST
+ *   2. configuration, et origines autorisées qu'elle déclare
+ *   3. lecture des champs
+ *   4. VALIDATION — calculée ici, verdict rendu à l'étape 7
+ *   5. CONTRÔLE D'ORIGINE — un refus est une ERREUR, jamais un faux succès
+ *   6. ANTI-ABUS : compteur, champ piège, durée de saisie, Turnstile, liens
+ *   7. verdict de la validation
+ *   8. ENVOI
+ *   9. succès
+ *
+ * ⚠️ La validation est CALCULÉE en 4 et son verdict rendu en 7. Ce décalage
+ * est délibéré : le compteur d'envois (étape 6) doit enregistrer TOUTES les
+ * tentatives, y compris celles que la validation refusera — sinon un robot
+ * qui martèle avec des données invalides n'est jamais compté, donc jamais
+ * limité. Refuser dès l'étape 4 rouvrirait exactement ce trou.
+ *
+ * ⚠️ UN ÉCHEC NE REPART JAMAIS EN « SUCCÈS ». Règle du 31/08/2026, née d'un
+ * défaut réel : l'origine attendue était codée en dur sur le domaine de
+ * production, si bien que toute soumission depuis le staging repartait vers la
+ * page de confirmation SANS QU'AUCUN MAIL NE PARTE. Celui qui testait voyait
+ * « merci pour votre demande » et concluait que le formulaire marchait. Deux
+ * dégâts : un formulaire intestable ailleurs qu'en production, et des
+ * confirmations comptées comme des conversions qui n'en étaient pas.
+ *
+ * Seule exception maintenue : le SIGNAL DE ROBOT SANS AMBIGUÏTÉ — champ piège
+ * rempli, lien dans un champ nominatif, saisie en moins de trois secondes. Là,
+ * aucun humain n'attend de réponse, et répondre « refusé » apprendrait au
+ * robot où est le piège.
+ *
+ * ⚠️ NE JAMAIS COMPTER LES CONVERSIONS SUR LES VISITES DE /demande-envoyee :
+ * cette page est aussi servie aux robots piégés. Le décompte qui ne ment pas
+ * est `resultat=envoye` dans le journal.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 
 declare(strict_types=1);
+
+/**
+ * Les décisions vivent à côté, en fonctions pures, pour être vérifiables sans
+ * serveur web et sans expédier de vrai message : `deploy/api/tests/` les met à
+ * l'épreuve, y compris le cas qui compte le plus — une origine réellement
+ * interdite ne doit produire aucun envoi.
+ *
+ * ⚠️ Ce fichier doit être présent sur le serveur. Il est nommé dans
+ * FICHIERS_PUBLIES de scripts/prepare-deploy.ts ; sans lui, le formulaire meurt
+ * ici même, sur un require introuvable.
+ */
+require_once __DIR__ . '/demande-controles.php';
+
+/* --------------------------------------------------------------------------
+   JOURNAL
+   Une ligne de forme stable par demande, pour qu'elle soit comptable :
+
+       [demande-demo] resultat=envoye  motif=-       entreprise=…
+       [demande-demo] resultat=refuse  motif=origine valeur=…
+       [demande-demo] resultat=silence motif=piege
+
+   Trois résultats, et trois seulement :
+     envoye   — Mailjet a accepté le message ;
+     refuse   — le visiteur a reçu une erreur et peut recommencer ;
+     silence  — robot sans ambiguïté : réponse « succès », aucun envoi.
+
+   ⚠️ `envoye` ne se dit QUE lorsque Mailjet a accepté. Un HTTP 200 vaut
+   « accepté », jamais « remis » : la boîte de réception reste la seule preuve.
+   -------------------------------------------------------------------------- */
+
+function journal(string $resultat, string $motif, string $detail = ''): void
+{
+    error_log(sprintf(
+        '[demande-demo] resultat=%s motif=%s%s',
+        $resultat,
+        $motif === '' ? '-' : $motif,
+        $detail === '' ? '' : ' ' . $detail,
+    ));
+}
 
 /* --------------------------------------------------------------------------
    RÉPONSE
@@ -28,37 +104,54 @@ declare(strict_types=1);
    seconde fois.
    -------------------------------------------------------------------------- */
 
-function redirige(string $etat): void
+/**
+ * @param string $etat  'succes' ou 'erreur'
+ * @param string $motif repris dans l'URL pour que la page dise au visiteur
+ *                      quoi faire. Jamais une cause technique : il n'a à
+ *                      connaître ni le nom d'un fournisseur, ni l'état d'un
+ *                      compteur.
+ */
+function redirige(string $etat, string $motif = ''): void
 {
-    // Succès : page de confirmation déjà construite, qui fonctionne y compris
-    // sans JavaScript. Échec : retour au formulaire, que le visiteur doit
-    // pouvoir renvoyer immédiatement.
-    $cible = $etat === 'succes'
-        ? '/demande-envoyee'
-        : '/demander-une-demo?etat=erreur';
+    if ($etat === 'succes') {
+        header('Location: /demande-envoyee', true, 303);
+        exit;
+    }
+
+    $cible = '/demander-une-demo?etat=erreur';
+    if ($motif !== '') {
+        $cible .= '&motif=' . rawurlencode($motif);
+    }
 
     header('Location: ' . $cible, true, 303);
     exit;
 }
 
+/* --------------------------------------------------------------------------
+   1. MÉTHODE
+   -------------------------------------------------------------------------- */
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    redirige('erreur');
+    redirige('erreur', 'methode');
 }
 
-/**
- * Emplacement des identifiants — deux possibilités, dans cet ordre.
- *
- * 1. AU-DESSUS de la racine web (`www/../argon-config.php`). C'est le meilleur
- *    emplacement : un fichier hors du dossier servi par Apache ne peut pas
- *    être téléchargé, quoi qu'il arrive au .htaccess. Aucune règle à faire
- *    respecter, donc aucune règle qui puisse être perdue lors d'un transfert.
- * 2. `api/config.php`, protégé par le .htaccess du dossier. Fonctionne, mais
- *    la protection dépend d'un fichier que les clients FTP masquent et que
- *    l'hébergeur doit autoriser à surcharger la configuration.
- *
- * Si le contrôle « /api/config.php doit renvoyer 403 » échoue, la correction
- * n'est pas de bricoler le .htaccess : c'est de déplacer le fichier en 1.
- */
+/* --------------------------------------------------------------------------
+   2. CONFIGURATION
+
+   Emplacement des identifiants — deux possibilités, dans cet ordre.
+
+   1. AU-DESSUS de la racine web (`www/../argon-config.php`). C'est le meilleur
+      emplacement : un fichier hors du dossier servi par Apache ne peut pas
+      être téléchargé, quoi qu'il arrive au .htaccess. Aucune règle à faire
+      respecter, donc aucune règle qui puisse être perdue lors d'un transfert.
+   2. `api/config.php`, protégé par le .htaccess du dossier. Fonctionne, mais
+      la protection dépend d'un fichier que les clients FTP masquent et que
+      l'hébergeur doit autoriser à surcharger la configuration.
+
+   Si le contrôle « /api/config.php doit renvoyer 403 » échoue, la correction
+   n'est pas de bricoler le .htaccess : c'est de déplacer le fichier en 1.
+   -------------------------------------------------------------------------- */
+
 $emplacements = [
     dirname(__DIR__, 2) . '/argon-config.php', // au-dessus de www/
     __DIR__ . '/config.php',                   // dans api/
@@ -78,11 +171,8 @@ foreach ($emplacements as $emplacement) {
 }
 
 if (!is_array($config)) {
-    error_log(
-        '[demande-demo] Aucun fichier de configuration trouve. Emplacements '
-        . 'testes : ' . implode(', ', $emplacements),
-    );
-    redirige('erreur');
+    journal('refuse', 'config-absente', 'emplacements=' . implode(',', $emplacements));
+    redirige('erreur', 'technique');
 }
 
 /**
@@ -98,16 +188,68 @@ $manquants = array_keys(array_filter(
 ));
 
 if ($manquants !== []) {
-    error_log(
-        '[demande-demo] config.php incomplet — clés vides : '
-        . implode(', ', $manquants)
-        . '. La demande n\'a PAS ete envoyee.',
+    journal('refuse', 'config-incomplete', 'cles=' . implode(',', $manquants));
+    redirige('erreur', 'technique');
+}
+
+/**
+ * Origines autorisées — déclarées par le SERVEUR, jamais par le paquet.
+ *
+ * C'est la correction du défaut du 31/08/2026. `argon-config.php` est le seul
+ * fichier qui diffère déjà d'une machine à l'autre : production et staging
+ * n'ont ni les mêmes clés Mailjet, ni le même domaine. C'est donc lui qui sait
+ * où il tourne. Le paquet, lui, est identique partout — lui demander de
+ * connaître son serveur était l'erreur d'origine.
+ *
+ * Absente ou illisible, la liste retombe sur le domaine de production et le
+ * DIT : un serveur mis à jour avant sa configuration continue de fonctionner,
+ * mais l'écart s'entend.
+ */
+[$originesAutorisees, $originesParDefaut] = originesAutorisees($config);
+
+if ($originesParDefaut) {
+    journal(
+        'avertissement',
+        'origines-non-declarees',
+        'repli=' . ORIGINE_PRODUCTION . ' — ajouter la cle "origines" a argon-config.php',
     );
-    redirige('erreur');
 }
 
 /* --------------------------------------------------------------------------
-   ORIGINE DE LA REQUÊTE
+   3. LECTURE DES CHAMPS
+   -------------------------------------------------------------------------- */
+
+const CHAMP_PIEGE   = 'site_web_entreprise';
+const CHAMP_INSTANT = 'ouverture'; // contient une DUREE en ms, pas un instant
+
+function valeur(string $nom): string
+{
+    return trim((string) ($_POST[$nom] ?? ''));
+}
+
+$nom        = valeur('nom');
+$entreprise = valeur('entreprise');
+$email      = valeur('email');
+$telephone  = valeur('telephone');
+$secteur    = valeur('secteur');
+
+/* --------------------------------------------------------------------------
+   4. VALIDATION — calculée ici, verdict rendu à l'étape 7
+   Voir l'en-tête du fichier : refuser maintenant priverait le compteur
+   d'envois des tentatives invalides, donc de sa raison d'être.
+   -------------------------------------------------------------------------- */
+
+$refus = validerChamps([
+    'nom'        => $nom,
+    'entreprise' => $entreprise,
+    'email'      => $email,
+    'telephone'  => $telephone,
+    'secteur'    => $secteur,
+]);
+
+/* --------------------------------------------------------------------------
+   5. ORIGINE DE LA REQUÊTE
+
    Un robot qui poste directement sur ce point d'entrée n'a aucune raison
    d'envoyer un en-tête `Origin` ou `Referer` cohérent : il n'est jamais passé
    par la page.
@@ -117,23 +259,37 @@ if ($manquants !== []) {
    base perdrait des demandes légitimes sans que personne ne le sache jamais.
    On ne refuse que sur une origine PRÉSENTE et ÉTRANGÈRE : c'est un signal,
    pas une absence de signal.
+
+   ⚠️ UN REFUS EST UNE ERREUR, PAS UN FAUX SUCCÈS. Une origine étrangère n'est
+   pas un signal de robot sans ambiguïté — c'est aussi, et d'abord, ce que
+   produit un environnement de test, un proxy d'entreprise ou un domaine
+   oublié dans la configuration. Répondre « succès » a rendu tout test du
+   formulaire mensonger pendant deux semaines.
    -------------------------------------------------------------------------- */
 
-const ORIGINE_ATTENDUE = 'https://www.argon-mobility.com';
+$verdictOrigine = origineAcceptee(
+    (string) ($_SERVER['HTTP_ORIGIN'] ?? ''),
+    (string) ($_SERVER['HTTP_REFERER'] ?? ''),
+    $originesAutorisees,
+);
 
-$origine  = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
-$referent = (string) ($_SERVER['HTTP_REFERER'] ?? '');
-
-if ($origine !== '' && !str_starts_with($origine, ORIGINE_ATTENDUE)) {
-    error_log('[demande-demo] Origine etrangere : ' . $origine . '. Aucun envoi.');
-    redirige('succes');
-}
-if ($origine === '' && $referent !== '' && !str_starts_with($referent, ORIGINE_ATTENDUE)) {
-    error_log('[demande-demo] Referent etranger : ' . $referent . '. Aucun envoi.');
-    redirige('succes');
+if (!$verdictOrigine['acceptee']) {
+    journal(
+        'refuse',
+        'origine',
+        sprintf(
+            'source=%s valeur=%s autorisees=%s',
+            $verdictOrigine['motif'],
+            $verdictOrigine['valeur'],
+            implode(',', $originesAutorisees),
+        ),
+    );
+    redirige('erreur', 'origine');
 }
 
 /* --------------------------------------------------------------------------
+   6. ANTI-ABUS
+
    ADRESSE RÉELLE DU VISITEUR
    ⚠️ `REMOTE_ADDR` NE CONVIENT PAS ICI. Le conteneur est derrière Caddy : il
    voit l'adresse du proxy, pas celle du visiteur. Le journal du 18/08/2026 le
@@ -225,10 +381,10 @@ $dossierLimites = dossierCompteur($dossierConfig);
 $fichierLimites = $dossierLimites === '' ? '' : $dossierLimites . '/argon-limites.php';
 
 if ($fichierLimites === '') {
-    error_log(
-        '[demande-demo] ATTENTION : aucun emplacement inscriptible pour le compteur '
-        . '(essayes : ' . $dossierConfig . ', ' . sys_get_temp_dir() . '). '
-        . 'La limitation d envois est INACTIVE.',
+    journal(
+        'avertissement',
+        'compteur-inactif',
+        'aucun emplacement inscriptible (essayes : ' . $dossierConfig . ', ' . sys_get_temp_dir() . ')',
     );
 }
 
@@ -264,15 +420,11 @@ $surUnJour   = count($miens);
 if ($fichierLimites !== ''
     && ($surUneHeure >= ENVOIS_MAX_PAR_HEURE || $surUnJour >= ENVOIS_MAX_PAR_JOUR)
 ) {
-    error_log(sprintf(
-        '[demande-demo] Limite atteinte : %d envoi(s) sur une heure, %d sur 24 h. Aucun envoi.',
-        $surUneHeure,
-        $surUnJour,
-    ));
     // `erreur` et non `succes` : un humain qui atteint la limite doit le voir
     // et pouvoir appeler. Lui afficher une confirmation mensongère serait
     // exactement la panne silencieuse que ce fichier passe son temps à éviter.
-    redirige('erreur');
+    journal('refuse', 'limite', sprintf('heure=%d jour=%d', $surUneHeure, $surUnJour));
+    redirige('erreur', 'limite');
 }
 
 $historique[$empreinte] = [...$miens, $maintenant];
@@ -286,115 +438,49 @@ if ($fichierLimites !== '' && @file_put_contents(
     // Un compteur qu'on ne peut pas écrire est un compteur qui n'existe pas.
     // Le dire fort : le mode de panne à éviter est celui où la limitation est
     // inactive depuis des mois sans que rien ne l'ait signalé.
-    error_log(
-        '[demande-demo] ATTENTION : compteur non ecrit (' . $fichierLimites
-        . '). La limitation d envois est INACTIVE.',
-    );
+    journal('avertissement', 'compteur-non-ecrit', 'fichier=' . $fichierLimites);
 }
 
 /* --------------------------------------------------------------------------
-   ANTI-ROBOT
+   SIGNAUX DE ROBOT SANS AMBIGUÏTÉ
    Robot détecté : on renvoie un SUCCÈS sans rien envoyer. Répondre par une
    erreur apprendrait au robot que le piège existe et l'inciterait à le
    contourner.
+
+   ⚠️ Ces réponses-là sont journalisées `resultat=silence`. Elles ne doivent
+   jamais entrer dans un décompte de demandes.
    -------------------------------------------------------------------------- */
-
-const CHAMP_PIEGE   = 'site_web_entreprise';
-const CHAMP_INSTANT = 'ouverture'; // contient une DUREE en ms, pas un instant
-const DELAI_MINIMUM_MS = 3000; // Un humain met plus de 3 s à remplir 5 champs.
-
-function valeur(string $nom): string
-{
-    return trim((string) ($_POST[$nom] ?? ''));
-}
 
 // 1. Champ piège : seul un robot qui remplit tout le formulaire le renseigne.
 if (valeur(CHAMP_PIEGE) !== '') {
     // Tracé côté serveur uniquement : le robot ne voit rien, mais sans cette
     // ligne il est impossible de distinguer « le formulaire fonctionne » de
     // « le formulaire avale les demandes en silence ».
-    error_log('[demande-demo] Anti-robot : champ piege rempli. Aucun envoi.');
+    journal('silence', 'piege');
     redirige('succes');
 }
 
 // 2. Durée de remplissage, MESURÉE PAR LE NAVIGATEUR et transmise en
 //    millisecondes. Absente si le visiteur navigue sans JavaScript : on ne
 //    bloque alors pas, le champ piège suffit.
-//
-//    ⚠️ Ne JAMAIS revenir à un horodatage comparé à l'heure du serveur. Les
-//    deux horloges ne sont pas synchronisées : en recette, un écart de six
-//    secondes a produit une durée négative, donc « inférieure au seuil », et
-//    un visiteur légitime a été traité comme un robot — demande abandonnée en
-//    silence, page de confirmation affichée. Le serveur ne doit lire qu'une
-//    DURÉE, sans jamais consulter sa propre horloge.
-//
-//    Une valeur aberrante (négative, ou si grande qu'elle trahit un ancien
-//    horodatage envoyé par une page en cache) n'est pas jugeable : on laisse
-//    passer plutôt que de risquer de perdre une vraie demande.
-$delai = (float) valeur(CHAMP_INSTANT);
+$verdictDelai = verdictDelai((float) valeur(CHAMP_INSTANT));
 
-if ($delai < 0 || $delai > 86400000) {
-    error_log(
-        '[demande-demo] Duree de remplissage aberrante (' . $delai . ' ms) : '
-        . 'controle du delai ignore, le champ piege reste actif.',
+if ($verdictDelai === 'aberrant') {
+    journal(
+        'avertissement',
+        'delai-aberrant',
+        'controle du delai ignore, le champ piege reste actif',
     );
-} elseif ($delai > 0 && $delai < DELAI_MINIMUM_MS) {
-    error_log(
-        '[demande-demo] Anti-robot : formulaire valide en ' . (int) $delai . ' ms '
-        . '(minimum ' . DELAI_MINIMUM_MS . ' ms). Aucun envoi.',
-    );
+} elseif ($verdictDelai === 'trop-rapide') {
+    journal('silence', 'delai', 'minimum=' . DELAI_MINIMUM_MS . 'ms');
     redirige('succes');
-}
-
-/* --------------------------------------------------------------------------
-   VALIDATION
-   Volontairement permissive : chaque règle trop stricte est une demande
-   perdue. Les adresses gratuites ne sont PAS refusées — beaucoup de dirigeants
-   de PME utilisent une adresse personnelle.
-   -------------------------------------------------------------------------- */
-
-$nom        = valeur('nom');
-$entreprise = valeur('entreprise');
-$email      = valeur('email');
-$telephone  = valeur('telephone');
-$secteur    = valeur('secteur');
-
-/**
- * Chaque règle est évaluée séparément afin que le journal nomme le champ
- * fautif. Une validation globale qui répond « invalide » sans dire quoi est
- * indiagnosticable en exploitation : c'est la panne où l'on sait que des
- * demandes se perdent, sans pouvoir dire pourquoi.
- *
- * `mb_strlen` n'est pas garanti présent — l'extension mbstring n'est pas
- * activée dans toutes les images PHP. `strlen` compte des octets et non des
- * caractères, ce qui est ici sans conséquence : les bornes sont larges, et un
- * nom accentué compte simplement quelques octets de plus.
- */
-$longueur = static fn(string $v): int =>
-    function_exists('mb_strlen') ? mb_strlen($v) : strlen($v);
-
-$refus = [];
-if ($longueur($nom) < 2 || $longueur($nom) > 80) {
-    $refus[] = 'nom (' . $longueur($nom) . ' caractères)';
-}
-if ($longueur($entreprise) < 2 || $longueur($entreprise) > 120) {
-    $refus[] = 'entreprise (' . $longueur($entreprise) . ' caractères)';
-}
-if ($longueur($email) > 160 || preg_match('/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i', $email) !== 1) {
-    $refus[] = 'email';
-}
-if (preg_match('/^[+0-9][0-9\s.()\-]{7,19}$/', $telephone) !== 1) {
-    $refus[] = 'telephone (« ' . $telephone . ' »)';
-}
-if ($secteur === '' || $longueur($secteur) > 60) {
-    $refus[] = 'secteur (« ' . $secteur . ' »)';
 }
 
 /* --------------------------------------------------------------------------
    TURNSTILE — CONTRÔLE ANTI-ROBOT DE CLOUDFLARE
 
    Placé APRÈS le champ piège et le contrôle de délai, qui ne coûtent rien, et
-   AVANT la validation des champs : inutile de payer un aller-retour réseau
+   AVANT le verdict de validation : inutile de payer un aller-retour réseau
    pour un robot que les deux barrières précédentes ont déjà écarté.
 
    TROIS COMPORTEMENTS, ET LEURS RAISONS
@@ -429,14 +515,12 @@ $secretTurnstile = trim((string) ($config['turnstileSecret'] ?? ''));
 $jetonTurnstile  = valeur('cf-turnstile-response');
 
 if ($secretTurnstile === '') {
-    error_log(
-        '[demande-demo] ATTENTION : turnstileSecret absent de la configuration. '
-        . 'Le controle Turnstile est INACTIF.',
-    );
+    journal('avertissement', 'turnstile-inactif', 'turnstileSecret absent de la configuration');
 } elseif ($jetonTurnstile === '') {
-    error_log(
-        '[demande-demo] Turnstile : aucun jeton recu (widget non charge ou bloque). '
-        . 'La demande PASSE, les autres barrieres restent actives.',
+    journal(
+        'avertissement',
+        'turnstile-sans-jeton',
+        'widget non charge ou bloque — la demande PASSE, les autres barrieres restent actives',
     );
 } else {
     $requete = curl_init(TURNSTILE_VERIFICATION);
@@ -459,22 +543,19 @@ if ($secretTurnstile === '') {
     if ($reponseTurnstile === false) {
         // Cloudflare injoignable : même raisonnement que le jeton absent. Une
         // panne chez un tiers ne doit pas fermer votre formulaire.
-        error_log(
-            '[demande-demo] Turnstile injoignable (' . $erreurTurnstile
-            . '). La demande PASSE.',
-        );
+        journal('avertissement', 'turnstile-injoignable', 'erreur=' . $erreurTurnstile);
     } else {
         $verdict = json_decode((string) $reponseTurnstile, true);
         $accepte = is_array($verdict) && ($verdict['success'] ?? false) === true;
 
         if (!$accepte) {
             $codes = is_array($verdict) ? (array) ($verdict['error-codes'] ?? []) : ['reponse-illisible'];
-            error_log(
-                '[demande-demo] Turnstile a refuse le jeton : '
-                . (implode(', ', array_map('strval', $codes)) ?: 'aucun code')
-                . '. Aucun envoi.',
+            journal(
+                'refuse',
+                'turnstile',
+                'codes=' . (implode(',', array_map('strval', $codes)) ?: 'aucun'),
             );
-            redirige('erreur');
+            redirige('erreur', 'controle');
         }
     }
 }
@@ -488,27 +569,33 @@ if ($secretTurnstile === '') {
    robot n'apprend rien, le journal dit tout.
    -------------------------------------------------------------------------- */
 
-const MOTIF_LIEN = '~(https?://|www\.|\[url|</?a\s)~i';
-
-if (preg_match(MOTIF_LIEN, $nom) === 1 || preg_match(MOTIF_LIEN, $entreprise) === 1) {
-    error_log('[demande-demo] Lien detecte dans un champ nominatif. Aucun envoi.');
+if (contientLien($nom) || contientLien($entreprise)) {
+    journal('silence', 'lien', 'lien detecte dans un champ nominatif');
     redirige('succes');
 }
 
 /* --------------------------------------------------------------------------
-   DOMAINE DE L'ADRESSE
-   Deux contrôles de nature différente, et c'est important de ne pas les
-   confondre.
+   7. VERDICT DE LA VALIDATION
 
-   1. Les messageries jetables sont REFUSÉES. Une adresse temporaire ne permet
-      ni de rappeler, ni de suivre l'échange : elle ne correspond à aucune
-      demande de démonstration sérieuse.
+   Les messageries jetables sont refusées par `validerChamps` : une adresse
+   temporaire ne permet ni de rappeler, ni de suivre l'échange.
 
-   2. L'existence du domaine est seulement SIGNALÉE, jamais bloquante. Une
-      résolution DNS peut échouer parce que le domaine est faux — ou parce que
-      le résolveur du serveur a hoqueté. Refuser sur ce doute reviendrait à
-      perdre une vraie demande pour une panne réseau de trois secondes.
-      La demande part donc, avec la mention dans le mail reçu.
+   ⚠️ Le journal nomme le champ fautif mais PAS sa valeur — un journal se
+   conserve, et un numéro de téléphone est une donnée personnelle.
+   -------------------------------------------------------------------------- */
+
+if ($refus !== []) {
+    journal('refuse', 'champs', 'invalides=' . implode(', ', $refus));
+    redirige('erreur', 'champs');
+}
+
+/* --------------------------------------------------------------------------
+   EXISTENCE DU DOMAINE — SIGNALÉE, JAMAIS BLOQUANTE
+
+   Une résolution DNS peut échouer parce que le domaine est faux — ou parce que
+   le résolveur du serveur a hoqueté. Refuser sur ce doute reviendrait à perdre
+   une vraie demande pour une panne réseau de trois secondes. La demande part
+   donc, avec la mention dans le mail reçu.
 
    ⚠️ Ce contrôle N'ATTRAPE PAS les fautes de frappe sur un domaine qui existe.
    Vérifié : « gamil.com » — la coquille du test du 18/08 — possède de vrais
@@ -519,36 +606,18 @@ if (preg_match(MOTIF_LIEN, $nom) === 1 || preg_match(MOTIF_LIEN, $entreprise) ==
    n'existent pas du tout.
    -------------------------------------------------------------------------- */
 
-const DOMAINES_JETABLES = [
-    'yopmail.com', 'yopmail.fr', 'jetable.org', 'mailinator.com',
-    'guerrillamail.com', 'guerrillamail.info', 'sharklasers.com',
-    'temp-mail.org', 'tempmail.com', 'throwawaymail.com', '10minutemail.com',
-    '10minutemail.net', 'trashmail.com', 'trashmail.fr', 'getnada.com',
-    'maildrop.cc', 'dispostable.com', 'fakeinbox.com', 'mohmal.com',
-    'emailondeck.com', 'moakt.com', 'tempr.email', 'discard.email',
-    'spamgourmet.com', 'mailnesia.com', 'burnermail.io',
-];
-
-$domaineEmail = strtolower((string) substr((string) strrchr($email, '@'), 1));
-
-if ($domaineEmail !== '' && in_array($domaineEmail, DOMAINES_JETABLES, true)) {
-    $refus[] = 'email (messagerie jetable : ' . $domaineEmail . ')';
-}
-
+$domaineEmail  = domaineAdresse($email);
 $domaineResolu = true;
-if ($domaineEmail !== '' && $refus === [] && function_exists('checkdnsrr')) {
+
+if ($domaineEmail !== '' && function_exists('checkdnsrr')) {
     $domaineResolu = checkdnsrr($domaineEmail, 'MX') || checkdnsrr($domaineEmail, 'A');
     if (!$domaineResolu) {
-        error_log(
-            '[demande-demo] Domaine sans enregistrement MX ni A : ' . $domaineEmail
-            . '. La demande PART quand meme, signalee dans le mail.',
+        journal(
+            'avertissement',
+            'domaine-non-resolu',
+            'domaine=' . $domaineEmail . ' — la demande PART, signalee dans le mail',
         );
     }
-}
-
-if ($refus !== []) {
-    error_log('[demande-demo] Demande refusee - champs invalides : ' . implode(', ', $refus));
-    redirige('erreur');
 }
 
 /* --------------------------------------------------------------------------
@@ -557,6 +626,10 @@ if ($refus !== []) {
    l'e-mail reçu soit lisible. Table à tenir à jour avec le registre de routes
    (src/lib/routes.ts) ; une valeur inconnue est reprise telle quelle plutôt
    que perdue.
+
+   ⚠️ `npm run seo:check` (contrôle 7) compare cette table au registre et fait
+   échouer le build si l'une des deux dérive. Ne pas renommer le tableau
+   `$libelles` sans mettre le contrôle à jour : il le cherche par son nom.
    -------------------------------------------------------------------------- */
 
 $libelles = [
@@ -570,7 +643,38 @@ $libelles = [
 $activite = $libelles[$secteur] ?? $secteur;
 
 /* --------------------------------------------------------------------------
-   ENVOI — MAILJET (API Send v3.1)
+   PROVENANCE
+   D'où vient ce prospect ? Sans cette réponse, une demande arrive sans qu'on
+   sache jamais ce qui l'a produite, et toute décision éditoriale se prend à
+   l'intuition.
+
+   Les quatre valeurs viennent du navigateur (voir src/components/forms/
+   DemoForm.tsx). Elles n'ouvrent aucun droit et n'entrent dans aucune
+   décision : elles remplissent des lignes d'un e-mail interne. Elles sont
+   néanmoins normalisées avant d'être écrites — ce qui n'est pas un chemin
+   interne plausible, un hôte plausible, est jeté.
+   -------------------------------------------------------------------------- */
+
+$provenance = [
+    'url'        => normaliserCheminOrigine(valeur('origine_url')),
+    'titre'      => nettoyerTexteLibre(valeur('origine_titre'), 120),
+    'source'     => normaliserSource(valeur('origine_source')),
+    'campagne'   => nettoyerTexteLibre(valeur('origine_campagne'), 160),
+    // Simulation emportée depuis /tarifs, sur clic explicite du visiteur.
+    'simulateur' => normaliserSimulateur(valeur('origine_simulateur')),
+    'resultat'   => nettoyerTexteLibre(valeur('origine_resultat'), 200),
+];
+
+/**
+ * La date est posée par le SERVEUR, jamais par le client : c'est la seule
+ * horloge dont on connaisse le réglage. Fuseau explicite — un conteneur nu est
+ * en UTC, et « 07:12 » pour une demande de 09:12 fait manquer un rappel.
+ */
+$horodatage = (new DateTimeImmutable('now', new DateTimeZone('Europe/Paris')))
+    ->format('d/m/Y à H:i');
+
+/* --------------------------------------------------------------------------
+   8. ENVOI — MAILJET (API Send v3.1)
    Appel direct en cURL, sans SDK. Mailjet est un fournisseur français : les
    données ne quittent pas l'Union européenne.
    -------------------------------------------------------------------------- */
@@ -583,6 +687,10 @@ $corps = implode("\n", [
     'E-mail       : ' . $email,
     'Téléphone    : ' . $telephone,
     'Activité     : ' . $activite,
+    '',
+    '— Provenance —',
+    ...lignesProvenance($provenance),
+    'Date           : ' . $horodatage,
 ]);
 
 // Le doute sur l'adresse est porté jusque dans la boîte de réception : c'est
@@ -615,8 +723,8 @@ curl_setopt_array($ch, [
     CURLOPT_TIMEOUT        => 10,
 ]);
 
-$reponse     = curl_exec($ch);
-$code        = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$reponse      = curl_exec($ch);
+$code         = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $erreurReseau = curl_error($ch);
 curl_close($ch);
 
@@ -628,21 +736,107 @@ curl_close($ch);
  *               l'hébergeur, délai dépassé). Rien à corriger dans Mailjet.
  *   — 401/403 : les clés sont refusées.
  *   — 400     : l'expéditeur n'est pas validé dans Mailjet.
- * Le journal est consultable depuis l'espace client OVH.
+ * Le journal est consultable par `docker logs argon-vitrine-vitrine-1`.
  */
 if ($erreurReseau !== '') {
-    error_log('[demande-demo] Requete sortante impossible : ' . $erreurReseau);
-    redirige('erreur');
+    journal('refuse', 'envoi-reseau', 'erreur=' . $erreurReseau);
+    redirige('erreur', 'technique');
 }
 
 if ($code < 200 || $code >= 300) {
-    error_log('[demande-demo] Mailjet a répondu ' . $code . ' : ' . (string) $reponse);
-    redirige('erreur');
+    journal('refuse', 'envoi-refuse', 'http=' . $code . ' reponse=' . (string) $reponse);
+    redirige('erreur', 'technique');
 }
 
-error_log(
-    '[demande-demo] Demande transmise a Mailjet (HTTP ' . $code . ') - '
-    . $entreprise . ' / ' . $email . ' - activite : ' . $activite,
-);
+/* --------------------------------------------------------------------------
+   9. SUCCÈS
+   La ligne ci-dessous est le SEUL décompte fiable des demandes reçues.
+   -------------------------------------------------------------------------- */
+
+$cleDemande = cleIdempotence();
+
+journal('envoye', '', sprintf(
+    'entreprise=%s activite=%s page=%s source=%s simulateur=%s idem=%s',
+    $entreprise,
+    $activite,
+    $provenance['url'] !== '' ? $provenance['url'] : '-',
+    $provenance['source'] !== '' ? $provenance['source'] : '-',
+    $provenance['simulateur'] !== '' ? $provenance['simulateur'] : '-',
+    $cleDemande,
+));
+
+/* --------------------------------------------------------------------------
+   10. SYNCHRONISATION CRM — après l'envoi, jamais avant
+
+   ⚠️ TROIS INTERDITS, qui sont la raison d'être de ce bloc :
+
+   1. **Il ne peut pas changer la réponse au visiteur.** Il s'exécute APRÈS la ligne
+      `resultat=envoye`, et sa valeur de retour n'est lue que pour écrire une seconde ligne
+      de journal. Quoi qu'il arrive ici, `redirige('succes')` suit.
+   2. **Aucune reprise automatique.** Pas de second appel, pas de second mail, pas de file
+      d'attente. Un `crm=echec` se rattrape à la main, avec la clé d'idempotence — c'est
+      exactement à cela qu'elle sert, et c'est pourquoi elle est journalisée juste au-dessus,
+      qu'il y ait eu échec ou non.
+   3. **L'absence de configuration n'est pas une panne.** `crmUrl` ou `crmSecret` manquants ⇒
+      aucun appel, une ligne `crm=inactif`, et rien d'autre. Le paquet doit pouvoir être
+      déployé avant que la clé n'existe sur le serveur — même règle que pour Turnstile.
+
+   Le délai est court (2 s) et assumé : l'API est une commodité, pas une dépendance. Mieux
+   vaut une fiche manquante qu'un visiteur qui attend.
+   -------------------------------------------------------------------------- */
+
+$crmUrl    = trim((string) ($config['crmUrl'] ?? ''));
+$crmSecret = trim((string) ($config['crmSecret'] ?? ''));
+
+if ($crmUrl === '' || $crmSecret === '') {
+    journal('avertissement', 'crm-inactif', 'crmUrl ou crmSecret absent de la configuration');
+} else {
+    $chargeCrm = chargeCrm(
+        $cleDemande,
+        [
+            'nom'        => $nom,
+            'entreprise' => $entreprise,
+            'email'      => $email,
+            'telephone'  => $telephone,
+            'secteur'    => $secteur,
+            'activite'   => $activite,
+        ],
+        $provenance,
+        (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z'),
+    );
+
+    $appelCrm = curl_init($crmUrl);
+    curl_setopt_array($appelCrm, [
+        CURLOPT_POST           => true,
+        CURLOPT_RETURNTRANSFER => true,
+        // Deux secondes, connexion comprise. Le visiteur attend déjà la réponse de Mailjet ;
+        // on ne lui ajoute pas l'attente d'un service qui ne décide de rien.
+        CURLOPT_TIMEOUT        => 2,
+        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'X-Argon-Secret: ' . $crmSecret,
+        ],
+        CURLOPT_POSTFIELDS     => json_encode($chargeCrm, JSON_UNESCAPED_UNICODE),
+    ]);
+
+    $reponseCrm = curl_exec($appelCrm);
+    $codeCrm    = (int) curl_getinfo($appelCrm, CURLINFO_HTTP_CODE);
+    $erreurCrm  = curl_error($appelCrm);
+    curl_close($appelCrm);
+
+    if ($reponseCrm === false) {
+        journal('avertissement', 'crm-echec', 'reseau=' . $erreurCrm . ' idem=' . $cleDemande);
+    } elseif ($codeCrm < 200 || $codeCrm >= 300) {
+        journal('avertissement', 'crm-echec', 'http=' . $codeCrm . ' idem=' . $cleDemande);
+    } else {
+        // Le statut rendu par l'API distingue « creee » de « deja-traitee ». On le recopie
+        // tel quel : c'est la seule chose qui permette de reconnaître un rejeu dans le
+        // journal, et de ne pas le compter deux fois.
+        $verdictCrm = json_decode((string) $reponseCrm, true);
+        $statutCrm  = is_array($verdictCrm) ? (string) ($verdictCrm['statut'] ?? '?') : '?';
+        journal('avertissement', 'crm-ok', 'statut=' . $statutCrm . ' idem=' . $cleDemande);
+    }
+}
 
 redirige('succes');

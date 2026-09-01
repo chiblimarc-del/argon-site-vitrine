@@ -20,6 +20,10 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "@/components/ui/Button";
+import { primaryCta } from "@/lib/site";
+import { emporterSimulation, type DonneesSimulation } from "@/lib/simulation";
 import {
   COUT_HORAIRE,
   HYPOTHESES,
@@ -333,6 +337,17 @@ export function SimulateurValeur({
                 Ce calcul ne prouve rien. Il montre l&apos;ordre de grandeur de
                 ce que vous perdez aujourd&apos;hui.
               </p>
+
+              <SuiteDuCalcul
+                donnees={{
+                  terrains: terrainsRetenus,
+                  plan: plan.libelle,
+                  heuresRecuperees: r.heuresRecuperees,
+                  valeurMensuelle: r.valeur,
+                  coutMensuel: r.cout,
+                  soldeMensuel: r.solde,
+                }}
+              />
             </>
           )}
         </div>
@@ -344,6 +359,64 @@ export function SimulateurValeur({
           {MENTION_CONFIDENTIALITE}
         </p>
       </aside>
+    </div>
+  );
+}
+
+/* ==========================================================================
+   LA SUITE DU CALCUL
+   ========================================================================== */
+
+/**
+ * Ce qui manquait au simulateur : une suite.
+ *
+ * Le visiteur vient de chiffrer ce que lui coûte son organisation actuelle.
+ * Jusqu'au 01/09/2026, il n'avait rien à faire de ce chiffre — les trois
+ * simulateurs n'émettaient aucun lien. C'est le seul endroit du site où l'on
+ * sait que quelqu'un a pris cinq minutes pour se poser la question.
+ *
+ * ⚠️ AUCUNE PROMESSE AJOUTÉE. Le bloc ne dit pas qu'Argon « produira » ce
+ * gain : la phrase juste au-dessus dit que le calcul ne prouve rien, et les
+ * deux doivent pouvoir se lire à la suite sans se contredire. On propose de
+ * regarder d'où viendrait ce gain, ce qui est exactement ce que montre une
+ * démonstration.
+ *
+ * ⚠️ LE LIBELLÉ DU BOUTON RESTE « Demander une démo ». C'est le CTA unique du
+ * site (règle du cahier V2) : c'est la phrase au-dessus qui porte l'intention
+ * propre au simulateur, pas le bouton. Ne pas les intervertir.
+ *
+ * ⚠️ LA MENTION DE TRANSMISSION EST OBLIGATOIRE ICI. Le bloc joint le résumé
+ * du calcul à la demande ; le visiteur doit l'apprendre AVANT de cliquer, pas
+ * en découvrant ses chiffres dans un e-mail qu'il n'a pas vu partir. Elle est
+ * la contrepartie exacte de `MENTION_CONFIDENTIALITE`, réécrite le même jour.
+ *
+ * ⚠️ `Link` et des classes explicites, et NON `<Button>` : le CTA occupe toute
+ * la largeur de la carte de résultat. Poser `w-full` sur `Button` depuis
+ * l'extérieur serait une surcharge d'utilitaire, que le projet proscrit —
+ * `cn()` est un simple `join`, il n'y a pas de tailwind-merge, et c'est
+ * l'ordre du CSS généré qui trancherait. C'est le même motif que le bouton
+ * d'envoi de `DemoForm`, pour la même raison.
+ */
+function SuiteDuCalcul({ donnees }: { donnees: DonneesSimulation }) {
+  return (
+    <div className="mt-6 border-t border-white/15 pt-5">
+      <p className="text-sm font-medium leading-relaxed text-white">
+        Regarder d&apos;où viendrait ce gain, sur vos propres opérations.
+      </p>
+
+      <Link
+        href={primaryCta.href}
+        onClick={() => emporterSimulation(donnees)}
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-accent px-6 text-[15px] font-medium text-white transition-colors hover:bg-accent-hover"
+      >
+        {primaryCta.label}
+        <ArrowRight />
+      </Link>
+
+      <p className="mt-3 text-xs leading-relaxed text-white/60">
+        Le résumé ci-dessus accompagnera votre demande. Il sera affiché sur le
+        formulaire, et vous pourrez l&apos;y retirer.
+      </p>
     </div>
   );
 }

@@ -553,8 +553,21 @@ export const COUT_HORAIRE = {
 export const MENTION_SIMULATEUR =
   "Cette simulation repose sur les informations que vous renseignez et sur des hypothèses indicatives que vous pouvez modifier. Les gains réels dépendent de votre organisation, de vos volumes et de votre utilisation d'Argon. Certains bénéfices qualitatifs ne sont pas valorisés financièrement.";
 
+/**
+ * ⚠️ RÉÉCRITE LE 01/09/2026, ET IL LE FALLAIT.
+ *
+ * Elle disait : « Aucune de ces valeurs n'est envoyée, ni enregistrée, ni
+ * transmise. » Depuis que le bloc de résultat propose de demander une
+ * démonstration en emportant le résumé du calcul, cette phrase serait devenue
+ * fausse — et une mention de confidentialité fausse coûte davantage que
+ * l'information qu'elle protégeait.
+ *
+ * La nouvelle formulation dit la même chose sur le calcul, et dit en plus ce
+ * qui peut partir, à quelle condition. Elle doit rester alignée sur le texte
+ * du bloc `SuiteDuCalcul` : si l'un change, l'autre change.
+ */
 export const MENTION_CONFIDENTIALITE =
-  "Tout est calculé dans votre navigateur. Aucune de ces valeurs n'est envoyée, ni enregistrée, ni transmise.";
+  "Tout est calculé dans votre navigateur : aucune de ces valeurs n'est envoyée ni enregistrée pendant que vous les saisissez. Si vous demandez une démonstration depuis le bloc de résultat, son résumé accompagne votre demande — il vous est alors affiché, et vous pouvez le retirer.";
 
 /* ────────────────────────────────────────────────────────────────
    7. FAQ

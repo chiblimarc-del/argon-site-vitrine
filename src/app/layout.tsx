@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { SuiviProvenance } from "@/components/SuiviProvenance";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { site, siteUrl } from "@/lib/site";
 
@@ -116,6 +117,13 @@ export default function RootLayout({
         </main>
 
         <Footer />
+
+        {/*
+          Mémorise la page précédente pour que la demande de démonstration
+          puisse dire d'où vient le prospect. Ne rend rien, n'écrit rien dans
+          le navigateur — voir src/lib/provenance.ts.
+        */}
+        <SuiviProvenance />
 
         {/* Entités globales, injectées une seule fois pour tout le site. */}
         <JsonLd data={organizationSchema()} />

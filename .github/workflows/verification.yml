@@ -54,10 +54,27 @@ jobs:
 
       - run: npm ci
 
-      # Le contrôle qui fait foi : typecheck → lint → seo:check.
+      # Le contrôle qui fait foi : typecheck → lint → seo:check → tests.
       # Le déploiement échoue si l'un tombe ; la CI doit tomber pareil.
       - name: npm run check
         run: npm run check
+
+      # Les tests du formulaire, en PHP.
+      #
+      # ⚠️ ILS NE TOURNENT PAS SUR LE POSTE : il n'y a ni PHP ni Docker sur la
+      # machine de développement (vérifié le 31/08/2026). C'est donc ICI, et
+      # nulle part ailleurs, qu'ils s'exécutent — d'où le `php -v` qui précède :
+      # une version de PHP absente ferait autrement passer le pas en silence,
+      # et personne ne verrait que plus rien n'est vérifié.
+      #
+      # Ils éprouvent les décisions de deploy/api/demande-controles.php, dont
+      # celle qui a coûté deux semaines de tests mensongers : une origine
+      # interdite ne doit produire AUCUN envoi, et jamais une confirmation.
+      - name: php --version
+        run: php -v
+
+      - name: tests du formulaire
+        run: npm run test:php
 
       # `check` ne construit pas le site. Or le build attrape ce que le
       # typecheck ne voit pas — une page qui ne se prérend pas, une route du

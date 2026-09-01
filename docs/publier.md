@@ -184,11 +184,132 @@ et mode 600 — soit l'uid 33 attendu par Apache dans le conteneur. Le `scp` ci-
 que `site/` et ne peut pas l'atteindre. La règle n° 5 — jamais de synchronisation miroir —
 vaut ici comme en production.
 
+### ⚠️ Une seule ligne à poser sur le staging, sans quoi le test du formulaire ment
+
+Avant tout essai du formulaire sur le staging, `argon-config.php` doit y déclarer **son
+propre domaine** :
+
+```php
+'origines' => ['https://vitrine-staging.argon-mobility.com'],
+```
+
+Sans cette ligne, la liste retombe sur le domaine de production : le staging est alors une
+origine étrangère, la demande est **refusée**, et le journal l'écrit
+(`resultat=refuse motif=origine`). Depuis le 31/08/2026 le visiteur voit une **erreur** — ce
+qui est le comportement voulu — mais aucun mail ne part, et le test ne prouve rien.
+
+⚠️ **Jusqu'au 31/08/2026, ce même cas répondait « succès »** : le testeur voyait la page de
+confirmation alors qu'aucun message n'avait été envoyé. Tout test du formulaire mené sur le
+staging avant cette date est à refaire.
+
+⚠️ **Ne pas ajouter le staging à la liste de la production** : ce serait autoriser un autre
+site à poster sur le formulaire de production.
+
+### Le raccord CRM — deux clés à poser, dans cet ordre
+
+Depuis le 01/09/2026, une demande peut **aussi** devenir une fiche prospect dans Argon. Ce
+raccord est facultatif : sans lui, le formulaire fonctionne exactement comme avant.
+
+⚠️ **L'e-mail reste la garantie de livraison.** L'appel à l'API a lieu APRÈS l'envoi Mailjet,
+avec deux secondes de patience, et son échec n'est jamais lu autrement que pour écrire une
+ligne de journal. Une panne du SaaS ne peut ni perdre une demande, ni afficher une erreur au
+visiteur.
+
+**1. Côté backend** — `DEMANDES_SITE_SECRET` dans l'environnement du conteneur.
+⚠️ Non posée, la route **refuse tout** : c'est voulu, un oubli de déploiement ferme la route
+au lieu de l'ouvrir. Un secret différent par environnement.
+
+**2. Côté site** — deux clés dans `argon-config.php` :
+
+```php
+'crmUrl'    => 'http://backend:3000/demandes-site',
+'crmSecret' => '<la même valeur que DEMANDES_SITE_SECRET, dans CE serveur>',
+```
+
+⚠️ `http://backend:3000` et non une URL publique : les deux conteneurs partagent le réseau
+Docker, l'appel **ne sort pas du serveur**. Vérifié le 01/09/2026 —
+`docker exec argon-vitrine-vitrine-1 php -r 'file_get_contents("http://backend:3000/health")'`
+répond. Aucune route nouvelle n'est exposée sur internet.
+
+**3. Précondition, une seule fois par environnement** — l'entreprise éditrice doit exister,
+sinon le service refuse (`crm=echec motif=plateforme-absente`). Elle se crée depuis l'espace
+Super-administrateur, badge **ARGON** → **« Mon entreprise »**. Contrôle :
+
+```sql
+SELECT count(*) FROM companies WHERE est_plateforme;   -- attendu : 1
+```
+
+Ce qu'on lit ensuite dans le journal du conteneur vitrine :
+
+```
+crm=ok      statut=creee         la fiche est créée
+crm=ok      statut=deja-traitee  rejeu d'une clé connue, aucune fiche de plus
+crm=echec   http=… | reseau=…    la fiche manque — l'e-mail, lui, est parti
+crm=inactif                      crmUrl/crmSecret absents : aucun appel
+```
+
+### La collecte d'audience — un cron, à poser une fois
+
+⚠️ **C'est le geste le plus urgent du lot, et le seul qui ne se rattrape pas.** Les journaux
+Docker tiennent environ **2,5 jours** : ce qui n'est pas collecté cette nuit-là est perdu
+définitivement. Chaque jour sans cron est un jour absent de l'historique, pour toujours.
+
+⚠️ **Ce serveur n'a pas de `crontab`** — constaté le 01/09/2026. Les tâches périodiques y sont
+des **timers systemd** (`argon-factures-recurrentes.timer` existait déjà). Ne pas chercher à
+installer cron : suivre la convention de la machine.
+
+```bash
+scp deploy/vps/collecte-audience.sh root@164.132.76.117:/home/argon/vitrine/
+ssh root@164.132.76.117 'chmod +x /home/argon/vitrine/collecte-audience.sh'
+```
+
+Les deux unités `argon-audience-vitrine.{service,timer}` sont posées dans
+`/etc/systemd/system/`. Elles reprennent le patron du timer voisin, y compris
+`OnFailure=argon-alerte@%n.service` : **un échec de collecte part par mail**, parce qu'il est
+irrattrapable passé la rétention. `Persistent=true` rattrape au démarrage si le serveur était
+éteint à l'heure dite.
+
+```bash
+ssh root@164.132.76.117 'systemctl list-timers argon-audience-vitrine.timer'
+ssh root@164.132.76.117 'journalctl -u argon-audience-vitrine.service -n 20 --no-pager'
+```
+
+Heure retenue : **03:10 UTC** — après minuit (la veille est complète), avant la sauvegarde de
+03:30. Ne pas l'éloigner de minuit : la rétention des journaux ne pardonne pas le retard.
+
+Essai à blanc avant de brancher quoi que ce soit — agrège et affiche, **sans rien envoyer** :
+
+```bash
+ssh root@164.132.76.117 '/home/argon/vitrine/collecte-audience.sh --essai'
+```
+
+Rattraper un jour manqué (tant qu'il est encore dans le journal) :
+
+```bash
+ssh root@164.132.76.117 '/home/argon/vitrine/collecte-audience.sh --jour 2026-09-01'
+```
+
+L'envoi est **idempotent** : rejouer un jour écrase son relevé au lieu d'en créer un second.
+
+⚠️ Le script lit le secret dans `crmSecret` d'`argon-config.php` — le même que le raccord CRM,
+un seul appelant, un seul secret. Il résout l'adresse du backend à chaque exécution : le
+conteneur ne publie aucun port, et son adresse change à chaque redémarrage.
+
 ### Ce que le staging permet, et qui manquait
 
 Le formulaire de démonstration et Turnstile ne fonctionnent qu'en ligne, par construction.
 C'est ici qu'on les exerce, en attendant **au moins trois secondes** avant de valider —
 sinon la barrière anti-robot renvoie un faux succès sans rien envoyer.
+
+Contrôle de ce qui s'est réellement passé, quel que soit ce qu'affiche le navigateur :
+
+```bash
+ssh -l argon 37.187.183.209 'docker logs --since 10m argon-vitrine-vitrine-1 2>&1 | grep demande-demo'
+```
+
+Une ligne, une demande : `resultat=envoye` (parti), `resultat=refuse` (le visiteur a vu une
+erreur), `resultat=silence` (robot écarté, réponse « succès » volontaire). **C'est le seul
+décompte fiable** — la page `/demande-envoyee` est aussi servie aux robots piégés.
 
 C'est aussi ici que se valide tout changement d'en-tête ou de `.htaccess` : la CSP du Lot 10 a
 été déployée directement en production faute d'avoir cherché le bon compte. Cela ne doit plus
@@ -235,6 +356,12 @@ Ne marchent pas en local, et c'est structurel : **le formulaire de démonstratio
 **Turnstile** (clé restreinte aux domaines déclarés). Les deux se testent sur
 staging, en attendant au moins 3 secondes avant de valider le formulaire — sinon
 la barrière anti-robot renvoie un faux succès sans rien envoyer.
+
+En revanche, **les décisions du formulaire se vérifient sans serveur** : origines
+autorisées, validation, signaux de robot et provenance sont des fonctions pures,
+éprouvées par `npm run test:php`. ⚠️ Ce contrôle **ne tourne pas sur le poste** — il n'y a
+ni PHP ni Docker sur la machine de développement. Il s'exécute en CI, à chaque push : ne
+pas déployer le formulaire avant que la vérification GitHub soit verte.
 
 ⚠️ Le site est en **export statique**. Les blocs `redirects()` et `headers()` de
 `next.config.ts` sont **silencieusement ignorés** en production : toute règle de

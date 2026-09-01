@@ -123,6 +123,34 @@ détruit à la fin. Cette erreur a coûté une reconstitution complète le 18/08
   *Un bloc qui change de machine en cours de route est un bloc qui sera exécuté sur la
   mauvaise.* Le copier-coller ne retient pas la frontière ; la commande, elle, la porte.
 
+### Acquisition — décision de cadrage du 01/09/2026
+
+> **Aucune fonctionnalité d'acquisition n'est terminée tant qu'elle ne permet pas de mesurer
+> son parcours jusqu'au prospect.**
+>
+> **Et aucun chantier SEO n'est lancé à grande échelle avant que le tunnel visite → prospect
+> soit mesurable.**
+
+Ce n'est pas une préférence de méthode, c'est la leçon que paient la plupart des SaaS :
+produire beaucoup de contenu, voir le trafic monter, et découvrir six mois plus tard que
+rien de tout cela n'a produit un client — sans pouvoir dire quelle page était en cause,
+parce que la mesure n'a jamais été posée.
+
+Deux conséquences pratiques, opposables à tout lot futur :
+
+- une page, un formulaire, un simulateur qui ne dit pas d'où vient la personne est **inachevé**,
+  quelle qu'en soit la qualité éditoriale ;
+- le choix des mots-clés se fera à terme sur le **CA généré par intention**, pas sur le volume
+  de recherche. Cela suppose que la chaîne page → demande → opportunité → client porte la
+  provenance de bout en bout. Tant qu'elle ne le fait pas, on ne produit pas en masse.
+
+⚠️ Corollaire pour les **pages locales** : *dix excellentes pages valent mieux que trois cents
+pages satellites.* Une page ville n'existe que si Argon peut y dire quelque chose de vrai et
+de vérifiable sur le territoire — tissu d'entreprises, contraintes de déplacement,
+organisation des tournées, cas client local, partenaire réel. Un gabarit où seul le nom de la
+ville change n'est pas une ressource, et Google ne le traitera pas comme telle. **Sinon, pas
+de page.**
+
 ### Contenu
 
 - **Aucune fonctionnalité, client, témoignage ou chiffre inventé.** Aucune donnée fictive,
@@ -199,6 +227,16 @@ unique, `parent` déclaré, deux routes ne peuvent pas partager le même `keywor
 vers `/api/demande.php`, du PHP que `next dev` n'exécute pas) et Turnstile (clé restreinte
 aux domaines déclarés). **Ils se testent sur staging** — `vitrine-staging.argon-mobility.com`, `37.187.183.209` :
 
+⚠️ **Avant tout test du formulaire sur le staging, `argon-config.php` doit y déclarer
+`'origines' => ['https://vitrine-staging.argon-mobility.com']`.** Sans cette ligne, la
+demande est refusée comme venant d'une origine étrangère. Détail : `docs/publier.md`.
+
+⚠️ **Les DÉCISIONS du formulaire, elles, se vérifient sans serveur** : `npm run test:php`
+éprouve `deploy/api/demande-controles.php` (origines, validation, signaux de robot,
+provenance). Mais **il n'y a ni PHP ni Docker sur le poste** — vérifié le 31/08/2026, WSL
+est installé sans distribution. Ces tests tournent **en CI uniquement**. Les tests
+TypeScript, eux, tournent partout : `npm test`, inclus dans `npm run check`.
+
 ```bash
 ssh -l argon 37.187.183.209 ls /home/argon/
 ```
@@ -239,9 +277,15 @@ src/lib/tarifs.ts        source unique des prix, plans, comparatif et remise
 src/lib/site.ts          téléphone, espace client, clé publique Turnstile
 src/lib/seo.ts           fabriques de metadata et de JSON-LD
 src/lib/maillage-metiers.ts   motifs de lien propres à chaque métier
+src/lib/provenance.ts    d'où vient le prospect — sans cookie ni stockage
+src/lib/simulation.ts    la simulation emportée depuis /tarifs, sur clic explicite
+src/lib/simulation.ts    la simulation emportée depuis /tarifs, sur clic explicite
 src/app/robots.ts        constante PRODUCTION_HOST
 deploy/.htaccess         réécriture, en-têtes de sécurité, CSP, cache — unique source
-deploy/api/demande.php   traitement du formulaire, six barrières anti-robot
+deploy/api/demande.php   traitement du formulaire : orchestration et effets
+deploy/api/demande-controles.php   les décisions, en fonctions pures — testables
+deploy/api/tests/        ce qui les éprouve (npm run test:php, en CI)
+tests/                   tests TypeScript (npm test, partout)
 ```
 
 ### Les dépendances en cascade du registre — le piège le plus coûteux
@@ -324,6 +368,15 @@ une question de FAQ. C'est ce que `npm run controle` distingue.
   « peut décaler » et non « décale » : on nomme un risque, pas une fatalité.
 - Conclusion du simulateur : « Ce calcul ne prouve rien. Il montre l'ordre de grandeur de ce
   que vous perdez aujourd'hui. »
+  ⚠️ **Depuis le 01/09/2026, le bloc de résultat porte une suite** : « Regarder d'où
+  viendrait ce gain, sur vos propres opérations. » puis le CTA unique. Les deux phrases se
+  lisent l'une après l'autre et ne doivent pas se contredire — la seconde ne promet pas le
+  gain, elle propose d'en regarder l'origine. Le libellé du bouton reste
+  « Demander une démo », comme partout.
+  ⚠️ `MENTION_CONFIDENTIALITE` a été **réécrite le même jour**, et il le fallait : elle
+  affirmait qu'aucune valeur n'était « envoyée, ni enregistrée, ni transmise », ce que le
+  nouveau bloc rendait faux. Elle dit désormais ce qui part, et à quelle condition. Si l'un
+  des deux textes change, l'autre change.
 - CTA unique sur toutes les pages : « Demander une démo » → `/demander-une-demo`.
 - **D-Trans Express** s'écrit en deux mots, orthographe du logo. Ses chiffres restent DANS
   les guillemets, jamais en titre ni en meta. Sur l'accueil et nulle part ailleurs.
@@ -360,26 +413,76 @@ curl -I https://www.argon-mobility.com/solutions
 Attendu : `HTTP/2 200`, **aucun** `x-robots-tag`, et `x-content-type-options`,
 `referrer-policy`, `x-frame-options`, `strict-transport-security`, `content-security-policy`.
 
-⚠️ Depuis une session distante, `curl` vers l'extérieur est **bloqué** sur le poste comme
-dans le conteneur. Le contrôle en production passe par les outils web de la session, qui ne
-montrent pas les en-têtes HTTP ni le JSON-LD. **Le seul contrôle fiable du balisage se fait
-sur `dist/` après build**, ou par l'humain au navigateur.
+⚠️ **CORRIGÉ LE 31/08/2026 : `curl` fonctionne depuis le poste Windows.** Ce paragraphe
+affirmait le contraire. En-têtes de production, DNS, codes de retour, corps des pages, POST
+de contrôle : tout a été lu au `curl` pendant l'audit du 31/08. Le contrôle en ligne n'a donc
+plus besoin d'un humain au navigateur. *(Ce qui reste vrai : `curl --http2` échoue, la
+version installée ne le porte pas — la version HTTP servie ne se conclut donc pas ici.)*
 
-### Le formulaire — six barrières, dans l'ordre où `demande.php` les applique
+### Mesurer le trafic — `deploy/vps/mesure-vitrine.sh`
+
+```bash
+ssh root@164.132.76.117 'bash -s' < deploy/vps/mesure-vitrine.sh
+```
+
+Lecture seule, rien d'installé, dossier de travail effacé en sortie. Sort : période
+réellement couverte, volumes, pages les plus vues, pages d'entrée, référents, 404, robots,
+et le tableau **visites → demandes → taux** par page.
+
+- **Filtrage à l'analyse sur `request.host`**, décision du 01/09/2026 : Caddy sert les trois
+  domaines dans un seul journal, et séparer les fichiers exigerait de toucher à la
+  configuration Caddy de la **production du SaaS**. Le gain de propreté ne vaut pas ce
+  risque. La séparation reste possible plus tard, comme chantier d'infrastructure à part.
+- ⚠️ **La rétention est courte, et plus courte qu'elle n'en a l'air.** Docker plafonne à
+  3 × 10 Mo pour les trois domaines, et les **scans de failles** en consomment l'essentiel :
+  4 280 requêtes vers `/wp-admin/…` et consorts en 2,5 jours, contre 295 pages vues. Une
+  fenêtre de 168 h n'a rendu que **2,5 jours** le 01/09/2026. Toujours lire la période
+  affichée en tête, jamais le paramètre demandé.
+- ⚠️ **Un « visiteur » est une adresse qui a obtenu au moins une page en 200**, et non toute
+  adresse dont l'agent n'est pas reconnu : les scanners se présentent en « Mozilla/5.0 ».
+  La première version annonçait 167 visiteurs là où il y en avait 92.
+- ⚠️ **Les demandes ne se comptent jamais sur les visites de `/demande-envoyee`** — page
+  servie aussi aux robots piégés. Elles se lisent dans le journal du conteneur vitrine.
+
+Première mesure, 29 → 31/08/2026 : 92 visiteurs, 295 pages vues, 137 vues sur l'accueil,
+3 à 10 par page profonde, **aucun référent extérieur**, 1 demande. Les robots d'IA passent
+plus souvent que Googlebot (GPTBot 96, Applebot 54, PerplexityBot 51, ClaudeBot 39,
+Bytespider 42 — Googlebot 17).
+
+### Le formulaire — les barrières, dans l'ordre où `demande.php` les applique
+
+⚠️ **L'ordre et deux comportements ont changé le 31/08/2026.** Le fichier applique désormais :
+méthode → configuration → lecture → **validation calculée** → **origine** → anti-abus →
+verdict de validation → envoi.
 
 | Contrôle | Au déclenchement |
 |---|---|
-| Origine / référent étranger | « succès » sans envoi, journalisé |
+| Origine / référent non autorisé | **erreur** `motif=origine` — plus jamais un faux succès |
 | Limitation d'envois — 5/h, 15/j | **erreur** (pour qu'un humain puisse appeler) |
 | Champ piège | « succès » sans envoi |
 | Durée de saisie < 3 s | « succès » sans envoi |
 | Turnstile — jeton refusé | **erreur** ; jeton **absent** → la demande PASSE |
 | Lien dans « nom » ou « entreprise » | « succès » sans envoi |
-| Messagerie jetable | refus, champ nommé dans le journal |
+| Champ invalide / messagerie jetable | **erreur**, champ nommé dans le journal (jamais sa valeur) |
 | Domaine sans MX ni A | la demande **part**, mention portée dans le mail |
 
 Deux principes : **on ne ment jamais à un humain** (une limite atteinte renvoie une erreur,
 jamais une fausse confirmation) et **un doute ne coûte jamais une demande**.
+
+⚠️ **Les origines autorisées sont déclarées par le SERVEUR**, clé `origines` de
+`argon-config.php` — jamais par le paquet, qui est identique sur les deux machines. C'est la
+correction du défaut qui rendait tout test du formulaire mensonger sur le staging : l'origine
+attendue y était codée en dur sur le domaine de production, et la demande repartait en
+« succès » sans qu'aucun mail ne parte. Clé absente ⇒ repli sur la production, journalisé.
+
+⚠️ **Ne jamais compter les demandes sur les visites de `/demande-envoyee`** : cette page est
+aussi servie aux robots piégés. Le décompte qui ne ment pas est `resultat=envoye` dans le
+journal. Trois résultats possibles : `envoye`, `refuse`, `silence`.
+
+Le mail reçu porte depuis le 31/08/2026 un bloc **provenance** — page d'origine, URL, source,
+campagne, date. Il vient de `src/lib/provenance.ts`, qui n'écrit **rien** dans le navigateur :
+le chemin précédent vit dans une variable de module. La politique de confidentialité reste
+donc exacte, et ne doit pas être modifiée pour ce mécanisme.
 
 - Le navigateur transmet une **durée** (`performance.now()`), jamais un horodatage comparé à
   l'heure du serveur.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useRef, useState, useSyncExternalStore } from "react";
 import Script from "next/script";
 import type { RefObject } from "react";
 import { useSearchParams } from "next/navigation";
@@ -17,6 +17,19 @@ import {
 import { NavLink } from "@/components/navigation/NavLink";
 import { ArrowRight } from "@/components/ui/Button";
 import { site, turnstileSiteKey } from "@/lib/site";
+import {
+  CHAMPS_PROVENANCE,
+  cheminPrecedentConnu,
+  construireProvenance,
+} from "@/lib/provenance";
+import {
+  CHAMPS_SIMULATION,
+  abonnerSimulation,
+  oublierSimulation,
+  simulationAuRendu,
+  simulationEmportee,
+  type SimulationEmportee,
+} from "@/lib/simulation";
 
 /**
  * Formulaire de demande de démonstration.
@@ -116,11 +129,31 @@ export function DemoForm() {
    */
   const [adresseSuggeree, setAdresseSuggeree] = useState<string | null>(null);
 
+  /**
+   * Simulation que le visiteur a choisi d'emporter depuis /tarifs.
+   *
+   * ⚠️ Lue par `useSyncExternalStore`, jamais par un effet qui appellerait
+   * `setState` : la mémoire de `src/lib/simulation.ts` est un store externe, et
+   * un `setState` synchrone dans un effet déclenche un rendu en cascade
+   * (règle `react-hooks/set-state-in-effect`, qui a refusé la première
+   * version).
+   *
+   * Le troisième argument donne l'instantané du rendu statique : `null`. La
+   * page est un fichier HTML figé au build — annoncer une simulation dans le
+   * HTML servi produirait une différence d'hydratation, et surtout une
+   * affirmation fausse.
+   */
+  const simulation = useSyncExternalStore(
+    abonnerSimulation,
+    simulationEmportee,
+    simulationAuRendu,
+  );
+
   return (
     <form
       method="post"
       action={ENDPOINT_DEMANDE}
-      onSubmit={() => {
+      onSubmit={(evenement) => {
         // Écrit juste avant l'envoi : le navigateur construit la charge utile
         // après l'exécution des gestionnaires de soumission.
         if (champDureeRef.current && ouvertureRef.current !== null) {
@@ -128,12 +161,19 @@ export function DemoForm() {
             Math.round(performance.now() - ouvertureRef.current),
           );
         }
+        remplirProvenance(evenement.currentTarget);
         setEnvoiEnCours(true);
       }}
       className="card p-6 sm:p-8"
     >
       <DureeAntiRobot champRef={champDureeRef} ouvertureRef={ouvertureRef} />
       <ChampPiege />
+      <ChampsProvenance />
+      <ChampsSimulation simulation={simulation} />
+
+      {simulation ? (
+        <SimulationJointe simulation={simulation} onRetirer={oublierSimulation} />
+      ) : null}
 
       {/* Frontière volontairement réduite à la bannière : voir l'en-tête. */}
       <Suspense fallback={null}>
@@ -226,13 +266,39 @@ export function DemoForm() {
  * peine de remplir cinq champs. On lui donne immédiatement une porte de sortie
  * réelle — l'adresse de contact —, sans jamais révéler la cause technique.
  *
+ * ⚠️ CHAQUE ÉCHEC DIT CE QU'IL FAUT FAIRE. Un message unique pour toutes les
+ * causes renvoyait « réessayez dans un instant » à quelqu'un qui venait de
+ * saisir une adresse invalide — réessayer à l'identique échouait à nouveau.
+ * `demande.php` transmet donc un motif dans l'URL, et chaque motif a sa
+ * consigne. Le motif ne dit jamais la cause technique : ni fournisseur, ni
+ * compteur, ni nom de barrière.
+ *
  * Sans JavaScript, la bannière ne s'affiche pas : le visiteur retrouve
  * simplement le formulaire, ce qui reste la bonne invitation après un échec.
  * La confirmation de succès, elle, ne dépend d'aucun script — c'est une page
  * à part entière (/demande-envoyee).
  */
+const MESSAGES_ERREUR: Record<string, string> = {
+  champs:
+    "Une des informations saisies n'a pas été acceptée. Vérifiez l'adresse e-mail et le numéro de téléphone, puis renvoyez la demande.",
+  limite:
+    "Plusieurs demandes ont déjà été envoyées depuis cette connexion. Réessayez plus tard, ou appelez-nous : c'est immédiat.",
+  controle:
+    "Le contrôle anti-robot n'a pas abouti. Renvoyez la demande : un nouveau contrôle est proposé automatiquement.",
+  origine:
+    "La demande n'a pas été acceptée depuis cette page. Rechargez-la avant de renvoyer le formulaire.",
+  technique:
+    "L'envoi n'a pas abouti pour une raison technique de notre côté. Réessayez dans un instant.",
+};
+
+const MESSAGE_PAR_DEFAUT = "L'envoi n'a pas abouti. Réessayez dans un instant.";
+
 function MessageErreur() {
-  if (useSearchParams().get("etat") !== "erreur") return null;
+  const parametres = useSearchParams();
+  if (parametres.get("etat") !== "erreur") return null;
+
+  const motif = parametres.get("motif") ?? "";
+  const message = MESSAGES_ERREUR[motif] ?? MESSAGE_PAR_DEFAUT;
 
   return (
     <div
@@ -240,16 +306,17 @@ function MessageErreur() {
       className="mb-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3"
     >
       <p className="text-sm text-ink">
-        L&apos;envoi n&apos;a pas abouti. Réessayez dans un instant
+        {message}
         {site.email ? (
           <>
-            , ou écrivez-nous directement à{" "}
+            {" "}
+            Vous pouvez aussi nous écrire directement à{" "}
             <a href={`mailto:${site.email}`} className="underline">
               {site.email}
             </a>
+            .
           </>
         ) : null}
-        .
       </p>
     </div>
   );
@@ -394,6 +461,132 @@ function ChampPiege() {
         autoComplete="off"
         defaultValue=""
       />
+    </div>
+  );
+}
+
+/* ==========================================================================
+   PROVENANCE
+   ========================================================================== */
+
+/**
+ * Quatre champs cachés, remplis au moment de la soumission : la page depuis
+ * laquelle le visiteur a cliqué, son titre, la source par laquelle il est
+ * entré sur le site, et les paramètres de campagne s'il y en a.
+ *
+ * ⚠️ Ils sont remplis à la SOUMISSION, jamais au rendu. La page est un fichier
+ * HTML figé au moment du build : une valeur posée au rendu serait la même pour
+ * tous les visiteurs, c'est-à-dire fausse pour presque tous.
+ *
+ * ⚠️ Rien de tout cela n'est stocké dans le navigateur — voir
+ * `src/lib/provenance.ts`. Ces valeurs n'ouvrent aucun droit et n'entrent dans
+ * aucune décision du serveur : elles remplissent des lignes de l'e-mail reçu,
+ * et `demande.php` les revalide malgré tout avant de les écrire.
+ *
+ * Sans JavaScript, les quatre champs partent vides : la demande arrive
+ * normalement, avec « page d'origine inconnue ». Une information de pilotage
+ * ne doit jamais coûter une demande.
+ */
+function ChampsProvenance() {
+  return (
+    <>
+      {Object.values(CHAMPS_PROVENANCE).map((nom) => (
+        <input key={nom} type="hidden" name={nom} defaultValue="" />
+      ))}
+    </>
+  );
+}
+
+/**
+ * Écrit la provenance dans les champs cachés du formulaire qui part.
+ *
+ * Le formulaire est lu par `elements.namedItem` plutôt que par des refs : les
+ * quatre champs sont produits par une boucle, et quatre refs pour quatre
+ * valeurs qui ne servent qu'une fois seraient quatre occasions d'en oublier
+ * une.
+ */
+function remplirProvenance(formulaire: HTMLFormElement): void {
+  const provenance = construireProvenance({
+    cheminPrecedent: cheminPrecedentConnu(),
+    referrer: document.referrer,
+    origineSite: window.location.origin,
+    parametres: new URLSearchParams(window.location.search),
+  });
+
+  const valeurs: Record<string, string> = {
+    [CHAMPS_PROVENANCE.url]: provenance.url,
+    [CHAMPS_PROVENANCE.titre]: provenance.titre,
+    [CHAMPS_PROVENANCE.source]: provenance.source,
+    [CHAMPS_PROVENANCE.campagne]: provenance.campagne,
+  };
+
+  for (const [nom, valeur] of Object.entries(valeurs)) {
+    const champ = formulaire.elements.namedItem(nom);
+    if (champ instanceof HTMLInputElement) champ.value = valeur;
+  }
+}
+
+/* ==========================================================================
+   SIMULATION EMPORTÉE
+   ========================================================================== */
+
+/**
+ * Les deux champs cachés qui portent la simulation. Ils sont rendus vides et
+ * remplis par React à mesure : contrairement à la provenance, la valeur est
+ * connue avant la soumission — elle vient d'un clic explicite sur /tarifs.
+ */
+function ChampsSimulation({ simulation }: { simulation: SimulationEmportee | null }) {
+  return (
+    <>
+      <input
+        type="hidden"
+        name={CHAMPS_SIMULATION.simulateur}
+        value={simulation?.simulateur ?? ""}
+        readOnly
+      />
+      <input
+        type="hidden"
+        name={CHAMPS_SIMULATION.resultat}
+        value={simulation?.resume ?? ""}
+        readOnly
+      />
+    </>
+  );
+}
+
+/**
+ * Ce que le visiteur emporte est AFFICHÉ, et peut être retiré.
+ *
+ * ⚠️ C'est la contrepartie de la transmission, pas une décoration. Joindre en
+ * silence les chiffres qu'il vient de saisir — son nombre de techniciens, son
+ * coût horaire — serait précisément le genre de collecte discrète que ce site
+ * refuse ailleurs. Il l'a lu avant de cliquer, il le relit ici, il peut
+ * l'enlever. Ne pas retirer ce bloc en le croyant accessoire.
+ */
+function SimulationJointe({
+  simulation,
+  onRetirer,
+}: {
+  simulation: SimulationEmportee;
+  onRetirer: () => void;
+}) {
+  return (
+    <div className="mb-6 rounded-lg border border-line bg-surface-2 px-4 py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-[13px] font-medium text-ink">
+          Votre simulation est jointe à cette demande
+        </p>
+        <button
+          type="button"
+          onClick={onRetirer}
+          className="text-xs text-ink-muted underline transition-colors hover:text-ink-soft"
+        >
+          Retirer
+        </button>
+      </div>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
+        {simulation.resume}
+      </p>
     </div>
   );
 }

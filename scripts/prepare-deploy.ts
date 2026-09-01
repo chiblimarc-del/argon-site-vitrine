@@ -40,7 +40,19 @@ const HOTE_PRODUCTION = "www.argon-mobility.com";
  * l'ajouter à une liste d'exclusions le publie en silence. Ajouter un fichier
  * ici doit rester un acte délibéré.
  */
-const FICHIERS_PUBLIES = [".htaccess", "api/.htaccess", "api/demande.php"] as const;
+const FICHIERS_PUBLIES = [
+  ".htaccess",
+  "api/.htaccess",
+  "api/demande.php",
+  /**
+   * ⚠️ Sans ce fichier, `demande.php` meurt sur un `require` introuvable et le
+   * formulaire ne répond plus du tout. Il porte les décisions (origines
+   * autorisées, validation, signaux de robot) que `deploy/api/tests/` met à
+   * l'épreuve. Le `.htaccess` du dossier le rend inaccessible depuis le web,
+   * comme tout ce qui n'est pas `demande.php`.
+   */
+  "api/demande-controles.php",
+] as const;
 
 const erreurs: string[] = [];
 const avertissements: string[] = [];
@@ -92,6 +104,30 @@ if (existsSync(path.join(OUT, "index.html"))) {
 /** Le formulaire est inutile sans son point d'entrée. */
 if (!existsSync(path.join(DEPLOY, "api", "demande.php"))) {
   erreurs.push("deploy/api/demande.php est absent : le formulaire ne partira pas.");
+}
+
+/**
+ * Le point d'entrée exige ses contrôles. Le `require` et le fichier doivent
+ * exister ENSEMBLE : l'un sans l'autre, c'est une erreur fatale PHP à la
+ * première soumission, c'est-à-dire un formulaire mort en production sans que
+ * rien ne l'ait signalé au moment du déploiement.
+ */
+if (existsSync(path.join(DEPLOY, "api", "demande.php"))) {
+  const pointEntree = await readFile(path.join(DEPLOY, "api", "demande.php"), "utf8");
+  const exigeLesControles = pointEntree.includes("demande-controles.php");
+  const controlesPresents = existsSync(path.join(DEPLOY, "api", "demande-controles.php"));
+
+  if (exigeLesControles && !controlesPresents) {
+    erreurs.push(
+      "deploy/api/demande.php exige demande-controles.php, qui est absent :\n" +
+        "      le formulaire répondrait par une erreur fatale à la première demande.",
+    );
+  }
+  if (!exigeLesControles && controlesPresents) {
+    avertissements.push(
+      "deploy/api/demande-controles.php est empaqueté mais demande.php ne l'inclut pas.",
+    );
+  }
 }
 
 /**
