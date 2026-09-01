@@ -1,0 +1,26 @@
+# =============================================================================
+# Fins de ligne — posé le 01/09/2026, après un avertissement de git.
+# =============================================================================
+#
+# Le poste tourne sous Windows avec `core.autocrlf=true` : git réécrit les fichiers en CRLF
+# à chaque checkout. Pour du TypeScript ou du Markdown, c'est sans conséquence.
+#
+# ⚠️ POUR UN SCRIPT SHELL, C'EST FATAL. Il s'exécute sur le VPS, sous Linux, et un `\r` en
+# fin de première ligne suffit : `bash: ligne 1: $'\r': commande introuvable`. Le script est
+# déposé par `scp` DEPUIS CE POSTE — il part donc tel que git l'a écrit sur le disque.
+#
+# Le piège est différé, et c'est ce qui le rend dangereux : `deploy/vps/collecte-audience.sh`
+# fonctionne aujourd'hui parce qu'il a été écrit en LF et n'a jamais été rematérialisé par
+# git. Au premier `git pull`, `git checkout` ou changement de branche sur ce poste, il
+# repartirait en CRLF — et la collecte nocturne échouerait toutes les nuits, avec un message
+# qui ne dit rien du problème réel.
+#
+# `eol=lf` force donc le LF sur le disque, quelle que soit la plateforme.
+*.sh text eol=lf
+
+# Même raison pour le point d'entrée PHP et le `.htaccess` : tous deux sont téléversés tels
+# quels sur un Apache Linux. PHP tolère CRLF, mais un `Header always set …` coupé par un `\r`
+# produit une valeur d'en-tête qui contient un caractère de contrôle — et Apache l'accepte
+# sans rien dire.
+*.htaccess text eol=lf
+deploy/api/*.php text eol=lf
