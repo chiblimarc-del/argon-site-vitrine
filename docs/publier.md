@@ -348,7 +348,7 @@ tout écart.
 ## Travailler entre deux publications
 
 ```bash
-npm run dev          # http://localhost:3000, rechargement à chaud
+npm run dev          # http://localhost:3002, rechargement à chaud
 ```
 
 Ne marchent pas en local, et c'est structurel : **le formulaire de démonstration**

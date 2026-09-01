@@ -212,7 +212,7 @@ et sauvegarde avant d'écraser.
 ```bash
 npm run check      # typecheck → lint → seo:check ; le déploiement échoue si l'un tombe
 npm run controle   # contrôle éditorial (vocabulaire, formule comptable, légendes)
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3002
 ```
 
 **Contraintes dures de `seo:check`** : `title ≤ 60`, `description ≤ 160`, H1 non vide et
@@ -542,6 +542,19 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
 12. **Une alerte Search Console n'est un défaut que si la fonctionnalité visée est
     atteignable.** Un champ manquant sur une fonctionnalité inéligible n'est pas un manque,
     c'est un mauvais type. *(Leçon des cinq signalements du 26/08 sur `/tarifs`.)*
+13. **Deux projets qui réclament le même port échouent en silence.** Le backend NestJS du
+    monorepo écoute sur `process.env.PORT || 3000` et son `.env` ne définit **pas** `PORT` ;
+    `npm run dev` du vitrine réclamait lui aussi le 3000. Le second démarré meurt en
+    `EADDRINUSE`, noyé dans la sortie de `concurrently` : le frontend répond, le backend est
+    mort, et **rien ne le signale**. Le vitrine est donc fixé sur **3002**, le 3000 restant
+    au backend où il est câblé une vingtaine de fois dans `frontend-next` et `mobile`.
+    ⚠️ `npm start` a suivi le même jour : il sert `dist` sur le **3002** lui aussi. Il
+    n'entre plus en conflit avec le backend, et il n'a jamais concerné la production — le
+    déploiement force son propre environnement (`scripts/deploy.ts`).
+    ⚠️ Deux stacks lancées coup sur coup laissent des doublons
+    (`concurrently`, `nest --watch`) qui se disputent le port et le font répondre par
+    intermittence — vérifier `netstat -ano` plutôt que la seule page qui s'affiche.
+    *(01/09/2026.)*
 
 ---
 

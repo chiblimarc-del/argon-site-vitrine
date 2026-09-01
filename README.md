@@ -13,7 +13,7 @@ processus Node en production.
 
 ```bash
 npm ci
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3002
 ```
 
 Node ≥ 22.6.

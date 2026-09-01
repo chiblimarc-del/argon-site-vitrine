@@ -64,7 +64,7 @@ prudence, ce sont trois impossibilités techniques.
 ```bash
 npm run check      # typecheck → lint → seo:check ; le déploiement échoue si l'un tombe
 npm run controle   # contrôle éditorial : vocabulaire, formule comptable, légendes
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3002
 ```
 
 Le formulaire de démonstration et Turnstile **ne marchent pas en local**, et c'est
