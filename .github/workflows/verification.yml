@@ -42,12 +42,27 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      # ⚠️ Les deux actions sont en @v5 depuis le 03/09/2026. Les @v4 tournaient
+      # sur Node 20, déprécié : le runner les forçait déjà sur Node 24 en
+      # l'annonçant à chaque exécution, et cette compatibilité finira par être
+      # retirée. Les v5 n'apportent que ce passage à Node 24 — elles exigent en
+      # retour un runner ≥ 2.327.1, ce que `ubuntu-latest` dépasse largement.
+      #
+      # Rien d'autre ne change ICI, et c'est vérifié : la cassure de
+      # checkout@v5.1 (`allow-unsafe-pr-checkout`) ne porte que sur
+      # `pull_request_target` et `workflow_run`, que ce workflow n'emploie pas ;
+      # et le cache automatique de setup-node@v5 ne s'arme qu'en présence d'un
+      # champ `packageManager` dans `package.json`, absent ici — le `cache: npm`
+      # ci-dessous reste donc le seul en vigueur.
+      - uses: actions/checkout@v5
 
       # `package.json` déclare `engines: node >=22.6`. La borne n'est pas
       # décorative : `scripts/seo-check.ts` et `scripts/deploy.ts` sont lancés
       # par `node --experimental-strip-types`, qui n'existe pas avant 22.6.
-      - uses: actions/setup-node@v4
+      #
+      # ⚠️ Ne PAS confondre avec le Node 24 des actions ci-dessus : celui-là
+      # fait tourner les actions elles-mêmes, celui-ci le code du projet.
+      - uses: actions/setup-node@v5
         with:
           node-version: '22.x'
           cache: npm
