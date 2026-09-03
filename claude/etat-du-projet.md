@@ -151,6 +151,26 @@ organisation des tournées, cas client local, partenaire réel. Un gabarit où s
 ville change n'est pas une ressource, et Google ne le traitera pas comme telle. **Sinon, pas
 de page.**
 
+### Cockpit vitrine — décision de cadrage du 03/09/2026
+
+Le contrat de données est arrêté (`claude/contrat-cockpit-vitrine-2026-09-01.md`). Trois
+points tranchés, opposables à l'écriture du cockpit :
+
+1. **Les pages d'entrée restent hors périmètre.** La donnée n'existe pas dans les journaux
+   tels qu'ils sont collectés ; l'obtenir obligerait à rouvrir le socle. Le cockpit montre ce
+   qui est mesuré, jamais ce qui est reconstitué.
+2. **`npm start` est aligné sur le 3002**, comme `npm run dev` — fait le 01/09 par
+   `5af92a2`, la question ne se posait déjà plus. Voir le piège 13 du § 9.
+3. **Deux endpoints, pas un** : `GET /cockpit` et `GET /pages` sont séparés parce qu'ils ne
+   se rafraîchissent pas au même rythme.
+
+⚠️ **L'historique n'a qu'un jour de recul** — premier relevé le 31/08/2026. Une vue
+« 90 jours » sera vide pendant trois mois : l'écran doit annoncer le nombre de jours
+réellement couverts plutôt que tracer 90 points dont 87 valent zéro. Un zéro affiché comme
+une mesure est un mensonge.
+
+La mise en œuvre est un **chantier du monorepo SaaS**, pas du dépôt vitrine.
+
 ### Contenu
 
 - **Aucune fonctionnalité, client, témoignage ou chiffre inventé.** Aucune donnée fictive,
