@@ -65,11 +65,14 @@ prudence, ce sont trois impossibilités techniques.
 npm run check      # typecheck → lint → seo:check ; le déploiement échoue si l'un tombe
 npm run controle   # contrôle éditorial : vocabulaire, formule comptable, légendes
 npm run dev        # http://localhost:3002
+npm run apercu     # http://localhost:3003 — le site exporté + le VRAI demande.php
 ```
 
-Le formulaire de démonstration et Turnstile **ne marchent pas en local**, et c'est
-structurel : le premier poste vers du PHP que `next dev` n'exécute pas, la seconde est
-restreinte aux domaines déclarés.
+`next dev` n'exécute pas de PHP : sur le 3002, le formulaire poste dans le vide. C'est
+`npm run apercu` qui l'éprouve, après `npm run build`, sur le fichier réel de `deploy/api/`.
+Y sont vérifiables l'origine, la validation, le compteur, le champ piège, le délai — et
+surtout qu'un échec ne repart **jamais** en confirmation. Restent hors de portée l'envoi
+Mailjet réussi (vraies clés) et le raccord CRM (réseau Docker privé du VPS).
 
 ---
 

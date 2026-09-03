@@ -46,6 +46,20 @@ next-env.d.ts
 # Secrets Mailjet : créés directement sur le serveur, jamais versionnés.
 deploy/api/config.php
 
+# Les trois fichiers que `npm run apercu` fait vivre à la racine du dépôt.
+#
+#   argon-config.php   la configuration locale du formulaire. Même nom qu'en
+#                      production, où il vit au-dessus de la racine web. Il
+#                      porte des clés : jamais dans un commit.
+#   argon-limites.php  le compteur d'envois, que demande.php écrit à côté de sa
+#                      configuration. Généré, jamais écrit à la main — le
+#                      supprimer remet le quota à zéro.
+#   argon-journal.log  le journal du formulaire. C'est lui qui dit ce qui s'est
+#                      réellement passé : refuse, silence, succes.
+/argon-config.php
+/argon-limites.php
+/argon-journal.log
+
 # Documents du projet.
 # Le document d'amorcage et les audits sont VERSIONNES : un depot qui ne les porte pas
 # n'apprend rien a la session qui le clone. Les comptes rendus de lot et les regles

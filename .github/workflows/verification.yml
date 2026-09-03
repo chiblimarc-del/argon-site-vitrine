@@ -61,11 +61,12 @@ jobs:
 
       # Les tests du formulaire, en PHP.
       #
-      # ⚠️ ILS NE TOURNENT PAS SUR LE POSTE : il n'y a ni PHP ni Docker sur la
-      # machine de développement (vérifié le 31/08/2026). C'est donc ICI, et
-      # nulle part ailleurs, qu'ils s'exécutent — d'où le `php -v` qui précède :
-      # une version de PHP absente ferait autrement passer le pas en silence,
-      # et personne ne verrait que plus rien n'est vérifié.
+      # PHP 8.3 est installé sur le poste depuis le 03/09/2026 : ces tests y
+      # tournent aussi, et le parcours complet du formulaire avec eux
+      # (`npm run apercu`). La CI reste le filet qui ne dépend d'aucun poste —
+      # d'où le `php -v` qui précède : une version de PHP absente ferait
+      # autrement passer le pas en silence, et personne ne verrait que plus
+      # rien n'est vérifié.
       #
       # Ils éprouvent les décisions de deploy/api/demande-controles.php, dont
       # celle qui a coûté deux semaines de tests mensongers : une origine

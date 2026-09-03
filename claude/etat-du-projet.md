@@ -243,19 +243,31 @@ unique, `parent` déclaré, deux routes ne peuvent pas partager le même `keywor
 - ni l'existence réelle d'une page pour une route déclarée,
 - ni deux mots-clés quasi identiques (comparaison de chaînes exactes seulement).
 
-**Ne marchent pas en local, et c'est structurel** : le formulaire de démonstration (il poste
-vers `/api/demande.php`, du PHP que `next dev` n'exécute pas) et Turnstile (clé restreinte
-aux domaines déclarés). **Ils se testent sur staging** — `vitrine-staging.argon-mobility.com`, `37.187.183.209` :
+**Le formulaire ne marche pas sur `next dev`**, qui n'exécute pas de PHP — et l'export
+statique interdit toute route serveur de remplacement. **Mais il s'essaie en local depuis le
+03/09/2026** : `npm run build && npm run apercu` sert le site exporté et le vrai
+`deploy/api/demande.php` sur `http://localhost:3003`. Origine, validation, compteur, champ
+piège, délai, lien, et surtout le fait qu'un échec ne reparte jamais en confirmation : tout
+cela se vérifie en une seconde par cas. Marche à suivre complète dans `docs/publier.md`
+§ « Essayer le formulaire en local ».
+
+⚠️ **Ce qui reste hors de portée du local, et là c'est structurel** : l'envoi Mailjet
+**réussi** (vraies clés) et le raccord CRM (`backend:3000`, réseau Docker privé du VPS).
+Ces deux-là **se testent sur staging** — `vitrine-staging.argon-mobility.com`,
+`37.187.183.209` :
 
 ⚠️ **Avant tout test du formulaire sur le staging, `argon-config.php` doit y déclarer
 `'origines' => ['https://vitrine-staging.argon-mobility.com']`.** Sans cette ligne, la
 demande est refusée comme venant d'une origine étrangère. Détail : `docs/publier.md`.
 
-⚠️ **Les DÉCISIONS du formulaire, elles, se vérifient sans serveur** : `npm run test:php`
-éprouve `deploy/api/demande-controles.php` (origines, validation, signaux de robot,
-provenance). Mais **il n'y a ni PHP ni Docker sur le poste** — vérifié le 31/08/2026, WSL
-est installé sans distribution. Ces tests tournent **en CI uniquement**. Les tests
-TypeScript, eux, tournent partout : `npm test`, inclus dans `npm run check`.
+⚠️ **Les DÉCISIONS du formulaire se vérifient sans serveur** : `npm run test:php` éprouve
+`deploy/api/demande-controles.php` (origines, validation, signaux de robot, provenance) —
+121 vérifications, des fonctions pures qui ne touchent jamais au réseau. Elles tournent
+désormais **sur le poste comme en CI** : PHP 8.3.33 y est installé depuis le 03/09/2026,
+dans `%LOCALAPPDATA%\Programs\php-8.3`. L'affirmation « il n'y a ni PHP ni Docker sur le
+poste », vraie le 31/08, ne l'est plus qu'à moitié : Docker manque toujours, PHP non.
+Les tests TypeScript, eux, ont toujours tourné partout : `npm test`, inclus dans
+`npm run check`.
 
 ```bash
 ssh -l argon 37.187.183.209 ls /home/argon/
@@ -304,7 +316,8 @@ src/app/robots.ts        constante PRODUCTION_HOST
 deploy/.htaccess         réécriture, en-têtes de sécurité, CSP, cache — unique source
 deploy/api/demande.php   traitement du formulaire : orchestration et effets
 deploy/api/demande-controles.php   les décisions, en fonctions pures — testables
-deploy/api/tests/        ce qui les éprouve (npm run test:php, en CI)
+deploy/api/tests/        ce qui les éprouve (npm run test:php)
+scripts/serveur-local.php   sert out/ + le vrai demande.php (npm run apercu)
 tests/                   tests TypeScript (npm test, partout)
 ```
 
@@ -575,6 +588,17 @@ ssh root@164.132.76.117 'date -u; docker logs --since 15m argon-vitrine-vitrine-
     (`concurrently`, `nest --watch`) qui se disputent le port et le font répondre par
     intermittence — vérifier `netstat -ano` plutôt que la seule page qui s'affiche.
     *(01/09/2026.)*
+14. **Sous Windows, deux `php -S` sur le même port démarrent tous les deux** — sans
+    `EADDRINUSE`, chacun affichant fièrement « Development Server started ». C'est le plus
+    ANCIEN qui reçoit les requêtes. Et comme le serveur intégré **relit son routeur à chaque
+    requête**, un processus périmé sert le code du jour avec la configuration de la veille :
+    l'illusion est parfaite. Symptôme vécu le 03/09/2026 : `curl.cainfo` réglé, vérifié en
+    ligne de commande, et le formulaire continuait pourtant d'échouer en
+    « certificat introuvable » — un `php.exe` d'avant la correction tenait le port.
+    ⚠️ Corollaire : arrêter une tâche d'arrière-plan tue l'enveloppe `npm`, **pas** le
+    `php.exe` enfant. Avant de conclure quoi que ce soit d'un aperçu local :
+    `Get-Process php` ne doit montrer qu'un seul processus.
+    *(03/09/2026.)*
 
 ---
 

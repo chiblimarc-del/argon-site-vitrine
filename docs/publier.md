@@ -351,17 +351,83 @@ tout écart.
 npm run dev          # http://localhost:3002, rechargement à chaud
 ```
 
-Ne marchent pas en local, et c'est structurel : **le formulaire de démonstration**
-(il poste vers `/api/demande.php`, du PHP que `next dev` n'exécute pas) et
-**Turnstile** (clé restreinte aux domaines déclarés). Les deux se testent sur
-staging, en attendant au moins 3 secondes avant de valider le formulaire — sinon
-la barrière anti-robot renvoie un faux succès sans rien envoyer.
+Sur le 3002, **le formulaire poste dans le vide** : `next dev` n'exécute pas de PHP, et
+l'export statique interdit toute route serveur de remplacement. Ce n'est pas une raison de
+n'essayer qu'en ligne — voir la section suivante.
 
-En revanche, **les décisions du formulaire se vérifient sans serveur** : origines
-autorisées, validation, signaux de robot et provenance sont des fonctions pures,
-éprouvées par `npm run test:php`. ⚠️ Ce contrôle **ne tourne pas sur le poste** — il n'y a
-ni PHP ni Docker sur la machine de développement. Il s'exécute en CI, à chaque push : ne
-pas déployer le formulaire avant que la vérification GitHub soit verte.
+**Les décisions du formulaire se vérifient aussi sans serveur** : origines autorisées,
+validation, signaux de robot et provenance sont des fonctions pures, éprouvées par
+`npm run test:php`. Les mêmes tests tournent en CI à chaque push : ne pas déployer le
+formulaire avant que la vérification GitHub soit verte.
+
+---
+
+## Essayer le formulaire en local
+
+```bash
+npm run build && npm run apercu     # http://localhost:3003
+```
+
+`scripts/serveur-local.php` sert les fichiers de `out/` et exécute le **vrai**
+`deploy/api/demande.php` — jamais une copie, qui divergerait sans que rien ne le signale.
+
+⚠️ **Arrêter l'aperçu avant de reconstruire.** Le processus PHP travaille dans `out/`, et
+Windows refuse d'effacer un dossier occupé : `npm run build` tombe alors sur
+`EBUSY: resource busy or locked, rmdir out`, sans dire que le coupable est le serveur d'à
+côté. Et **un seul serveur à la fois** — deux `php -S` sur le même port démarrent tous les
+deux sous Windows, c'est le plus ancien qui répond, et le routeur relu à chaque requête rend
+la confusion indétectable. `Get-Process php` doit montrer une seule ligne.
+
+**Une fois pour toutes, l'installation.** PHP ≥ 8.3, la même version mineure que l'image
+`php:8.3-apache` de production. Sur le poste il vit dans
+`%LOCALAPPDATA%\Programs\php-8.3`, avec `curl`, `mbstring` et `openssl` activés dans
+`php.ini`, et `curl.cainfo` réglé sur un `cacert.pem` — sans ce dernier, **tout appel HTTPS
+échoue en « certificat introuvable »** et le local ment sur chaque appel réseau.
+
+**À chaque fois, la configuration.** `demande.php` cherche ses identifiants deux dossiers
+au-dessus de lui, soit `argon-config.php` à la racine du dépôt :
+
+```bash
+cp deploy/api/config.example.php argon-config.php
+# puis, dans ce fichier : 'origines' => ['http://localhost:3003']
+```
+
+⚠️ **Là, et nulle part ailleurs.** `deploy/api/config.php`, le repli de production, fait
+échouer `npm run deploy:pack` s'il traîne dans le dépôt. Les trois fichiers que l'aperçu fait
+vivre à la racine — `argon-config.php`, `argon-limites.php` (le compteur d'envois) et
+`argon-journal.log` — sont ignorés par git.
+
+**Ce qui se vérifie**, en une seconde chacun, contre la production qui demandait un
+déploiement :
+
+| Cas | Attendu |
+|---|---|
+| origine interdite | `?etat=erreur&motif=origine` — **jamais** la confirmation |
+| champs invalides | `?etat=erreur&motif=champs` |
+| champ piège rempli | `/demande-envoyee`, journal `resultat=silence motif=piege` |
+| validé en moins de 3 s | `/demande-envoyee`, journal `resultat=silence motif=delai` |
+| lien dans le nom | `/demande-envoyee`, journal `resultat=silence motif=lien` |
+| envoi refusé par Mailjet | `?etat=erreur&motif=technique`, journal `motif=envoi-refuse http=401` |
+
+**Le journal fait foi, pas la page.** Trois de ces cas affichent « merci pour votre
+demande » sans qu'aucun mail ne parte — c'est voulu, un robot ne doit rien apprendre. Seul
+`argon-journal.log` distingue un succès d'un silence :
+
+```bash
+grep 'demande-demo' argon-journal.log
+```
+
+**Ce qui reste hors de portée**, et c'est structurel : l'envoi Mailjet **réussi**, qui
+demande les vraies clés, et le raccord CRM, dont l'adresse `backend:3000` vit sur le réseau
+Docker privé du VPS. Les deux se neutralisent proprement — configuration absente ⇒
+`crm-inactif`, jamais une panne.
+
+**Turnstile.** Avec la clé de production, le widget ne rend pas de jeton sur `localhost` —
+et la demande passe quand même, par décision du 18/08/2026 : un jeton absent n'est pas un
+signal de robot. Pour éprouver le **refus**, Cloudflare publie des clés de test valables sur
+n'importe quel domaine : sitekey `2x00000000000000000000AB` (échoue toujours) et secret
+`2x0000000000000000000000000000000AA`. La sitekey est en dur dans `src/lib/site.ts` — la
+remplacer le temps d'un essai, et ne jamais commiter ce changement.
 
 ⚠️ Le site est en **export statique**. Les blocs `redirects()` et `headers()` de
 `next.config.ts` sont **silencieusement ignorés** en production : toute règle de
