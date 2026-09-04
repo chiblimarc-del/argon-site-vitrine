@@ -56,15 +56,30 @@ jobs:
       # ci-dessous reste donc le seul en vigueur.
       - uses: actions/checkout@v5
 
-      # `package.json` déclare `engines: node >=22.6`. La borne n'est pas
-      # décorative : `scripts/seo-check.ts` et `scripts/deploy.ts` sont lancés
-      # par `node --experimental-strip-types`, qui n'existe pas avant 22.6.
+      # NODE 24 — UN SEUL ENVIRONNEMENT DE RÉFÉRENCE, décidé le 04/09/2026.
       #
-      # ⚠️ Ne PAS confondre avec le Node 24 des actions ci-dessus : celui-là
-      # fait tourner les actions elles-mêmes, celui-ci le code du projet.
+      # Trois endroits disent désormais la même chose, et doivent continuer de
+      # le dire ensemble : `.nvmrc` (24), `engines` de package.json (>=24), et
+      # cette ligne. En changer un seul rouvrirait exactement ce qu'on ferme.
+      #
+      # Ce qu'on fermait : le paquet mis en ligne est construit SUR LE POSTE
+      # (`npm run deploy:ouvrir`), jamais ici — ce workflow ne déploie rien.
+      # Or le poste bâtissait en Node 26 pendant que la CI vérifiait en Node 22 :
+      # la version qui produisait la production n'était éprouvée nulle part, et
+      # le dépôt ne nommait aucune référence (`>=22.6`, sans `.nvmrc`).
+      #
+      # Pourquoi 24 plutôt que 26 : 24 « Krypton » est l'Active LTS. 26 est la
+      # Current, que la documentation Node déconseille pour produire. Rien ne
+      # tourne en Node en production — le site est un export statique servi par
+      # Apache — mais c'est bien Node qui fabrique ce qui part.
+      #
+      # ⚠️ Le plancher 22.6 venait de `--experimental-strip-types`, dont
+      # dépendent seo-check.ts, deploy.ts, prepare-deploy.ts et les tests.
+      # Vérifié sous Node 24.20.0 avant d'écrire cette ligne : le drapeau
+      # fonctionne, sans avertissement de dépréciation.
       - uses: actions/setup-node@v5
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: npm
 
       - run: npm ci
